@@ -8548,6 +8548,8 @@ function renderBtvlDanhSachTabs(dong, dsBai){
       renderBtvlAdmin();
     };
   });
+  // Đổi nhãn + hành động của 2 nút khóa/mở hàng loạt theo đúng tab bài đang chọn ở trên.
+  capNhatNutBtvlKhoaHangLoat();
 }
 
 /* Đặt trạng thái khóa cho đúng 1 bài của đúng 1 học sinh — dùng .update() để không đụng tới
@@ -8559,11 +8561,13 @@ async function btvlDatKhoaMotBai(uid, baiId, khoaMoi){
   }catch(e){ showMsg($('btvlKhoaMsg'), baoLoi(e), 'err'); }
 }
 
-/* Khóa/mở HÀNG LOẠT tất cả các bài ĐÃ NỘP của TẤT CẢ học sinh — dùng 1 lệnh .update() nhiều
-   đường dẫn cùng lúc (giống tính năng khóa hàng loạt vị trí học sinh), tránh phải bấm khóa
-   từng dòng một khi cả lớp đã nộp xong hết. */
-async function btvlKhoaHangLoat(khoaMoi){
-  const dsBai = danhSachBaiTapHienTai();
+/* Khóa/mở HÀNG LOẠT các bài ĐÃ NỘP — dùng 1 lệnh .update() nhiều đường dẫn cùng lúc (giống
+   tính năng khóa hàng loạt vị trí học sinh), tránh phải bấm khóa từng dòng một khi cả lớp đã
+   nộp xong hết. Nếu truyền baiIdLoc (vd. "bai2") thì CHỈ khóa/mở đúng bài đó — dùng khi Thầy
+   đang xem 1 tab bài cụ thể ở bảng "Danh sách đã nộp"; để trống/'' thì áp dụng cho TẤT CẢ các
+   bài, như trước đây. */
+async function btvlKhoaHangLoat(khoaMoi, baiIdLoc){
+  const dsBai = danhSachBaiTapHienTai().filter(b=> !baiIdLoc || b.id === baiIdLoc);
   const capNhat = {};
   Object.keys(baiTapVatLy10TatCa).forEach(uid=>{
     const hs = baiTapVatLy10TatCa[uid];
@@ -8576,15 +8580,34 @@ async function btvlKhoaHangLoat(khoaMoi){
   try{
     await baiTapVatLy10Ref.update(capNhat);
     await napBaiTapVatLy10TatCa();
-    showMsg($('btvlKhoaMsg'), khoaMoi ? '✅ Đã khóa tất cả bài đã nộp.' : '✅ Đã mở khóa tất cả.', 'ok');
+    const tenBaiLoc = baiIdLoc ? (dsBai[0] && dsBai[0].ten) || baiIdLoc : '';
+    const moTa = tenBaiLoc ? `tất cả bài đã nộp của ${tenBaiLoc}` : 'tất cả bài đã nộp';
+    showMsg($('btvlKhoaMsg'), khoaMoi ? `✅ Đã khóa ${moTa}.` : `✅ Đã mở khóa ${moTa}.`, 'ok');
   }catch(e){ showMsg($('btvlKhoaMsg'), baoLoi(e), 'err'); }
 }
-$('btvlKhoaTatCaBtn') && ($('btvlKhoaTatCaBtn').onclick = ()=>{
-  if(confirm('Khóa TẤT CẢ các bài đã nộp của cả lớp? Học sinh sẽ không thể nộp lại bất kỳ bài nào cho đến khi được mở khóa.')) btvlKhoaHangLoat(true);
-});
-$('btvlMoKhoaTatCaBtn') && ($('btvlMoKhoaTatCaBtn').onclick = ()=>{
-  if(confirm('Mở khóa TẤT CẢ các bài đã nộp của cả lớp?')) btvlKhoaHangLoat(false);
-});
+// Nhãn + xác nhận của 2 nút khóa/mở hàng loạt tự đổi theo tab bài đang chọn ở bảng "Danh sách
+// đã nộp" (btvlDanhSachBaiLoc) — đang xem "Tất cả" thì khóa/mở CẢ LỚP như trước; đang xem 1
+// bài cụ thể thì chỉ khóa/mở đúng bài đang xem, tránh khóa nhầm các bài khác.
+function capNhatNutBtvlKhoaHangLoat(){
+  const nutKhoa = $('btvlKhoaTatCaBtn'), nutMo = $('btvlMoKhoaTatCaBtn');
+  if(!nutKhoa || !nutMo) return;
+  const dsBai = danhSachBaiTapHienTai();
+  const baiDangChon = btvlDanhSachBaiLoc ? dsBai.find(b=> b.id === btvlDanhSachBaiLoc) : null;
+  const tenBai = baiDangChon ? baiDangChon.ten : '';
+  nutKhoa.textContent = tenBai ? `🔒 Khóa tất cả ${tenBai} đã nộp` : '🔒 Khóa tất cả bài đã nộp';
+  nutMo.textContent = tenBai ? `🔓 Mở khóa tất cả ${tenBai}` : '🔓 Mở khóa tất cả';
+  nutKhoa.onclick = ()=>{
+    const loiXacNhan = tenBai
+      ? `Khóa TẤT CẢ bài "${tenBai}" đã nộp của cả lớp? Học sinh sẽ không thể nộp lại ${tenBai} cho đến khi được mở khóa (các bài khác không bị ảnh hưởng).`
+      : 'Khóa TẤT CẢ các bài đã nộp của cả lớp? Học sinh sẽ không thể nộp lại bất kỳ bài nào cho đến khi được mở khóa.';
+    if(confirm(loiXacNhan)) btvlKhoaHangLoat(true, btvlDanhSachBaiLoc);
+  };
+  nutMo.onclick = ()=>{
+    const loiXacNhan = tenBai ? `Mở khóa TẤT CẢ bài "${tenBai}" đã nộp của cả lớp?` : 'Mở khóa TẤT CẢ các bài đã nộp của cả lớp?';
+    if(confirm(loiXacNhan)) btvlKhoaHangLoat(false, btvlDanhSachBaiLoc);
+  };
+}
+capNhatNutBtvlKhoaHangLoat();
 
 // Cho phép giáo viên sửa lại họ tên khi học sinh gõ sai chính tả (không đối chiếu được với
 // danh sách lớp) — sửa xong sẽ tự lấy lại Ngày sinh/Giới tính/Dân tộc theo tên mới.
