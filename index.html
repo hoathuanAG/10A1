@@ -1271,6 +1271,7 @@
         <button class="btn btn-ghost btn-sm" id="btvlMoKhoaTatCaBtn">🔓 Mở khóa tất cả</button>
       </div>
       <div id="btvlKhoaMsg" class="msg"></div>
+      <div id="btvlDanhSachTabs" style="display:flex; flex-wrap:wrap; gap:6px; margin:10px 0;"></div>
       <div class="scroll-x"><table id="btvlDanhSachTable"></table></div>
     </div>
 
@@ -8474,6 +8475,7 @@ napBaiTapDanhSach();
    (thay vì 1 dòng/học sinh với 1 ô "Đính kèm" duy nhất như trước — cách cũ chỉ đọc được
    anhId/anhLink cấp ngoài nên chỉ hiện đúng bài nộp kiểu CŨ, còn Bài 2..10 kiểu mới không
    hiện ra được gì). Mỗi dòng có nút khóa/mở riêng cho đúng bài đó của đúng học sinh đó. */
+let btvlDanhSachBaiLoc = ''; // '' = "Tất cả các bài" | ngược lại là baiId (vd. "bai1") đang chọn ở menu tab
 function renderBtvlAdmin(){
   const card = $('btvlDanhSachCard');
   if(!card) return;
@@ -8492,11 +8494,14 @@ function renderBtvlAdmin(){
     });
   });
 
+  renderBtvlDanhSachTabs(dong, dsBai);
+  const dongLocTheoTab = btvlDanhSachBaiLoc ? dong.filter(d=> d.baiId === btvlDanhSachBaiLoc) : dong;
+
   let h = `<tr><th>STT</th><th>Họ và tên</th><th>Bài</th><th>Đính kèm</th><th>Xem lại</th><th>Trạng thái</th><th>Khóa/Mở</th><th></th></tr>`;
-  if(!dong.length){
-    h += `<tr><td colspan="8" style="text-align:center;color:var(--ink-soft);">Chưa có học sinh nào nộp bài.</td></tr>`;
+  if(!dongLocTheoTab.length){
+    h += `<tr><td colspan="8" style="text-align:center;color:var(--ink-soft);">${dong.length ? 'Chưa có bài nộp nào cho bài này.' : 'Chưa có học sinh nào nộp bài.'}</td></tr>`;
   } else {
-    dong.forEach((d,i)=>{
+    dongLocTheoTab.forEach((d,i)=>{
       const khoa = !!d.dl.khoa;
       h += `<tr>
         <td>${i+1}</td>
@@ -8515,6 +8520,33 @@ function renderBtvlAdmin(){
   $('btvlDanhSachTable').querySelectorAll('[data-btvl-khoabai]').forEach(btn=> btn.onclick = async ()=>{
     const [uid, baiId] = btn.getAttribute('data-btvl-khoabai').split('|');
     await btvlDatKhoaMotBai(uid, baiId, !btn.textContent.includes('Mở khóa'));
+  });
+}
+
+// Menu "Tất cả | Bài 1 | Bài 2 | ..." cho bảng "Danh sách đã nộp" — bấm bài nào thì bảng CHỈ
+// hiện đúng bài đó, tránh liệt kê chung TẤT CẢ các bài của TẤT CẢ học sinh (rất dài, chiếm
+// nhiều chỗ khi lớp đông và đã nộp nhiều bài).
+function renderBtvlDanhSachTabs(dong, dsBai){
+  const wrap = $('btvlDanhSachTabs');
+  if(!wrap) return;
+  // Nếu bài đang lọc không còn tồn tại nữa (vd. đã xóa ở mục Quản lý danh sách bài tập) thì
+  // tự về lại "Tất cả" để tránh bảng bị trống oan.
+  if(btvlDanhSachBaiLoc && !dsBai.some(b=> b.id === btvlDanhSachBaiLoc)) btvlDanhSachBaiLoc = '';
+
+  const demTheoBai = {};
+  dong.forEach(d=>{ demTheoBai[d.baiId] = (demTheoBai[d.baiId]||0) + 1; });
+
+  const nutHtml = (id, ten, soLuong)=>{
+    const dangChon = btvlDanhSachBaiLoc === id;
+    const lop = dangChon ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+    return `<button type="button" class="${lop}" data-btvl-bai-id="${esc(id)}">${esc(ten)}${soLuong ? ` (${soLuong})` : ''}</button>`;
+  };
+  wrap.innerHTML = nutHtml('', 'Tất cả', dong.length) + dsBai.map(b=> nutHtml(b.id, b.ten, demTheoBai[b.id]||0)).join('');
+  wrap.querySelectorAll('button[data-btvl-bai-id]').forEach(btn=>{
+    btn.onclick = ()=>{
+      btvlDanhSachBaiLoc = btn.getAttribute('data-btvl-bai-id');
+      renderBtvlAdmin();
+    };
   });
 }
 
