@@ -1926,6 +1926,55 @@
     </script>
   </div>
 
+  <!-- ============ CÔNG CỤ: TRÒ CHƠI "ĐẬP MUỖI" (GỌI TÊN HỌC SINH NGẪU NHIÊN) ============ -->
+  <div class="panel" id="panel-dapmuoi" data-group="games">
+    <div class="card">
+      <h2>🦟 Đập muỗi</h2>
+      <p class="section-note">Mỗi "con muỗi" bay trên màn hình mang tên 1 học sinh — đập trúng con nào thì gọi tên bạn đó. Danh sách học sinh tự lấy theo đúng danh sách lớp 10A1 (mục Sơ đồ lớp/Danh sách học sinh) và tự cập nhật ngay khi danh sách lớp thay đổi, không cần dán tay. Thầy vẫn có thể bấm nút quản lý trong game để tự dán 1 danh sách khác (ví dụ chỉ chọn 1 tổ) khi cần.</p>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <button type="button" id="dmFullscreenBtn" class="btn" onclick="dmBatToanManHinh()">⛶ Toàn màn hình</button>
+      </div>
+      <div class="scroll-x" id="dmWrap" style="background:#0f172a;">
+        <iframe id="dmIframe" src="dap-muoi/index.html" title="Đập muỗi"
+          style="width:100%; min-height:80vh; border:1px solid var(--line, #ddd); border-radius:10px;"
+          loading="lazy"></iframe>
+      </div>
+    </div>
+    <script>
+      function dmBatToanManHinh(){
+        var el = document.getElementById('dmWrap');
+        if(!el) return;
+        var dangFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+        if(!dangFullscreen){
+          var yeuCau = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+          if(yeuCau) yeuCau.call(el);
+        } else {
+          var thoat = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+          if(thoat) thoat.call(document);
+        }
+      }
+      (function(){
+        function capNhatKichThuoc(){
+          var el = document.getElementById('dmWrap');
+          var frame = document.getElementById('dmIframe');
+          if(!el || !frame) return;
+          var dangFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+          if(dangFullscreen === el){
+            frame.style.height = '100vh';
+            frame.style.minHeight = '100vh';
+            frame.style.borderRadius = '0';
+          } else {
+            frame.style.height = '';
+            frame.style.minHeight = '80vh';
+            frame.style.borderRadius = '10px';
+          }
+        }
+        document.addEventListener('fullscreenchange', capNhatKichThuoc);
+        document.addEventListener('webkitfullscreenchange', capNhatKichThuoc);
+      })();
+    </script>
+  </div>
+
   <!-- ============ KHU VỰC GIÁO VIÊN ============ -->
   <details class="admin" id="adminDetails">
     <summary>🔒 Khu vực giáo viên / quản trị</summary>
@@ -2685,13 +2734,14 @@ const SUBTAB_DINH_NGHIA = {
   dodoon:    {icon:'🔊', ten:'Đo độ ồn'},
   ndkm:      {icon:'📷', ten:'Camera nhận diện học sinh'},
   duongdenngoivua: {icon:'👑', ten:'Đường đến ngôi vua'},
+  dapmuoi:   {icon:'🦟', ten:'Đập muỗi'},
 };
 const NHOM_TAB = {
   thongtin: ['sodo', 'danhsachhs', 'vitri', 'thanhvien', 'hoso', 'bancansu', 'caulacbo', 'khoanthu'],
   hoatdong: ['laodong', 'phongtrao', 'khaigiang', 'hotro'],
   hoatdongto: ['tongketTuan'],
   nhiemvu:  ['baitapvatly10'],
-  games:    ['quayten', 'dodoon', 'ndkm', 'duongdenngoivua'],
+  games:    ['quayten', 'dodoon', 'ndkm', 'duongdenngoivua', 'dapmuoi'],
 };
 /* Map link cũ (trước khi gộp nhóm) -> đúng nhóm mới, để link/bookmark cũ vẫn mở đúng chỗ */
 const TAB_CU_SANG_NHOM = {};
