@@ -55,7 +55,7 @@
             try {
                 firebase.auth().onAuthStateChanged(function () { hoanTat(); }, function () { hoanTat(); });
             } catch (e) { hoanTat(); return; }
-            setTimeout(hoanTat, 2500);
+            setTimeout(hoanTat, 4000);
         }
 
         var goc = {
@@ -82,6 +82,51 @@
         }
         function __dmAnLoiDongBo() { try { if (__dmBaoLoi) __dmBaoLoi.style.display = 'none'; } catch (e) {} }
 
+        /* ----------------------------------------------------------------
+           Ô ĐĂNG NHẬP ADMIN NGAY TRONG GAME: khi phát hiện trình duyệt này
+           chưa đăng nhập đúng tài khoản admin, hiện hẳn 1 ô nhập email/mật
+           khẩu NGAY TRONG banner đỏ để Thầy đăng nhập tại chỗ, khỏi phải
+           rời khỏi game quay lại trang chính.
+           ---------------------------------------------------------------- */
+        var __dmLoginBox = null;
+        function __dmHienThiCanhBaoDangNhap() {
+            try {
+                if (!document.body) { setTimeout(__dmHienThiCanhBaoDangNhap, 300); return; }
+                if (__dmLoginBox) { __dmLoginBox.style.display = 'block'; return; }
+                __dmLoginBox = document.createElement('div');
+                __dmLoginBox.id = '__dmLoginBox';
+                __dmLoginBox.style.cssText = 'position:fixed; top:0; left:0; right:0; z-index:999999; background:#dc3545; color:#fff; font-family:Tahoma,Arial,sans-serif; font-size:13px; line-height:1.5; padding:10px 14px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.35);';
+                __dmLoginBox.innerHTML =
+                    '<div style="margin-bottom:7px;">⚠️ Bạn đang KHÔNG đăng nhập bằng tài khoản admin trong trình duyệt này — danh sách lớp/nhóm tự thêm sẽ chỉ lưu tạm trên máy này và MẤT khi tải lại trang hoặc mở ở máy khác. Đăng nhập ngay tại đây để lưu được lâu dài:</div>' +
+                    '<div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap; align-items:center;">' +
+                        '<input id="__dmLoginEmail" type="email" placeholder="Email giáo viên" autocomplete="username" style="padding:7px 9px; border-radius:6px; border:none; min-width:190px; font-size:13px;">' +
+                        '<input id="__dmLoginPass" type="password" placeholder="Mật khẩu" autocomplete="current-password" style="padding:7px 9px; border-radius:6px; border:none; min-width:150px; font-size:13px;">' +
+                        '<button id="__dmLoginBtn" style="padding:7px 16px; border-radius:6px; border:none; background:#fff; color:#dc3545; font-weight:bold; cursor:pointer; font-size:13px;">Đăng nhập</button>' +
+                        '<span id="__dmLoginMsg" style="align-self:center; font-weight:bold;"></span>' +
+                    '</div>';
+                document.body.appendChild(__dmLoginBox);
+                function __dmThucHienDangNhap() {
+                    var emailEl = document.getElementById('__dmLoginEmail');
+                    var passEl = document.getElementById('__dmLoginPass');
+                    var msgEl = document.getElementById('__dmLoginMsg');
+                    var email = emailEl ? emailEl.value.trim() : '';
+                    var pass = passEl ? passEl.value : '';
+                    if (!email || !pass) { if (msgEl) msgEl.textContent = 'Nhập đủ email & mật khẩu.'; return; }
+                    if (msgEl) msgEl.textContent = 'Đang đăng nhập...';
+                    firebase.auth().signInWithEmailAndPassword(email, pass).then(function () {
+                        // Đăng nhập xong: tải lại trang để game nạp lại đúng dữ liệu mới nhất
+                        // từ Firebase bằng phiên admin vừa đăng nhập.
+                        location.reload();
+                    }).catch(function () {
+                        if (msgEl) msgEl.textContent = 'Sai email hoặc mật khẩu.';
+                    });
+                }
+                document.getElementById('__dmLoginBtn').onclick = __dmThucHienDangNhap;
+                document.getElementById('__dmLoginPass').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') __dmThucHienDangNhap(); });
+            } catch (e) {}
+        }
+        function __dmAnCanhBaoDangNhap() { try { if (__dmLoginBox) __dmLoginBox.style.display = 'none'; } catch (e) {} }
+
         var dongBoTamNgung = false;
         var henGio = null;
         function dayLenFirebaseDapMuoi() {
@@ -99,16 +144,19 @@
                     }
                     dmSyncRef.set(goi).then(function () {
                         __dmAnLoiDongBo();
+                        __dmAnCanhBaoDangNhap();
                         if (coKhoaQuaLon) {
                             __dmHienThiLoiDongBo('⚠️ Một phần dữ liệu (quá lớn) CHƯA đồng bộ lên máy chủ, chỉ lưu tạm trên máy này. Báo thầy/admin kiểm tra.');
                         }
                     }).catch(function (err) {
                         try { console.error('[dap-muoi] Lỗi đồng bộ Firebase:', err); } catch (e) {}
                         var ma = err && err.code ? String(err.code) : '';
-                        var lyDo = (ma.indexOf('PERMISSION_DENIED') !== -1 || ma.indexOf('permission') !== -1)
-                            ? 'Bạn chưa đăng nhập đúng tài khoản ADMIN (hoặc phiên đăng nhập đã hết hạn) nên danh sách lớp/nhóm KHÔNG được lưu lại lâu dài. Hãy mở lại trang chính của lớp, đăng nhập bằng tài khoản giáo viên, rồi quay lại game này.'
-                            : ('Lỗi: ' + (err && err.message ? err.message : String(err)));
-                        __dmHienThiLoiDongBo('❌ KHÔNG lưu được lên máy chủ! ' + lyDo);
+                        var laDoQuyen = (ma.indexOf('PERMISSION_DENIED') !== -1 || ma.indexOf('permission') !== -1);
+                        if (laDoQuyen) {
+                            __dmHienThiCanhBaoDangNhap();
+                        } else {
+                            __dmHienThiLoiDongBo('❌ KHÔNG lưu được lên máy chủ! Lỗi: ' + (err && err.message ? err.message : String(err)));
+                        }
                     });
                 } catch (e) {
                     try { console.error('[dap-muoi] Lỗi dayLenFirebaseDapMuoi:', e); } catch (e2) {}
@@ -120,12 +168,12 @@
         window.__dapMuoiSyncReady = new Promise(function (resolve) {
             var xongRoi = false;
             function hoanTat() { if (xongRoi) return; xongRoi = true; resolve(); }
-            setTimeout(hoanTat, 3000);
+            setTimeout(hoanTat, 7000);
             __dmChoAuth(function () {
                 try {
                     var nguoiDung = firebase.auth().currentUser;
                     if (!nguoiDung || nguoiDung.uid !== ADMIN_UID_DAPMUOI) {
-                        __dmHienThiLoiDongBo('⚠️ Bạn đang KHÔNG đăng nhập bằng tài khoản admin trong trình duyệt này — danh sách lớp/nhóm tự thêm sẽ chỉ lưu tạm trên máy này và MẤT khi tải lại trang hoặc mở ở máy khác. Hãy mở trang chính của lớp và đăng nhập bằng tài khoản giáo viên trước, rồi quay lại game.');
+                        __dmHienThiCanhBaoDangNhap();
                     }
                 } catch (e) {}
                 dmSyncRef.once('value').then(function (snap) {
