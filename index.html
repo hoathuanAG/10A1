@@ -4674,6 +4674,7 @@ async function loadRoster(){
       roster = !v ? [] : (Array.isArray(v)? v.filter(Boolean) : Object.values(v));
       renderDanhSachHS();
       renderVitriBang();
+      if(typeof saasCapNhatKpiVaBreadcrumb === 'function') saasCapNhatKpiVaBreadcrumb(); // cập nhật ngay sĩ số/dân tộc/hoàn cảnh trên thẻ KPI, không cần chuyển tab
       if(laLanDau){ laLanDau = false; resolve(); }
       else { if(isAdmin){ renderAdmin(); renderCapTkChonHS(); } renderDanhSachKhoanThu(); renderQuyLop(); } // các lần sau (có người vừa thêm/sửa danh sách lớp) tự vẽ lại ngay
     });
@@ -10523,10 +10524,11 @@ async function suaBtvlHoTen(uid){
 }
 
 async function napBaiTapVatLy10TatCa(){
-  if(!isAdmin){ baiTapVatLy10TatCa = {}; return; }
+  if(!isAdmin){ baiTapVatLy10TatCa = {}; if(typeof saasCapNhatKpiVaBreadcrumb === 'function') saasCapNhatKpiVaBreadcrumb(); return; }
   try{ baiTapVatLy10TatCa = (await baiTapVatLy10Ref.once('value')).val() || {}; }
   catch(e){ baiTapVatLy10TatCa = {}; }
   renderBtvlAdmin();
+  if(typeof saasCapNhatKpiVaBreadcrumb === 'function') saasCapNhatKpiVaBreadcrumb(); // cập nhật ngay tỉ lệ hoàn thành bài tập trên thẻ KPI, không cần chuyển tab
 }
 if($('btvlLamMoiBtn')) $('btvlLamMoiBtn').onclick = async ()=>{
   const btn = $('btvlLamMoiBtn');
@@ -10942,6 +10944,7 @@ async function napChamAiDaDuyet(){
   catch(e){ chamAiDaDuyet = {}; }
   renderChamAiDaDuyet();
   renderChamAiKetQuaCuaToi();
+  if(typeof saasCapNhatKpiVaBreadcrumb === 'function') saasCapNhatKpiVaBreadcrumb(); // cập nhật ngay tỉ lệ hoàn thành bài tập trên thẻ KPI, không cần chuyển tab
 }
 let chamAiDaDuyetDsHienThi = []; // cache TOÀN BỘ danh sách (chưa lọc theo bài) đã tính sẵn tenBaiHienThi, dùng chung cho bảng + form xuất Excel
 let chamAiDaDuyetBaiLoc = '';    // '' = "Tất cả các bài" | ngược lại là baiId (vd. "bai1") đang được chọn ở menu tab bên dưới
