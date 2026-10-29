@@ -139,7 +139,9 @@
                     for (var i = 0; i < localStorage.length; i++) {
                         var k = localStorage.key(i);
                         var v = localStorage.getItem(k);
-                        if (typeof v === 'string' && v.length > 480000) { coKhoaQuaLon = true; continue; }
+                        // Gioi han Rules (tu dat, da nang tu 500.000 -> 4.000.000 ky tu/khoa,
+                        // thang 10/2026); nguong client nay (3.900.000) phai nho hon Rules.
+                        if (typeof v === 'string' && v.length > 3900000) { coKhoaQuaLon = true; continue; }
                         goi[k] = v;
                     }
                     dmSyncRef.set(goi).then(function () {
