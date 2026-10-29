@@ -3715,7 +3715,9 @@
             <input type="text" id="htGvDienThoai" placeholder="0912345678" maxlength="15">
           </div>
           <button type="button" class="btn btn-primary btn-sm" id="htGvThemBtn">Thêm vào danh sách</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="htGvHuyBtn" style="display:none;">Hủy sửa</button>
           <div id="htGvMsg" class="msg"></div>
+          <div id="htGvDanhSach" style="margin-top:10px;"></div>
         </div>
       </details>
       <div class="scroll-x"><table id="htAdminTable"></table></div>
@@ -10263,9 +10265,62 @@ async function napHoTroTatCa(){
 }
 
 /* Giáo viên tự nhập trực tiếp 1 bản ghi "nhận hỗ trợ" cho một em (không cần em tự đăng ký) — dùng
-   khóa giả "gv_..." (không trùng uid Firebase Auth thật nào) để bản ghi nằm độc lập, không ghi đè
-   lên đăng ký tự thân (nếu có sau này) của chính em đó. Hiện ngay vào bảng vì gọi lại napHoTroTatCa()
-   + renderAdmin() sau khi ghi thành công. */
+   push() của Firebase (khóa duy nhất tuyệt đối, tăng dần theo thời gian — cùng kiểu đang dùng cho
+   giaiThuongRef/phongtraoRef) để CHẮC CHẮN không bao giờ trùng khóa giữa các lần thêm — mỗi lần bấm
+   "Thêm vào danh sách" luôn tạo MỘT bản ghi mới, giữ nguyên toàn bộ các em đã thêm trước đó.
+   Mỗi bản ghi được gắn cờ nguon:'giaovien' để phân biệt với bản ghi học sinh tự đăng ký (htForm),
+   và được hiển thị ngay thành danh sách riêng (renderHtGvDanhSach) ngay trong khung này — có nút
+   Sửa (nạp lại dữ liệu vào form để chỉnh, lưu bằng update()) và Xóa cho từng em. */
+let htGvDangSuaUid = null;
+function htGvHuySua(){
+  htGvDangSuaUid = null;
+  $('htGvName').value=''; $('htGvLoai').value=''; $('htGvHoanCanh').value='';
+  $('htGvMoTa').value=''; $('htGvDienThoai').value='';
+  if($('htGvThemBtn')) $('htGvThemBtn').textContent = 'Thêm vào danh sách';
+  if($('htGvHuyBtn')) $('htGvHuyBtn').style.display = 'none';
+}
+function renderHtGvDanhSach(){
+  const host = $('htGvDanhSach');
+  if(!host) return;
+  const ds = htTatCa.filter(r=> r && r.nguon === 'giaovien');
+  if(!ds.length){
+    host.innerHTML = '<p class="section-note" style="margin:6px 0 0;">Chưa có em nào được giáo viên tự nhập ở đây.</p>';
+    return;
+  }
+  host.innerHTML = `<div class="section-note" style="margin:6px 0 4px;font-weight:700;">Đã nhập (${ds.length} em):</div>` +
+    ds.map(r=> `<div class="ph-stat-list-row" style="align-items:center;gap:8px;">
+      <span style="flex:1;">${esc(r.name)} — <span style="color:var(--ink-soft);">${esc(r.loai)}</span></span>
+      <button type="button" class="btn btn-ghost btn-sm" data-htGvSua="${r.uid}">✏️ Sửa</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-htGvXoa="${r.uid}">🗑️ Xóa</button>
+    </div>`).join('');
+  host.querySelectorAll('[data-htGvSua]').forEach(b=> b.onclick = ()=>{
+    const uid = b.getAttribute('data-htGvSua');
+    const r = htTatCa.find(x=> x.uid===uid);
+    if(!r) return;
+    htGvDangSuaUid = uid;
+    $('htGvName').value = r.name || '';
+    $('htGvLoai').value = r.loai || '';
+    $('htGvHoanCanh').value = r.hoanCanh || '';
+    $('htGvMoTa').value = r.moTa || '';
+    $('htGvDienThoai').value = r.dienThoai || '';
+    if($('htGvThemBtn')) $('htGvThemBtn').textContent = 'Lưu thay đổi';
+    if($('htGvHuyBtn')) $('htGvHuyBtn').style.display = '';
+    showMsg($('htGvMsg'), `Đang sửa thông tin của "${r.name}" — bấm "Lưu thay đổi" để cập nhật, hoặc "Hủy sửa" để bỏ qua.`, 'info');
+  });
+  host.querySelectorAll('[data-htGvXoa]').forEach(b=> b.onclick = async ()=>{
+    const uid = b.getAttribute('data-htGvXoa');
+    const r = htTatCa.find(x=> x.uid===uid);
+    if(!r) return;
+    if(!confirm(`Xóa thông tin hỗ trợ của "${r.name}"?`)) return;
+    try{
+      await htRef.child(uid).remove();
+      await htCongKhaiRef.child(uid).remove();
+      if(htGvDangSuaUid === uid) htGvHuySua();
+      await napHoTroTatCa(); renderAdmin();
+    }catch(e){ showMsg($('htGvMsg'), baoLoi(e), 'err'); }
+  });
+}
+if($('htGvHuyBtn')) $('htGvHuyBtn').onclick = ()=>{ htGvHuySua(); showMsg($('htGvMsg'), '', ''); };
 if($('htGvThemBtn')) $('htGvThemBtn').onclick = async ()=>{
   const name = $('htGvName').value.trim();
   const loai = $('htGvLoai').value;
@@ -10276,18 +10331,21 @@ if($('htGvThemBtn')) $('htGvThemBtn').onclick = async ()=>{
   if(!loai){ showMsg($('htGvMsg'),'Vui lòng chọn loại hỗ trợ.','err'); return; }
   if(!hc){ showMsg($('htGvMsg'),'Vui lòng chọn hoàn cảnh gia đình.','err'); return; }
   if(dt && !/^0\d{9}$/.test(dt)){ showMsg($('htGvMsg'),'Số điện thoại phải có 10 chữ số, bắt đầu bằng 0.','err'); return; }
-  // Dùng push() của Firebase (khóa duy nhất tuyệt đối, tăng dần theo thời gian — cùng kiểu đang dùng
-  // cho giaiThuongRef/phongtraoRef) thay vì tự ghép khóa thủ công, để CHẮC CHẮN không bao giờ trùng
-  // khóa giữa các lần thêm — mỗi lần bấm "Thêm vào danh sách" luôn tạo MỘT bản ghi mới, giữ nguyên
-  // toàn bộ các em đã thêm trước đó.
   try{
-    const refMoi = htRef.push();
-    const key = refMoi.key;
-    await refMoi.set({ name, loai, hoanCanh: hc, moTa, dienThoai: dt, uid: key,
-                       time: new Date().toLocaleString('vi-VN') });
-    $('htGvName').value=''; $('htGvLoai').value=''; $('htGvHoanCanh').value='';
-    $('htGvMoTa').value=''; $('htGvDienThoai').value='';
-    showMsg($('htGvMsg'), `Đã thêm "${name}" vào danh sách.`, 'ok');
+    if(htGvDangSuaUid){
+      // Đang sửa một em đã có — update() giữ nguyên các em khác, không tạo bản ghi mới.
+      await htRef.child(htGvDangSuaUid).update({ name, loai, hoanCanh: hc, moTa, dienThoai: dt });
+      showMsg($('htGvMsg'), `Đã lưu thay đổi cho "${name}".`, 'ok');
+      htGvHuySua();
+    } else {
+      const refMoi = htRef.push();
+      const key = refMoi.key;
+      await refMoi.set({ name, loai, hoanCanh: hc, moTa, dienThoai: dt, uid: key, nguon: 'giaovien',
+                         time: new Date().toLocaleString('vi-VN') });
+      $('htGvName').value=''; $('htGvLoai').value=''; $('htGvHoanCanh').value='';
+      $('htGvMoTa').value=''; $('htGvDienThoai').value='';
+      showMsg($('htGvMsg'), `Đã thêm "${name}" vào danh sách — hiện ${htTatCa.filter(r=>r.nguon==='giaovien').length + 1} em đã nhập ở đây.`, 'ok');
+    }
     await napHoTroTatCa(); renderAdmin();
   }catch(e){ showMsg($('htGvMsg'), baoLoi(e), 'err'); }
 };
@@ -10594,6 +10652,7 @@ function renderAdmin(){
       await napHoTroTatCa(); renderAdmin();
     }catch(e){ showMsg($('adminMsg'), baoLoi(e),'err'); }
   });
+  renderHtGvDanhSach();
 
   renderAdminHoSo();
   renderConfessionChoDuyet();
