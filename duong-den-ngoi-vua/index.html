@@ -66,7 +66,8 @@
      TRUOC: ddnvRef.set(goi).catch(function(){}) NUOT MAT MOI LOI -> neu
      phien dang nhap khong phai admin (quy tac Firebase chi cho UID admin
      ghi "duongDenNgoiVua2026/luuTru"), hoac 1 key localStorage qua dai
-     (quy tac gioi han 500.000 ky tu/khoa), thi diem CONG/TRU se CAP NHAT
+     (quy tac Rules TU DAT, gioi han 4.000.000 ky tu/khoa - xem ghi chu o
+     bien __ddnvGioiHanKyTuMoiKhoa ben duoi), thi diem CONG/TRU se CAP NHAT
      o man hinh (localStorage van ghi binh thuong) nhung KHONG len duoc
      Firebase -> F5 lai hoac mo may khac se bi keo ve du lieu CU, nhin
      giong nhu "nhap diem khong luu lai". Sua: luon bao loi ro ra man
@@ -187,9 +188,12 @@
       for(var i=0;i<localStorage.length;i++){
         var k = localStorage.key(i);
         var v = localStorage.getItem(k);
-        // Quy tac Firebase gioi han moi khoa <= 500.000 ky tu; bo qua
-        // (khong day len) khoa vuot nguong de khong lam loi CA GOI ghi.
-        if(typeof v === 'string' && v.length > 480000){
+        // Quy tac Rules (TU DAT, khong phai tran cung cua Firebase - tran
+        // thuc cua Firebase la 10MB/chuoi) gioi han moi khoa <= 4.000.000
+        // ky tu (nang tu 500.000 - thang 10/2026); bo qua (khong day len)
+        // khoa vuot nguong de khong lam loi CA GOI ghi. Nguong client nay
+        // (3.900.000) phai LUON nho hon dung voi gia tri trong Rules.
+        if(typeof v === 'string' && v.length > 3900000){
           coKhoaQuaLon = true;
           continue;
         }
