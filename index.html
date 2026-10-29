@@ -2381,21 +2381,40 @@
 
         <button type="submit" class="btn btn-primary">Gửi đăng ký</button>
         <div id="formMsg" class="msg"></div>
+        <div id="ldKhoaBao" class="msg err" style="display:none;">🔒 Đợt đăng ký này đã được giáo viên khóa — không thể gửi đăng ký mới nữa.</div>
       </form>
     </div>
 
-    <div class="card">
-      <h2>Danh sách đã đăng ký <span class="count-badge" id="countBadge">0</span></h2>
-      <p class="section-note">Dòng có dấu ✋ là đăng ký của em — bấm nút Sửa để thay đổi.</p>
-      <div class="scroll-x">
-        <table>
-          <thead>
-            <tr><th>#</th><th>Họ tên</th><th>Khu vực</th><th>Dụng cụ mang theo</th><th>Thời gian</th><th>Thao tác</th></tr>
-          </thead>
-          <tbody id="regBody"></tbody>
-        </table>
+    <div class="card" id="ldAdminBox" style="display:none;">
+      <h2>⚙️ Quản lý đợt đăng ký (chỉ giáo viên)</h2>
+      <p class="section-note">Đang ở <b id="ldDotHienTaiNhan">Đợt 1</b> — <span id="ldDotTrangThai"></span></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-ghost btn-sm" id="ldAnHienBtn">👁️ Ẩn danh sách</button>
+        <button type="button" class="btn btn-clay btn-sm" id="ldKhoaDotBtn">🔒 Khóa đợt này</button>
+        <button type="button" class="btn btn-primary btn-sm" id="ldMoDotMoiBtn">🔓 Mở đợt mới</button>
       </div>
-      <div id="emptyState" class="empty" style="display:none;">Chưa có học sinh nào đăng ký. Hãy là người đầu tiên! 🌱</div>
+      <p class="section-note" style="margin-top:8px;">
+        "Khóa đợt" chỉ chặn học sinh gửi đăng ký mới/sửa/xóa — dữ liệu các đợt cũ vẫn được giữ nguyên,
+        không bị xóa. "Mở đợt mới" bắt đầu danh sách trống để đăng ký đợt lao động tiếp theo.
+      </p>
+      <div id="ldAdminMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Danh sách đã đăng ký <span class="count-badge" id="countBadge">0</span> <span id="ldDotBadge" style="font-weight:600;font-size:12px;color:var(--ink-soft);"></span></h2>
+      <p class="section-note">Dòng có dấu ✋ là đăng ký của em — bấm nút Sửa để thay đổi.</p>
+      <div id="ldDanhSachAn" class="empty" style="display:none;">🙈 Giáo viên đang tạm ẩn danh sách này — em vẫn đăng ký bình thường ở trên, chỉ không xem được danh sách của các bạn.</div>
+      <div id="ldDanhSachHienThi">
+        <div class="scroll-x">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Họ tên</th><th>Khu vực</th><th>Dụng cụ mang theo</th><th>Thời gian</th><th>Thao tác</th></tr>
+            </thead>
+            <tbody id="regBody"></tbody>
+          </table>
+        </div>
+        <div id="emptyState" class="empty" style="display:none;">Chưa có học sinh nào đăng ký. Hãy là người đầu tiên! 🌱</div>
+      </div>
     </div>
   </div>
 
@@ -3587,6 +3606,19 @@
         <button class="btn btn-ghost btn-sm" id="adminSignOutBtn">Đăng xuất</button>
       </div>
 
+      <div class="section-title">🔤 Sửa tên học sinh (áp dụng cho mọi mục có tên em)</div>
+      <p class="section-note" style="margin:0 0 6px;">
+        Dùng khi tên 1 em bị gõ sai/thiếu hoa ở đâu đó — hệ thống sẽ <b>dò tìm trước</b> và hiện danh sách
+        cho Thầy xem, chỉ sửa những dòng Thầy chọn khi bấm "Áp dụng" (không tự động sửa ngay khi dò).
+      </p>
+      <div class="tt-diem-them" style="flex-wrap:wrap;">
+        <input type="text" id="stTenCu" placeholder="Tên hiện có (gõ gần đúng cũng được)" maxlength="60" style="flex:1;min-width:160px;">
+        <input type="text" id="stTenMoi" placeholder="Tên đúng muốn đổi thành" maxlength="60" style="flex:1;min-width:160px;">
+        <button type="button" class="btn btn-primary btn-sm" id="stDoTimBtn">🔍 Dò tìm</button>
+      </div>
+      <div id="stMsg" class="msg"></div>
+      <div id="stKetQua"></div>
+
       <div class="section-title">Yêu cầu đổi chỗ đang chờ duyệt</div>
       <div class="scroll-x"><table id="swapApproveTable"></table></div>
 
@@ -3918,6 +3950,7 @@ const swapsRef  = db.ref('lop10a1/swaps');
 const banXoaRef = db.ref('lop10a1/banXoa'); // các bàn giáo viên đã xoá khỏi sơ đồ — công khai đọc, chỉ giáo viên ghi
 const rosterRef = db.ref('lop10a1/roster');
 const regsRef   = db.ref('laodong2026/registrations');
+const ldCaiDatRef = db.ref('laodong2026/caiDat'); // ẩn/hiện danh sách + khóa theo đợt đăng ký — công khai đọc, chỉ giáo viên (admin) ghi
 const tvRef     = db.ref('khaigiang2026/tivi');
 const htRef     = db.ref('hotro2026/dangky');      // riêng tư: khóa theo uid, chỉ chủ nhân và giáo viên đọc
 /* Góc Phụ Huynh: mật khẩu chung + thông tin liên hệ công khai (trong trangChu2026, ai cũng đọc được),
@@ -4077,6 +4110,7 @@ const ANH_CHAT_LON = 0.75;
 const BAI_TOI_DA   = 25;     // số bài hiển thị trên bảng tin, giữ trang nhẹ cho điện thoại
 
 let seats={}, swaps=[], roster=[], regs=[], tv={};
+let ldCaiDat = { anDanhSach:false, dotHienTai:1, dotKhoa:{} }; // Đăng ký lao động: ẩn/hiện danh sách + khóa theo đợt
 let banXoa = {};       // các bàn đã xoá khỏi sơ đồ (key dạng "d1-b3") — dữ liệu ĐÃ LƯU trên Firebase
 let seatsNhap = null;  // bản NHÁP cục bộ khi giáo viên đang kéo-thả/xóa bàn (null = chưa có gì chưa lưu)
 let banXoaNhap = null; // bản nháp tương ứng cho danh sách bàn đã xóa
@@ -4636,7 +4670,7 @@ function seatLabel(id){
   return `Dãy ${d.slice(1)} — Bàn ${b.slice(1)} — ghế ${s==='T'?'trái':'phải'}`;
 }
 function mySeatId(){ for(const id in seats){ if(seats[id] && seats[id].uid===myUid) return id; } return null; }
-function myRegId(){ const r = regs.find(x=> x.uid===myUid); return r? r.id : null; }
+function myRegId(){ const r = regs.find(x=> x.uid===myUid && (x.dot||1)===ldCaiDat.dotHienTai); return r? r.id : null; }
 
 /* -------------------- THẺ CHUYỂN TRANG (có nhóm/thẻ con) -------------------- */
 /* Định nghĩa CỐ ĐỊNH: icon/tên/thành viên mỗi nhóm không đổi — chỉ THỨ TỰ hiển thị là
@@ -5700,10 +5734,11 @@ $('regForm').onsubmit = async e=>{
   if(!areaEl){ showMsg($('formMsg'),'Vui lòng chọn khu vực lao động.','err'); return; }
   const tools = chon.concat(other ? [other] : []);
   if(!tools.length){ showMsg($('formMsg'),'Chọn ít nhất một dụng cụ, hoặc ghi vào ô "Dụng cụ khác".','err'); return; }
+  if(!isAdmin && ldCaiDat.dotKhoa[ldCaiDat.dotHienTai]){ showMsg($('formMsg'),'Đợt đăng ký này đã được giáo viên khóa, không thể gửi đăng ký mới.','err'); return; }
   if(myRegId()){ showMsg($('formMsg'),'Em đã đăng ký rồi. Bấm nút Sửa ở dòng của em trong bảng bên dưới.','err'); return; }
 
   try{
-    await regsRef.push({ name, area: areaEl.value, tools, uid: myUid,
+    await regsRef.push({ name, area: areaEl.value, tools, uid: myUid, dot: ldCaiDat.dotHienTai,
                          time: new Date().toLocaleString('vi-VN') });
     $('regForm').reset();
     showMsg($('formMsg'),'Đã gửi đăng ký. Cảm ơn em! 🌱','ok');
@@ -5711,14 +5746,28 @@ $('regForm').onsubmit = async e=>{
 };
 
 function renderRegs(){
+  const dotDangKhoa = !!ldCaiDat.dotKhoa[ldCaiDat.dotHienTai];
+  const dsDotNay = regs.filter(r=> (r.dot||1) === ldCaiDat.dotHienTai);
+
+  // Ẩn/hiện danh sách theo cài đặt giáo viên — admin luôn thấy thật để quản lý.
+  const anVoiHocSinh = ldCaiDat.anDanhSach && !isAdmin;
+  $('ldDanhSachAn').style.display = anVoiHocSinh ? 'block' : 'none';
+  $('ldDanhSachHienThi').style.display = anVoiHocSinh ? 'none' : 'block';
+  $('ldDotBadge').textContent = `— Đợt ${ldCaiDat.dotHienTai}${dotDangKhoa?' (đã khóa)':''}`;
+
+  // Khóa form đăng ký cho học sinh khi đợt hiện tại đã khóa.
+  $('ldKhoaBao').style.display = (!isAdmin && dotDangKhoa) ? 'block' : 'none';
+  const submitBtn = document.querySelector('#regForm button[type="submit"]');
+  if(submitBtn) submitBtn.disabled = (!isAdmin && dotDangKhoa);
+
   const body = $('regBody');
   body.innerHTML = '';
-  $('countBadge').textContent = regs.length;
-  $('emptyState').style.display = regs.length ? 'none' : 'block';
+  $('countBadge').textContent = dsDotNay.length;
+  $('emptyState').style.display = dsDotNay.length ? 'none' : 'block';
 
-  regs.forEach((r,i)=>{
+  dsDotNay.forEach((r,i)=>{
     const laCuaToi = (r.uid === myUid);
-    const suaDuoc  = laCuaToi || isAdmin;
+    const suaDuoc  = (laCuaToi && !dotDangKhoa) || isAdmin;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${i+1}</td>
@@ -5731,6 +5780,19 @@ function renderRegs(){
            <button class="btn btn-ghost btn-sm" data-xoaReg="${r.id}">Xóa</button>` : '' }</td>`;
     body.appendChild(tr);
   });
+
+  // Hộp quản lý đợt (chỉ giáo viên thấy)
+  const ldBox = $('ldAdminBox');
+  if(ldBox){
+    ldBox.style.display = isAdmin ? 'block' : 'none';
+    if(isAdmin){
+      $('ldDotHienTaiNhan').textContent = 'Đợt ' + ldCaiDat.dotHienTai;
+      $('ldDotTrangThai').textContent = dotDangKhoa ? '🔒 đã khóa (không nhận đăng ký mới)' : '🔓 đang mở';
+      $('ldAnHienBtn').textContent = ldCaiDat.anDanhSach ? '👁️ Hiện danh sách' : '🙈 Ẩn danh sách';
+      $('ldKhoaDotBtn').disabled = dotDangKhoa;
+      $('ldKhoaDotBtn').textContent = dotDangKhoa ? '🔒 Đã khóa' : '🔒 Khóa đợt này';
+    }
+  }
 
   document.querySelectorAll('[data-sua]').forEach(b=> b.onclick = ()=> modalSuaReg(b.getAttribute('data-sua')));
   document.querySelectorAll('[data-xoaReg]').forEach(b=> b.onclick = async ()=>{
@@ -5770,6 +5832,34 @@ function modalSuaReg(id){
     }catch(e){ showMsg($('eErr'), baoLoi(e),'err'); }
   };
 }
+
+/* Quản lý đợt đăng ký lao động — ẩn/hiện danh sách công khai, khóa đợt hiện tại (không chặn sửa/xóa
+   của chính admin), mở đợt mới (danh sách hiện ra trống để học sinh đăng ký lại cho đợt tiếp theo,
+   dữ liệu đợt cũ vẫn giữ nguyên trong Firebase, chỉ không hiện trong danh sách công khai nữa). */
+if($('ldAnHienBtn')) $('ldAnHienBtn').onclick = async ()=>{
+  try{ await ldCaiDatRef.update({ anDanhSach: !ldCaiDat.anDanhSach }); }
+  catch(e){ showMsg($('ldAdminMsg'), baoLoi(e), 'err'); }
+};
+if($('ldKhoaDotBtn')) $('ldKhoaDotBtn').onclick = async ()=>{
+  if(!confirm(`Khóa Đợt ${ldCaiDat.dotHienTai}? Học sinh sẽ không gửi đăng ký mới/sửa/xóa được nữa (dữ liệu vẫn giữ nguyên).`)) return;
+  try{
+    await ldCaiDatRef.child('dotKhoa').child(ldCaiDat.dotHienTai).set(true);
+    showMsg($('ldAdminMsg'), `✅ Đã khóa Đợt ${ldCaiDat.dotHienTai}.`, 'ok');
+  }catch(e){ showMsg($('ldAdminMsg'), baoLoi(e), 'err'); }
+};
+if($('ldMoDotMoiBtn')) $('ldMoDotMoiBtn').onclick = async ()=>{
+  const dotMoi = (ldCaiDat.dotHienTai||1) + 1;
+  if(!confirm(`Mở Đợt ${dotMoi}? Danh sách đăng ký sẽ hiện trống để cả lớp đăng ký lại cho đợt lao động tiếp theo — dữ liệu Đợt ${ldCaiDat.dotHienTai} vẫn còn, không bị mất.`)) return;
+  try{
+    await ldCaiDatRef.update({ dotHienTai: dotMoi });
+    showMsg($('ldAdminMsg'), `✅ Đã mở Đợt ${dotMoi}.`, 'ok');
+  }catch(e){ showMsg($('ldAdminMsg'), baoLoi(e), 'err'); }
+};
+ldCaiDatRef.on('value', s=>{
+  const v = s.val() || {};
+  ldCaiDat = { anDanhSach: !!v.anDanhSach, dotHienTai: v.dotHienTai || 1, dotKhoa: v.dotKhoa || {} };
+  renderRegs();
+});
 
 /* ================================================================
    THẺ 3 — CHUẨN BỊ KHAI GIẢNG (TIVI)
@@ -10083,6 +10173,130 @@ function renderBanXoa(){
   });
 }
 
+/* "Sửa tên học sinh trên toàn hệ thống" — dò tìm 1 tên (không phân biệt hoa/thường nhờ chuanTen) ở
+   TẤT CẢ các nơi đang lưu tên học sinh dưới dạng chữ tự do (không có khóa ngoại liên kết với nhau,
+   nên sửa ở "Danh sách lớp" KHÔNG tự động sửa theo ở chỗ khác) — cho giáo viên xem trước danh sách
+   rồi mới chọn áp dụng, tránh sửa nhầm hàng loạt không kiểm soát được.
+   KHÔNG bao gồm: hoso2026 (các cột c1..c69 không có tên trường rõ ràng để dò an toàn), chamBaiAI2026
+   (tên chỉ là gợi ý nhận diện lúc chấm, không phải tên chính thức) — 2 mục này cần sửa thì vào đúng
+   mục đó sửa thủ công. */
+const ST_MUC_PHANG = [
+  { nhan: 'Danh sách lớp (Sĩ số)', ref: rosterRef, truong: 'name' },
+  { nhan: 'Chỗ ngồi (Sơ đồ lớp)', ref: seatsRef, truong: 'name' },
+  { nhan: 'Ban cán sự lớp', ref: bcsRef, truong: 'hoTen' },
+  { nhan: 'Đăng ký lao động', ref: regsRef, truong: 'name' },
+  { nhan: 'Thành viên lớp (công khai)', ref: thanhVienRef, truong: 'hoTen' },
+  { nhan: 'Vị trí nhà (bản đồ)', ref: vitriRef, truong: 'hoTen' },
+  { nhan: 'Các khoản thu đầu năm', ref: khoanThuRef, truong: 'hoTen' },
+  { nhan: 'Nộp bài tập chuyên đề Vật lý 10', ref: baiTapVatLy10Ref, truong: 'hoTen' },
+  { nhan: 'Nộp video thuyết trình Vật lý 10', ref: videoBaiTapRef, truong: 'hoTen' },
+  { nhan: 'Hồ sơ cá nhân (riêng tư)', ref: chsRef, truong: 'hoTen' },
+  { nhan: 'Tài khoản đã cấp cho học sinh', ref: taiKhoanHocSinhRef, truong: 'ten' },
+  { nhan: 'Giải thưởng cá nhân', ref: giaiThuongRef, truong: 'hoTen' },
+];
+
+async function stDoTim(){
+  const tenCu = ($('stTenCu').value || '').trim();
+  const tenMoi = ($('stTenMoi').value || '').trim();
+  if(!tenCu || !tenMoi){ showMsg($('stMsg'), 'Nhập đủ cả 2 ô: tên hiện có và tên đúng.', 'err'); return; }
+  const keyCu = chuanTen(tenCu);
+  $('stDoTimBtn').disabled = true;
+  $('stKetQua').innerHTML = '<p class="section-note">Đang dò tìm...</p>';
+  const ketQua = []; // { nhan, truong, hienTai, ref (ref tới đúng bản ghi cần update) }
+
+  try{
+    // 1) Các mục phẳng (mỗi bản ghi có đúng 1 trường tên ở gốc)
+    await Promise.all(ST_MUC_PHANG.map(async muc=>{
+      let v;
+      try{ v = (await muc.ref.once('value')).val(); }catch(e){ return; }
+      if(!v) return;
+      Object.entries(v).forEach(([key, rec])=>{
+        if(!rec || typeof rec !== 'object') return;
+        const hienTai = rec[muc.truong];
+        if(hienTai && chuanTen(hienTai) === keyCu){
+          ketQua.push({ nhan: muc.nhan, truong: muc.truong, hienTai, ref: muc.ref.child(key) });
+        }
+      });
+    }));
+
+    // 2) Tổng kết tuần — Điểm tốt / Vi phạm (totuan2026/to{N}/{tuanId}/{diemTot|viPham}/{ghiId})
+    try{
+      const v = (await totuanRef.once('value')).val() || {};
+      [1,2,3,4].forEach(soTo=>{
+        const duLieuTo = v['to'+soTo] || {};
+        Object.entries(duLieuTo).forEach(([tuanId, tuanData])=>{
+          ['diemTot','viPham'].forEach(kieu=>{
+            const dsGhi = (tuanData && tuanData[kieu]) || {};
+            Object.entries(dsGhi).forEach(([ghiId, g])=>{
+              if(g && g.hoTen && chuanTen(g.hoTen) === keyCu){
+                ketQua.push({
+                  nhan: `Tổng kết tuần — Tổ ${soTo} — ${kieu==='diemTot'?'Điểm tốt':'Vi phạm'}`,
+                  truong: 'hoTen', hienTai: g.hoTen,
+                  ref: totuanRef.child('to'+soTo).child(tuanId).child(kieu).child(ghiId)
+                });
+              }
+            });
+          });
+        });
+      });
+    }catch(e){}
+
+    // 3) Phong trào — danh sách thành viên (phongtrao2026/{id}/thanhVien/{mid}, trường "ten")
+    try{
+      const v = (await phongTraoRef.once('value')).val() || {};
+      Object.entries(v).forEach(([ptId, pt])=>{
+        const dsTv = (pt && pt.thanhVien) || {};
+        Object.entries(dsTv).forEach(([mid, m])=>{
+          if(m && m.ten && chuanTen(m.ten) === keyCu){
+            ketQua.push({
+              nhan: `Phong trào "${pt.ten||'(không tên)'}" — thành viên`,
+              truong: 'ten', hienTai: m.ten,
+              ref: phongTraoRef.child(ptId).child('thanhVien').child(mid)
+            });
+          }
+        });
+      });
+    }catch(e){}
+
+    if(!ketQua.length){
+      $('stKetQua').innerHTML = `<p class="section-note">Không tìm thấy nơi nào đang ghi tên khớp với "${esc(tenCu)}". Kiểm tra lại cách gõ (có thể đã đúng rồi, hoặc tên viết khác đi nhiều).</p>`;
+      $('stDoTimBtn').disabled = false;
+      return;
+    }
+
+    $('stKetQua').innerHTML = `
+      <p class="section-note">Tìm thấy <b>${ketQua.length}</b> chỗ — bỏ chọn dòng nào không muốn sửa, rồi bấm "Áp dụng":</p>
+      <div class="gt-list" id="stDsCheckbox">
+        ${ketQua.map((k,i)=> `<label class="gt-item" style="cursor:pointer;align-items:center;">
+            <input type="checkbox" data-st-chk="${i}" checked style="flex-shrink:0;width:16px;height:16px;">
+            <div class="noidung">
+              <div class="ten">${esc(k.nhan)}</div>
+              <div class="meta">"${esc(k.hienTai)}" → "${esc(tenMoi)}"</div>
+            </div>
+          </label>`).join('')}
+      </div>
+      <button type="button" class="btn btn-primary btn-sm" id="stApDungBtn" style="margin-top:10px;">✅ Áp dụng cho các dòng đã chọn</button>
+    `;
+    $('stApDungBtn').onclick = async ()=>{
+      const chon = Array.from(document.querySelectorAll('[data-st-chk]')).filter(c=> c.checked).map(c=> +c.getAttribute('data-st-chk'));
+      if(!chon.length){ showMsg($('stMsg'), 'Chưa chọn dòng nào.', 'err'); return; }
+      $('stApDungBtn').disabled = true;
+      let ok = 0, loi = 0;
+      for(const i of chon){
+        const k = ketQua[i];
+        try{ await k.ref.update({ [k.truong]: tenMoi }); ok++; }
+        catch(e){ loi++; }
+      }
+      showMsg($('stMsg'), `✅ Đã sửa ${ok} chỗ${loi? `, lỗi ${loi} chỗ (kiểm tra lại quyền/kết nối)`:''}.`, loi?'err':'ok');
+      $('stKetQua').innerHTML = '';
+      $('stTenCu').value=''; $('stTenMoi').value='';
+    };
+  } finally {
+    $('stDoTimBtn').disabled = false;
+  }
+}
+if($('stDoTimBtn')) $('stDoTimBtn').onclick = stDoTim;
+
 function renderAdmin(){
   if(!isAdmin) return;
   renderBanXoa();
@@ -10163,12 +10377,12 @@ function renderAdmin(){
   }
   $('rosterTable').innerHTML = h3;
 
-  /* Đối chiếu danh sách lớp — lao động */
+  /* Đối chiếu danh sách lớp — lao động (chỉ tính đúng đợt hiện tại, không tính các đợt cũ đã khóa) */
   let h4 = `<tr><th>STT</th><th>Họ tên</th><th>Ngày sinh</th></tr>`;
   if(!roster.length){
     h4 += `<tr><td colspan="3" style="text-align:center;color:var(--ink-soft);">Cần nạp danh sách lớp để đối chiếu.</td></tr>`;
   } else {
-    const daNop = new Set(regs.map(r=> chuanTen(r.name)));
+    const daNop = new Set(regs.filter(r=> (r.dot||1) === ldCaiDat.dotHienTai).map(r=> chuanTen(r.name)));
     const thieu = roster.filter(st=> !daNop.has(chuanTen(st.name)));
     if(!thieu.length) h4 += `<tr><td colspan="3" style="text-align:center;color:var(--leaf-dark);font-weight:700;">🎉 Cả lớp đã đăng ký lao động!</td></tr>`;
     else thieu.forEach((st,i)=> h4 += `<tr style="background:#fff7ea;"><td>${i+1}</td><td>${esc(st.name)}</td><td>${esc(st.dob)}</td></tr>`);
