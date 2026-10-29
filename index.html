@@ -10242,10 +10242,15 @@ if($('htGvThemBtn')) $('htGvThemBtn').onclick = async ()=>{
   if(!loai){ showMsg($('htGvMsg'),'Vui lòng chọn loại hỗ trợ.','err'); return; }
   if(!hc){ showMsg($('htGvMsg'),'Vui lòng chọn hoàn cảnh gia đình.','err'); return; }
   if(dt && !/^0\d{9}$/.test(dt)){ showMsg($('htGvMsg'),'Số điện thoại phải có 10 chữ số, bắt đầu bằng 0.','err'); return; }
-  const key = 'gv_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  // Dùng push() của Firebase (khóa duy nhất tuyệt đối, tăng dần theo thời gian — cùng kiểu đang dùng
+  // cho giaiThuongRef/phongtraoRef) thay vì tự ghép khóa thủ công, để CHẮC CHẮN không bao giờ trùng
+  // khóa giữa các lần thêm — mỗi lần bấm "Thêm vào danh sách" luôn tạo MỘT bản ghi mới, giữ nguyên
+  // toàn bộ các em đã thêm trước đó.
   try{
-    await htRef.child(key).set({ name, loai, hoanCanh: hc, moTa, dienThoai: dt, uid: key,
-                                 time: new Date().toLocaleString('vi-VN') });
+    const refMoi = htRef.push();
+    const key = refMoi.key;
+    await refMoi.set({ name, loai, hoanCanh: hc, moTa, dienThoai: dt, uid: key,
+                       time: new Date().toLocaleString('vi-VN') });
     $('htGvName').value=''; $('htGvLoai').value=''; $('htGvHoanCanh').value='';
     $('htGvMoTa').value=''; $('htGvDienThoai').value='';
     showMsg($('htGvMsg'), `Đã thêm "${name}" vào danh sách.`, 'ok');
