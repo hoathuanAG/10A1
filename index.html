@@ -9569,8 +9569,20 @@ function renderGiaiThuong(){
   host.querySelectorAll('[data-xoa-giai]').forEach(b=> b.onclick = async ()=>{
     if(!confirm('Xóa giải thưởng này?')) return;
     try{ await giaiThuongRef.child(b.getAttribute('data-xoa-giai')).remove(); }
-    catch(e){ alert(baoLoi(e)); }
+    catch(e){
+      if(/permission_denied/i.test(String(e && e.message || e))) __gtPhienHetHan();
+      else alert(baoLoi(e));
+    }
   });
+}
+/* Phiên đăng nhập giáo viên trên máy này đã hết hạn/mất hiệu lực (đổi mật khẩu, đăng xuất ở
+   máy khác, token quá hạn...) nhưng form "Thêm giải thưởng" vẫn còn hiện do biến isAdmin trong
+   bộ nhớ trang chưa kịp cập nhật — ẩn ngay form đi và báo rõ cách xử lý, thay vì chỉ báo lỗi
+   "Không có quyền" chung chung khiến giáo viên tưởng là lỗi hệ thống. */
+function __gtPhienHetHan(){
+  isAdmin = false;
+  if(typeof renderGiaiThuong === 'function') renderGiaiThuong();
+  showMsg($('gtMsg'), '⚠️ Phiên đăng nhập giáo viên trên máy này đã hết hạn hoặc không còn hiệu lực. Vui lòng tải lại trang (F5) rồi đăng nhập lại ở mục quản trị, sau đó thử lại.', 'err');
 }
 if($('gtThemBtn')) $('gtThemBtn').onclick = async ()=>{
   const hoTen = ($('gtHoTen').value||'').trim();
@@ -9578,12 +9590,22 @@ if($('gtThemBtn')) $('gtThemBtn').onclick = async ()=>{
   const phongTrao = ($('gtPhongTrao').value||'').trim();
   const thoiGian = ($('gtThoiGian').value||'').trim();
   if(!hoTen || !tenGiai){ showMsg($('gtMsg'), 'Nhập đủ Họ tên học sinh và Tên giải thưởng.', 'err'); return; }
+  // Kiểm tra LẠI trực tiếp phiên đăng nhập hiện tại qua auth.currentUser (không chỉ dựa vào
+  // biến isAdmin đã lưu từ trước) — tránh trường hợp phiên giáo viên đã hết hạn/mất hiệu lực
+  // trên máy này nhưng giao diện chưa kịp ẩn form đi, khiến bấm "Thêm" báo lỗi khó hiểu.
+  const nguoiHienTai = auth.currentUser;
+  if(!nguoiHienTai || nguoiHienTai.uid !== ADMIN_UID){ __gtPhienHetHan(); return; }
   $('gtThemBtn').disabled = true;
   try{
     await giaiThuongRef.push({ hoTen, tenGiai, phongTrao, thoiGian, luc: Date.now() });
     $('gtHoTen').value = ''; $('gtTenGiai').value = ''; $('gtPhongTrao').value = ''; $('gtThoiGian').value = '';
     showMsg($('gtMsg'), '✅ Đã thêm giải thưởng.', 'ok');
-  }catch(e){ showMsg($('gtMsg'), baoLoi(e), 'err'); }
+  }catch(e){
+    // Hiếm khi kiểm tra ở trên vẫn còn hợp lệ nhưng máy chủ lại từ chối lúc ghi thực sự (token
+    // vừa hết hạn đúng lúc) — vẫn xử lý rõ ràng thay vì chỉ báo lỗi chung chung.
+    if(/permission_denied/i.test(String(e && e.message || e))) __gtPhienHetHan();
+    else showMsg($('gtMsg'), baoLoi(e), 'err');
+  }
   $('gtThemBtn').disabled = false;
 };
 giaiThuongRef.on('value', s=>{ giaiThuongState = s.val() || {}; renderGiaiThuong(); });
