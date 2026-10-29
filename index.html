@@ -28,6 +28,7 @@
     --sidebar-w:276px;
     --topbar-h:64px;
     --radius:12px;
+    --tt-tuan-scale:1; /* hệ số phóng/thu cỡ chữ nội dung "Tổng kết tuần" — người dùng tự chỉnh bằng nút A-/A+, lưu riêng theo trình duyệt */
   }
 
   *{box-sizing:border-box;}
@@ -1029,7 +1030,9 @@
   .tt-to-canbo{font-size:12px; color:var(--ink-soft); margin-bottom:12px;}
   .tt-tuan-the{background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px;}
   .tt-tuan-nhan{font-weight:700; color:#d97706; font-size:13px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
-  .tt-tuan-muc{margin-bottom:6px; font-size:clamp(16px, 4.6vw, 39px); line-height:1.2;}
+  .tt-tuan-muc{margin-bottom:6px; font-size:calc(clamp(16px, 4.6vw, 39px) * var(--tt-tuan-scale, 1)); line-height:1.2;}
+  .tt-font-dieu-chinh{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 0 12px;}
+  .tt-font-nhan{font-weight:700; font-size:13px; color:var(--ink-soft); min-width:44px; text-align:center;}
   .tt-tuan-muc b{color:var(--ink);}
   .tt-tuan-anh{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
   .tt-tuan-anh img{width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid var(--line); cursor:pointer;}
@@ -2557,6 +2560,13 @@
     <div class="card">
       <h2>📊 Tổng kết tuần theo Tổ</h2>
       <p class="section-note">Tổ trưởng/Tổ phó của từng Tổ tổng kết vào thứ 6 hàng tuần — mỗi lần thêm sẽ tự đánh số Tuần kế tiếp, hiển thị dồn dần xuống dưới.</p>
+      <div class="tt-font-dieu-chinh">
+        <span class="section-note" style="margin:0;">Cỡ chữ nội dung Tổng kết tuần:</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="ttFontNhoBtn" title="Chữ nhỏ lại">A−</button>
+        <span class="tt-font-nhan" id="ttFontNhan">100%</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="ttFontToBtn" title="Chữ to lên">A+</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="ttFontResetBtn" title="Về cỡ mặc định">Mặc định</button>
+      </div>
     </div>
 
     <!-- Nhận quyền chỉnh sửa — thay cho cách đối chiếu tên cũ, được Firebase xác thực thật -->
@@ -4233,6 +4243,30 @@ let taiKhoanHocSinhDaCap = {}; // {slugEmail: {ten, email, uid, ngayTao, taoBoi}
 
 /* -------------------- TIỆN ÍCH -------------------- */
 const $ = id => document.getElementById(id);
+
+/* -------------------- CỠ CHỮ "TỔNG KẾT TUẦN" — người dùng tự chỉnh bằng nút A-/A+ ngay trên web --------------------
+   Lưu riêng theo TỪNG TRÌNH DUYỆT/THIẾT BỊ (localStorage) — không lưu lên Firebase, vì đây là sở thích
+   hiển thị cá nhân (mắt mỗi người nhìn to/nhỏ khác nhau), không cần đồng bộ hay chia sẻ cho ai khác. */
+const TT_FONT_KEY = 'ld10a1_tt_tuan_font_scale';
+const TT_FONT_MIN = 0.6, TT_FONT_MAX = 2.0, TT_FONT_BUOC = 0.1;
+function ttFontDocLuu(){
+  try{
+    const luu = parseFloat(localStorage.getItem(TT_FONT_KEY));
+    if(isFinite(luu) && luu >= TT_FONT_MIN && luu <= TT_FONT_MAX) return luu;
+  }catch(e){ /* localStorage có thể bị chặn (chế độ ẩn danh...) — dùng mặc định */ }
+  return 1;
+}
+let ttFontScale = ttFontDocLuu();
+function ttFontApDung(scale){
+  ttFontScale = Math.min(TT_FONT_MAX, Math.max(TT_FONT_MIN, +scale.toFixed(2)));
+  document.documentElement.style.setProperty('--tt-tuan-scale', ttFontScale);
+  if($('ttFontNhan')) $('ttFontNhan').textContent = Math.round(ttFontScale*100) + '%';
+  try{ localStorage.setItem(TT_FONT_KEY, String(ttFontScale)); }catch(e){}
+}
+ttFontApDung(ttFontScale); // áp ngay khi tải trang, theo cỡ chữ lần trước đã chỉnh trên máy này
+if($('ttFontNhoBtn')) $('ttFontNhoBtn').onclick = ()=> ttFontApDung(ttFontScale - TT_FONT_BUOC);
+if($('ttFontToBtn'))  $('ttFontToBtn').onclick  = ()=> ttFontApDung(ttFontScale + TT_FONT_BUOC);
+if($('ttFontResetBtn')) $('ttFontResetBtn').onclick = ()=> ttFontApDung(1);
 
 /* -------------------- BANNER ĐẦU TRANG: kéo-thả logo/chữ + đổi chiều cao (chỉ giáo viên) --------------------
    Vị trí logo/chữ lưu dạng % theo chiều rộng/cao banner (không phải px) để co giãn hợp lý trên
