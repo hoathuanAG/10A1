@@ -523,6 +523,40 @@
     color:#be123c;
     border:1px solid #fecdd3;
   }
+  .saas-kpi-top5{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    margin:3px 0 1px;
+  }
+  .saas-kpi-top5-row{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-size:10.5px;
+    line-height:1.3;
+  }
+  .saas-kpi-top5-rank{
+    flex-shrink:0;
+    font-weight:800;
+    color:#b45309;
+    width:14px;
+  }
+  .saas-kpi-top5-ten{
+    flex:1;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .saas-kpi-top5-so{
+    flex-shrink:0;
+    font-weight:700;
+    color:#b45309;
+    font-size:9.5px;
+  }
   .saas-kpi-progress{
     width:100%;
     height:4px;
@@ -957,6 +991,16 @@
   }
   .bcs-the-thaotac-nho{display:flex; gap:4px; flex:none;}
   .bcs-the-thaotac-nho .btn{padding:3px 7px; font-size:10.5px;}
+
+  /* ---------- Giải thưởng cá nhân ---------- */
+  .gt-list{display:flex; flex-direction:column; gap:8px;}
+  .gt-item{display:flex; align-items:flex-start; gap:10px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:10px 12px;}
+  .gt-item .ico{font-size:20px; flex-shrink:0;}
+  .gt-item .noidung{flex:1; min-width:0;}
+  .gt-item .ten{font-weight:800; color:var(--ink);}
+  .gt-item .giai{color:#b45309; font-weight:700; font-size:13px; margin-top:1px;}
+  .gt-item .meta{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .gt-item .xoa{border:none; background:none; color:var(--ink-soft); cursor:pointer; font-size:14px; flex-shrink:0; padding:0 2px;}
 
   /* ---------- Các hoạt động của tổ — Tổng kết tuần ---------- */
   .tt-luoi-to{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
@@ -1952,14 +1996,12 @@
           </div>
           <div class="saas-kpi-ico amber">🤝</div>
         </div>
-        <div class="saas-kpi-card" onclick="moTab('nhiemvu','baitapvatly10')">
+        <div class="saas-kpi-card" onclick="moTab('hoatdongto','thongkeDiemTot')">
           <div style="min-width:0;flex:1;">
-            <div class="saas-kpi-label">TỈ LỆ HOÀN THÀNH BÀI TẬP</div>
-            <div class="saas-kpi-val" id="saasKpiPosts">0%</div>
-            <div class="saas-kpi-progress"><div class="saas-kpi-progress-bar" id="saasKpiPostsBar"></div></div>
-            <div class="saas-kpi-sub" id="saasKpiPostsSub">0/45 HS đã hoàn thành</div>
+            <div class="saas-kpi-label">CÁ NHÂN XUẤT SẮC TUẦN NÀY</div>
+            <div class="saas-kpi-top5" id="saasKpiTop5"><span class="saas-kpi-sub">Chưa có dữ liệu tuần này</span></div>
           </div>
-          <div class="saas-kpi-ico rose">📚</div>
+          <div class="saas-kpi-ico amber">🏆</div>
         </div>
       </div>
 
@@ -2336,6 +2378,28 @@
     </div>
     <div id="ptDanhSach"></div>
     <div id="ptTrong" class="empty" style="display:none;">Chưa có phong trào nào — bấm "+ Thêm phong trào mới" để bắt đầu.</div>
+  </div>
+
+  <!-- ============ GIẢI THƯỞNG CÁ NHÂN (chỉ giáo viên cập nhật) ============ -->
+  <div class="panel" id="panel-giaithuong" data-group="hoatdong">
+    <div class="card">
+      <h2>🏅 Giải thưởng cá nhân</h2>
+      <p class="section-note">Danh sách giải thưởng, thành tích cá nhân đạt được khi tham gia các phong trào của lớp/trường — do giáo viên chủ nhiệm cập nhật.</p>
+    </div>
+    <div class="card" id="gtAdminCard" style="display:none;">
+      <h2>➕ Thêm giải thưởng (chỉ giáo viên)</h2>
+      <div class="tt-diem-them" style="flex-wrap:wrap;">
+        <input type="text" id="gtHoTen" list="dsHoTenLop10A1" placeholder="Họ tên học sinh" maxlength="60" style="flex:0 0 160px;">
+        <input type="text" id="gtTenGiai" placeholder="Tên giải thưởng (VD: Giải Nhất Hội thi...)" maxlength="200" style="flex:1;min-width:160px;">
+        <input type="text" id="gtPhongTrao" placeholder="Phong trào/hoạt động" maxlength="200" style="flex:1;min-width:160px;">
+        <input type="text" id="gtThoiGian" placeholder="Thời gian (VD: Tháng 10/2026)" maxlength="40" style="flex:0 0 150px;">
+        <button type="button" class="btn btn-primary btn-sm" id="gtThemBtn">+ Thêm</button>
+      </div>
+      <div id="gtMsg" class="msg"></div>
+    </div>
+    <div class="card">
+      <div id="gtDanhSach" class="gt-list"></div>
+    </div>
   </div>
 
   <!-- ============ THẺ 3: CHUẨN BỊ KHAI GIẢNG ============ -->
@@ -3865,6 +3929,7 @@ const caiDatRef = db.ref('caidat2026'); // cài đặt chung (tọa độ trư�
 const maToTuanRef = db.ref('matoTuan2026');       // mã xác nhận từng Tổ — chỉ admin xem/đặt
 const quyenToTuanRef = db.ref('quyenToTuan2026'); // ai đã được cấp quyền Tổ nào — công khai đọc
 const quyenToTuanTenRef = db.ref('quyenToTuanTen2026'); // tên đã xác nhận của người giữ quyền, để hiện đúng "Tuần N — Tên" thay vì "Không rõ"
+const giaiThuongRef = db.ref('giaiThuong2026'); // giải thưởng cá nhân — công khai đọc, chỉ giáo viên (admin) ghi
 const nhapMaToTuanRef = db.ref('nhapMaToTuan2026'); // nhánh tạm để Rules so khớp mã, không cần đọc lại
 const khoanThuRef = db.ref('khoanthu2026'); // các khoản thu đầu năm — công khai đọc, mỗi người tự ghi phần của mình
 const quyLopRef = db.ref('quylop2026'); // quỹ lớp theo từng đợt thu — công khai đọc (minh bạch với PH/HS), CHỈ giáo viên ghi được
@@ -4572,6 +4637,7 @@ const SUBTAB_DINH_NGHIA = {
   khoanthu:  {icon:'💰', ten:'Các khoản thu đầu năm'},
   laodong:   {icon:'🧹', ten:'Đăng ký lao động'},
   phongtrao: {icon:'🚀', ten:'Phong trào'},
+  giaithuong: {icon:'🏅', ten:'Giải thưởng'},
   khaigiang: {icon:'📺', ten:'Chuẩn bị khai giảng'},
   hotro:     {icon:'🤝', ten:'Nhận hỗ trợ'},
   tongketTuan: {icon:'📊', ten:'Tổng kết tuần'},
@@ -4591,7 +4657,7 @@ const SUBTAB_DINH_NGHIA = {
 };
 const NHOM_TAB = {
   thongtin: ['sodo', 'danhsachhs', 'vitri', 'thanhvien', 'hoso', 'bancansu', 'caulacbo', 'khoanthu'],
-  hoatdong: ['laodong', 'phongtrao', 'khaigiang', 'hotro'],
+  hoatdong: ['laodong', 'phongtrao', 'giaithuong', 'khaigiang', 'hotro'],
   hoatdongto: ['tongketTuan', 'thongkeDiemTot', 'thongkeViPham'],
   nhiemvu:  ['baitapvatly10', 'nopvideo10'],
   games:    ['quayten', 'dodoon', 'ndkm', 'duongdenngoivua', 'dapmuoi'],
@@ -4839,11 +4905,10 @@ function saasCapNhatKpiVaBreadcrumb(){
     const elPhHoanCanh = document.getElementById('phtqHoanCanh');
     if(elPhHoanCanh) elPhHoanCanh.textContent = '2 học sinh cận nghèo · 2 học sinh khó khăn';
 
-    // 4. Tỉ lệ hoàn thành bài tập
-    const elPosts = document.getElementById('saasKpiPosts');
-    const elPostsBar = document.getElementById('saasKpiPostsBar');
-    const elPostsSub = document.getElementById('saasKpiPostsSub');
-    if(elPosts){
+    // 4. Tỉ lệ hoàn thành bài tập — mục này đã rời khỏi lưới KPI trang chủ (được thay bằng "Cá nhân
+    // xuất sắc"), nhưng Góc Phụ Huynh vẫn cần số liệu này nên tính trực tiếp vào phtqBaiTap/Sub.
+    const elPhBaiTap = document.getElementById('phtqBaiTap'), elPhBaiTapSub = document.getElementById('phtqBaiTapSub');
+    if(elPhBaiTap){
       const tongHS = (typeof roster !== 'undefined' && roster.length) ? roster.length : 45;
       const nguonBt = (typeof baiTapVatLy10TatCa !== 'undefined' && Object.keys(baiTapVatLy10TatCa).length)
         ? baiTapVatLy10TatCa
@@ -4885,16 +4950,45 @@ function saasCapNhatKpiVaBreadcrumb(){
 
       const soHsHoanThanh = Math.min(tongHS, tenDaCoBai.size);
       const tiLe = tongHS > 0 ? Math.min(100, Math.round((soHsHoanThanh / tongHS) * 100)) : 0;
-      elPosts.textContent = `${tiLe}%`;
-      if(elPostsBar) elPostsBar.style.width = `${tiLe}%`;
-      if(elPostsSub){
-        const soBaiActive = cacBaiCoNguoiNop.size;
-        elPostsSub.textContent = soHsHoanThanh > 0
+      const soBaiActive = cacBaiCoNguoiNop.size;
+      elPhBaiTap.textContent = `${tiLe}%`;
+      if(elPhBaiTapSub){
+        elPhBaiTapSub.textContent = soHsHoanThanh > 0
           ? `${soHsHoanThanh}/${tongHS} HS đã nộp (${soBaiActive || 1} bài)`
           : `0/${tongHS} HS đã nộp bài`;
       }
-      const elPhBaiTap = document.getElementById('phtqBaiTap'), elPhBaiTapSub = document.getElementById('phtqBaiTapSub');
-      if(elPhBaiTap){ elPhBaiTap.textContent = elPosts.textContent; if(elPhBaiTapSub && elPostsSub) elPhBaiTapSub.textContent = elPostsSub.textContent; }
+    }
+
+    // 5. Cá nhân xuất sắc tuần này — top 5 học sinh được ghi nhận "Điểm tốt" nhiều nhất trong
+    // tuần mới nhất (mỗi Tổ tự đánh số tuần riêng — "tuần này" = tuần có số thứ tự lớn nhất đã có
+    // ở ít nhất 1 Tổ, gộp "Điểm tốt" của đúng tuần đó ở MỌI Tổ đã nộp tới tuần đó).
+    const elTop5 = document.getElementById('saasKpiTop5');
+    if(elTop5 && typeof totuanState !== 'undefined'){
+      const soTuanMoiNhat = (typeof tkMaxSoTuan === 'function') ? tkMaxSoTuan() : 0;
+      const demTheoTen = {}; // { "tên chuẩn hoá": {hoTen gốc, soLuong} }
+      if(soTuanMoiNhat > 0){
+        [1,2,3,4].forEach(soTo=>{
+          const duLieuTo = totuanState['to'+soTo] || {};
+          const dsTuanId = Object.keys(duLieuTo).sort();
+          const tuanId = dsTuanId[soTuanMoiNhat - 1]; // tuần cuối cùng (mới nhất) của đúng Tổ này, nếu có
+          if(!tuanId) return;
+          const dsGhi = (duLieuTo[tuanId] || {}).diemTot || {};
+          Object.values(dsGhi).forEach(g=>{
+            if(!g || !g.hoTen) return;
+            const key = chuanTen(g.hoTen);
+            if(!demTheoTen[key]) demTheoTen[key] = { hoTen: g.hoTen, soLuong: 0 };
+            demTheoTen[key].soLuong += 1;
+          });
+        });
+      }
+      const top5 = Object.values(demTheoTen).sort((a,b)=> b.soLuong - a.soLuong).slice(0,5);
+      elTop5.innerHTML = top5.length
+        ? top5.map((hs,i)=> `<div class="saas-kpi-top5-row">
+            <span class="saas-kpi-top5-rank">#${i+1}</span>
+            <span class="saas-kpi-top5-ten">${esc(hs.hoTen)}</span>
+            <span class="saas-kpi-top5-so">${hs.soLuong} điểm tốt</span>
+          </div>`).join('')
+        : '<span class="saas-kpi-sub">Chưa có dữ liệu tuần này</span>';
     }
 
     const elView = document.getElementById('saasActiveViewName');
@@ -4986,6 +5080,7 @@ auth.onAuthStateChanged(async user=>{
   if($('phQuanTriGopYBox')) $('phQuanTriGopYBox').style.display = isAdmin ? 'block' : 'none';
   if(typeof capNhatKhoaPhuHuynh === 'function') capNhatKhoaPhuHuynh();
   if(isAdmin){ if(typeof napPhPhanHoiTatCa === 'function') napPhPhanHoiTatCa(); } else { phPhanHoiTatCa = []; }
+  if(typeof renderGiaiThuong === 'function') renderGiaiThuong();
   // Thủ quỹ: đăng nhập thành công nên ẩn form đăng nhập, nhưng KHÔNG mở khu vực quản trị đầy
   // đủ (dữ liệu riêng tư khác của học sinh) — chỉ mục Quỹ lớp mở khóa cho họ (xem renderQuyLop).
   $('adminLocked').style.display = (isAdmin || isThuQuy) ? 'none' : 'block';
@@ -9256,6 +9351,45 @@ phongTraoRef.on('value', s=>{
    ================================================================ */
 let totuanState = {};
 
+/* Giải thưởng cá nhân — do giáo viên (admin) cập nhật, hiển thị danh sách công khai cho mọi người xem. */
+let giaiThuongState = {};
+function renderGiaiThuong(){
+  const box = $('gtAdminCard');
+  if(box) box.style.display = isAdmin ? 'block' : 'none';
+  const host = $('gtDanhSach');
+  if(!host) return;
+  const ds = Object.entries(giaiThuongState || {}).sort((a,b)=> (b[1].luc||0) - (a[1].luc||0));
+  host.innerHTML = ds.length ? ds.map(([id,g])=> `<div class="gt-item">
+      <div class="ico">🏅</div>
+      <div class="noidung">
+        <div class="ten">${esc(g.hoTen||'')}</div>
+        <div class="giai">${esc(g.tenGiai||'')}</div>
+        <div class="meta">${[g.phongTrao, g.thoiGian].filter(Boolean).map(esc).join(' · ')}</div>
+      </div>
+      ${isAdmin ? `<button class="xoa" title="Xóa" data-xoa-giai="${id}">✕</button>` : ''}
+    </div>`).join('') : '<p class="section-note">Chưa có giải thưởng nào được cập nhật.</p>';
+  host.querySelectorAll('[data-xoa-giai]').forEach(b=> b.onclick = async ()=>{
+    if(!confirm('Xóa giải thưởng này?')) return;
+    try{ await giaiThuongRef.child(b.getAttribute('data-xoa-giai')).remove(); }
+    catch(e){ alert(baoLoi(e)); }
+  });
+}
+if($('gtThemBtn')) $('gtThemBtn').onclick = async ()=>{
+  const hoTen = ($('gtHoTen').value||'').trim();
+  const tenGiai = ($('gtTenGiai').value||'').trim();
+  const phongTrao = ($('gtPhongTrao').value||'').trim();
+  const thoiGian = ($('gtThoiGian').value||'').trim();
+  if(!hoTen || !tenGiai){ showMsg($('gtMsg'), 'Nhập đủ Họ tên học sinh và Tên giải thưởng.', 'err'); return; }
+  $('gtThemBtn').disabled = true;
+  try{
+    await giaiThuongRef.push({ hoTen, tenGiai, phongTrao, thoiGian, luc: Date.now() });
+    $('gtHoTen').value = ''; $('gtTenGiai').value = ''; $('gtPhongTrao').value = ''; $('gtThoiGian').value = '';
+    showMsg($('gtMsg'), '✅ Đã thêm giải thưởng.', 'ok');
+  }catch(e){ showMsg($('gtMsg'), baoLoi(e), 'err'); }
+  $('gtThemBtn').disabled = false;
+};
+giaiThuongRef.on('value', s=>{ giaiThuongState = s.val() || {}; renderGiaiThuong(); });
+
 function tenCuaToiTheoSeats(){
   if(!myUid) return null;
   const ghe = Object.values(seats).find(s=> s && s.uid === myUid);
@@ -9613,6 +9747,7 @@ totuanRef.on('value', s=>{
   totuanState = s.val() || {};
   renderTongKetTuan();
   renderThongKeDiemTuan();
+  if(typeof saasCapNhatKpiVaBreadcrumb === 'function') saasCapNhatKpiVaBreadcrumb();
 });
 quyenToTuanRef.on('value', s=>{
   quyenToTuanState = s.val() || {};
