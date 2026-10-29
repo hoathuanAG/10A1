@@ -140,49 +140,103 @@
   }
   function __ddnvAnCanhBaoDangNhap(){ try{ if(__ddnvLoginBox) __ddnvLoginBox.style.display = 'none'; }catch(e){} }
 
+  /* ----------------------------------------------------------------
+     HUY HIEU NHO O GOC DUOI-PHAI MAN HINH: bao "Dang luu..." (vang) trong
+     luc dang ghi len Firebase va "Da luu len may chu" (xanh, tu mo dan sau
+     ~1.8s) ngay khi ghi THANH CONG — de Thay THAY RO bang mat moi lan cong/
+     tru diem la da chac chan len duoc may chu, khong phai doan mo hinh. */
+  var __ddnvBadge = null;
+  var __ddnvBadgeAnTimer = null;
+  function __ddnvBadgeEl(){
+    if(__ddnvBadge) return __ddnvBadge;
+    if(!document.body) return null;
+    __ddnvBadge = document.createElement('div');
+    __ddnvBadge.id = '__ddnvSaveBadge';
+    __ddnvBadge.style.cssText = 'position:fixed; bottom:12px; right:12px; z-index:999998; font-family:Tahoma,Arial,sans-serif; font-size:12.5px; font-weight:700; padding:7px 14px; border-radius:20px; box-shadow:0 2px 10px rgba(0,0,0,0.25); color:#fff; transition:opacity .25s linear; pointer-events:none; opacity:0;';
+    document.body.appendChild(__ddnvBadge);
+    return __ddnvBadge;
+  }
+  function __ddnvHienThiDangLuu(){
+    var el = __ddnvBadgeEl();
+    if(!el){ setTimeout(__ddnvHienThiDangLuu, 300); return; }
+    clearTimeout(__ddnvBadgeAnTimer);
+    el.style.background = '#FFA726';
+    el.textContent = '💾 Đang lưu...';
+    el.style.opacity = '1';
+  }
+  function __ddnvHienThiDaLuu(){
+    var el = __ddnvBadgeEl();
+    if(!el) return;
+    el.style.background = '#28a745';
+    el.textContent = '✅ Đã lưu lên máy chủ';
+    el.style.opacity = '1';
+    clearTimeout(__ddnvBadgeAnTimer);
+    __ddnvBadgeAnTimer = setTimeout(function(){ el.style.opacity = '0'; }, 1800);
+  }
+
   var dongBoTamNgung = false;
   var henGio = null;
+  /* Thuc su thuc hien 1 lan ghi len Firebase (tach rieng khoi dayLenFirebase
+     de co the GOI NGAY, bo qua hang doi 700ms, khi trang sap bi an/dong —
+     xem __ddnvDayNgayNeuCoCho ben duoi). */
+  function __ddnvThucHienDayLen(){
+    henGio = null;
+    try{
+      var goi = {};
+      var coKhoaQuaLon = false;
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        var v = localStorage.getItem(k);
+        // Quy tac Firebase gioi han moi khoa <= 500.000 ky tu; bo qua
+        // (khong day len) khoa vuot nguong de khong lam loi CA GOI ghi.
+        if(typeof v === 'string' && v.length > 480000){
+          coKhoaQuaLon = true;
+          continue;
+        }
+        goi[k] = v;
+      }
+      __ddnvHienThiDangLuu();
+      ddnvRef.set(goi).then(function(){
+        __ddnvAnLoiDongBo();
+        __ddnvAnCanhBaoDangNhap();
+        if(coKhoaQuaLon){
+          __ddnvHienThiLoiDongBo('⚠️ Một phần dữ liệu (quá lớn) CHƯA đồng bộ lên máy chủ, chỉ lưu tạm trên máy này. Báo thầy/admin kiểm tra.');
+        } else {
+          __ddnvHienThiDaLuu();
+        }
+      }).catch(function(err){
+        try{ console.error('[duong-den-ngoi-vua] Lỗi đồng bộ Firebase:', err); }catch(e){}
+        var ma = err && err.code ? String(err.code) : '';
+        var laDoQuyen = (ma.indexOf('PERMISSION_DENIED') !== -1 || ma.indexOf('permission') !== -1);
+        if(laDoQuyen){
+          // Hiện ngay ô đăng nhập tại chỗ (thay vì chỉ 1 dòng chữ yêu cầu quay
+          // lại trang chính) để Thầy sửa được ngay, không bỏ lỡ điểm vừa cộng/trừ.
+          __ddnvHienThiCanhBaoDangNhap();
+        } else {
+          __ddnvHienThiLoiDongBo('❌ KHÔNG lưu được lên máy chủ! Lỗi: ' + (err && err.message ? err.message : String(err)));
+        }
+      });
+    }catch(e){
+      try{ console.error('[duong-den-ngoi-vua] Lỗi dayLenFirebase:', e); }catch(e2){}
+    }
+  }
   function dayLenFirebase(){
     if(dongBoTamNgung) return;
     clearTimeout(henGio);
-    henGio = setTimeout(function(){
-      try{
-        var goi = {};
-        var coKhoaQuaLon = false;
-        for(var i=0;i<localStorage.length;i++){
-          var k = localStorage.key(i);
-          var v = localStorage.getItem(k);
-          // Quy tac Firebase gioi han moi khoa <= 500.000 ky tu; bo qua
-          // (khong day len) khoa vuot nguong de khong lam loi CA GOI ghi.
-          if(typeof v === 'string' && v.length > 480000){
-            coKhoaQuaLon = true;
-            continue;
-          }
-          goi[k] = v;
-        }
-        ddnvRef.set(goi).then(function(){
-          __ddnvAnLoiDongBo();
-          __ddnvAnCanhBaoDangNhap();
-          if(coKhoaQuaLon){
-            __ddnvHienThiLoiDongBo('⚠️ Một phần dữ liệu (quá lớn) CHƯA đồng bộ lên máy chủ, chỉ lưu tạm trên máy này. Báo thầy/admin kiểm tra.');
-          }
-        }).catch(function(err){
-          try{ console.error('[duong-den-ngoi-vua] Lỗi đồng bộ Firebase:', err); }catch(e){}
-          var ma = err && err.code ? String(err.code) : '';
-          var laDoQuyen = (ma.indexOf('PERMISSION_DENIED') !== -1 || ma.indexOf('permission') !== -1);
-          if(laDoQuyen){
-            // Hiện ngay ô đăng nhập tại chỗ (thay vì chỉ 1 dòng chữ yêu cầu quay
-            // lại trang chính) để Thầy sửa được ngay, không bỏ lỡ điểm vừa cộng/trừ.
-            __ddnvHienThiCanhBaoDangNhap();
-          } else {
-            __ddnvHienThiLoiDongBo('❌ KHÔNG lưu được lên máy chủ! Lỗi: ' + (err && err.message ? err.message : String(err)));
-          }
-        });
-      }catch(e){
-        try{ console.error('[duong-den-ngoi-vua] Lỗi dayLenFirebase:', e); }catch(e2){}
-      }
-    }, 700);
+    henGio = setTimeout(__ddnvThucHienDayLen, 700);
   }
+  /* Neu Thay cong/tru diem roi DONG TAB / CHUYEN TRANG NGAY trong luc dang
+     cho 700ms gop ghi, lan ghi cuoi co the bi bo lo (hen gio chua kip chay).
+     Day ngay (bo qua hang doi) khi trang sap bi an hoac dong, de khong mat
+     diem vua cong/tru. */
+  function __ddnvDayNgayNeuCoCho(){
+    if(henGio){ clearTimeout(henGio); __ddnvThucHienDayLen(); }
+  }
+  try{
+    document.addEventListener('visibilitychange', function(){ if(document.hidden) __ddnvDayNgayNeuCoCho(); });
+    window.addEventListener('pagehide', __ddnvDayNgayNeuCoCho);
+    window.addEventListener('beforeunload', __ddnvDayNgayNeuCoCho);
+  }catch(e){}
 
   var ADMIN_UID_DDNV = '3eMkknzDuNVFyrpmB1ceIBViTDD2';
   window.__ddnvSyncReady = new Promise(function(resolve){
@@ -3210,6 +3264,20 @@
                 return;
             }
             
+            // Giới hạn lịch sử điểm riêng của TỪNG học sinh (student.history) — nếu không,
+            // mảng này phình to không giới hạn theo thời gian (mỗi lần cộng/trừ điểm lại
+            // push thêm 1 dòng, không bao giờ xóa) và khóa "students" trong localStorage có
+            // thể vượt quá 480.000 ký tự. Khi đó lớp đồng bộ Firebase ở đầu file sẽ BỎ QUA
+            // hẳn khóa này (để không làm lỗi cả gói ghi) — nghĩa là từ lúc đó, MỌI điểm
+            // cộng/trừ về sau chỉ lưu tạm trên máy này, KHÔNG lên được máy chủ nữa, dù vẫn
+            // thấy đúng trên màn hình. Chỉ giữ 150 lượt gần nhất/em là đủ xem lại lịch sử
+            // gần đây; tổng điểm hiện tại không phụ thuộc vào history nên không bị ảnh hưởng.
+            students.forEach(s => {
+                if (Array.isArray(s.history) && s.history.length > 150) {
+                    s.history = s.history.slice(-150);
+                }
+            });
+
             // Save students
             const studentsKey = getClassDataKey('students', cleanClassName);
             const studentsData = JSON.stringify(students);
