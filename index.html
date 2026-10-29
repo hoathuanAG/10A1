@@ -1287,6 +1287,10 @@
   .ph-guide-list{display:flex; flex-direction:column; gap:12px; margin-top:12px;}
   .ph-guide-item{display:flex; gap:12px; align-items:flex-start; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#f8fafc; font-size:13.5px; line-height:1.5;}
   .ph-guide-ico{font-size:20px; flex-shrink:0;}
+  /* 4 nút mục con của Góc Phụ Huynh: viền dày + đậm màu hơn mức mặc định để phụ huynh dễ nhận ra ngay,
+     không phải nhìn kỹ mới thấy (so với .subtab[data-mau] dùng chung, viền chỉ 1px). */
+  #subtabs-phuhuynh .subtab[data-mau]{border-width:2px; font-weight:700;}
+  #subtabs-phuhuynh .subtab[data-mau]:not(.active){background:color-mix(in srgb, var(--mau) 10%, #fff);}
 
   /* ---------- Sơ đồ lớp ---------- */
   .front-zone{display:grid; grid-template-columns:1fr 1.6fr 1fr; gap:12px; margin-bottom:22px;}
@@ -3340,15 +3344,12 @@
       </div>
       <button type="button" class="btn btn-primary btn-sm" id="phqtLuuBtn">💾 Lưu</button>
       <div id="phqtMsg" class="msg"></div>
-
-      <div class="tc-quantri-list">
-        <h3 style="margin-top:16px;">📨 Phản hồi / góp ý từ phụ huynh</h3>
-        <div id="phPhanHoiAdminList"><p class="section-note">Chưa có phản hồi nào.</p></div>
-      </div>
     </div>
+  </div>
 
+  <div class="panel" id="panel-phgopy" data-group="phuhuynh">
     <div class="card">
-      <h2>Gửi phản hồi / góp ý cho GVCN</h2>
+      <h2>💬 Góp ý trực tiếp cho GVCN</h2>
       <div class="rieng-tu">
         🔒 <b>Mục này riêng tư.</b> Chỉ Thầy chủ nhiệm đọc được nội dung quý phụ huynh gửi.
       </div>
@@ -3373,6 +3374,11 @@
         <div id="phMsg" class="msg"></div>
       </form>
     </div>
+
+    <div id="phQuanTriGopYBox" class="tc-quantri" style="display:none;">
+      <h3>📨 Phản hồi / góp ý từ phụ huynh (chỉ thầy nhìn thấy mục này)</h3>
+      <div id="phPhanHoiAdminList"><p class="section-note">Chưa có phản hồi nào.</p></div>
+    </div>
   </div>
 
   <div class="panel" id="panel-phhuongdan" data-group="phuhuynh">
@@ -3394,7 +3400,11 @@
         </div>
         <div class="ph-guide-item">
           <div class="ph-guide-ico">📞</div>
-          <div><b>Góc Phụ Huynh → Liên hệ &amp; góp ý</b> — xem số điện thoại/Zalo của Thầy chủ nhiệm, hoặc gửi phản hồi trực tiếp cho Thầy.</div>
+          <div><b>Góc Phụ Huynh → Liên hệ với GVCN</b> — xem số điện thoại/Zalo/Email của Thầy chủ nhiệm.</div>
+        </div>
+        <div class="ph-guide-item">
+          <div class="ph-guide-ico">💬</div>
+          <div><b>Góc Phụ Huynh → Góp ý trực tiếp</b> — gửi phản hồi/góp ý riêng tư cho Thầy ngay trên trang, không cần gọi điện hay nhắn Zalo.</div>
         </div>
         <div class="ph-guide-item">
           <div class="ph-guide-ico">📱</div>
@@ -3402,7 +3412,7 @@
         </div>
         <div class="ph-guide-item">
           <div class="ph-guide-ico">❓</div>
-          <div><b>Cần hỗ trợ thêm?</b> — liên hệ trực tiếp Thầy chủ nhiệm qua mục "Liên hệ &amp; góp ý với GVCN" ở trên.</div>
+          <div><b>Cần hỗ trợ thêm?</b> — vào mục "Góp ý trực tiếp" ở trên để gửi cho Thầy chủ nhiệm.</div>
         </div>
       </div>
     </div>
@@ -4519,7 +4529,8 @@ const SUBTAB_DINH_NGHIA = {
   duongdenngoivua: {icon:'👑', ten:'Đường đến ngôi vua'},
   dapmuoi:   {icon:'🦟', ten:'Đập muỗi'},
   phtongquan: {icon:'📊', ten:'Tổng quan tình hình lớp'},
-  phlienhe:   {icon:'📞', ten:'Liên hệ & góp ý với GVCN'},
+  phlienhe:   {icon:'📞', ten:'Liên hệ với GVCN'},
+  phgopy:     {icon:'💬', ten:'Góp ý trực tiếp'},
   phhuongdan: {icon:'📖', ten:'Hướng dẫn sử dụng trang web'},
 };
 const NHOM_TAB = {
@@ -4528,7 +4539,16 @@ const NHOM_TAB = {
   hoatdongto: ['tongketTuan'],
   nhiemvu:  ['baitapvatly10', 'nopvideo10'],
   games:    ['quayten', 'dodoon', 'ndkm', 'duongdenngoivua', 'dapmuoi'],
-  phuhuynh: ['phtongquan', 'phlienhe', 'phhuongdan'],
+  phuhuynh: ['phtongquan', 'phlienhe', 'phgopy', 'phhuongdan'],
+};
+/* Màu khung mặc định cho các mục con của "Góc Phụ Huynh" — tô màu sẵn (không cần giáo viên tự chỉnh
+   màu như các mục khác) để phụ huynh dễ nhận ra và bấm vào, đặc biệt trên điện thoại. Dùng chung cơ
+   chế data-mau/--mau đã có sẵn cho mục chính (xem CSS .subtab[data-mau]). */
+const PH_MAU_MAC_DINH = {
+  phtongquan: '#2563eb',
+  phlienhe:   '#059669',
+  phgopy:     '#d97706',
+  phhuongdan: '#7c3aed',
 };
 /* Map link cũ (trước khi gộp nhóm) -> đúng nhóm mới, để link/bookmark cũ vẫn mở đúng chỗ */
 const TAB_CU_SANG_NHOM = {};
@@ -4580,7 +4600,7 @@ function renderSubtabsNhom(groupId){
   const ds = thuTuCon[groupId] || NHOM_TAB[groupId];
   host.innerHTML = ds.map(id=>{
     const d = SUBTAB_DINH_NGHIA[id];
-    const mau = mauTuyChinhState[id];
+    const mau = mauTuyChinhState[id] || PH_MAU_MAC_DINH[id];
     const thuocTinhMau = mau ? ` data-mau="1" style="--mau:${esc(mau)}"` : '';
     return `<button class="subtab" data-subtab="${id}"${thuocTinhMau}><span class="ico">${d.icon}</span>${esc(tenHienThi(id, SUBTAB_DINH_NGHIA))}</button>`;
   }).join('');
@@ -4907,6 +4927,7 @@ auth.onAuthStateChanged(async user=>{
   // của phụ huynh nữa — tự mở khóa; hộp quản trị (đổi liên hệ/mật khẩu) chỉ giáo viên mới thấy.
   if(isAdmin) phDaXacThuc = true;
   if($('phQuanTriBox')) $('phQuanTriBox').style.display = isAdmin ? 'block' : 'none';
+  if($('phQuanTriGopYBox')) $('phQuanTriGopYBox').style.display = isAdmin ? 'block' : 'none';
   if(typeof capNhatKhoaPhuHuynh === 'function') capNhatKhoaPhuHuynh();
   if(isAdmin){ if(typeof napPhPhanHoiTatCa === 'function') napPhPhanHoiTatCa(); } else { phPhanHoiTatCa = []; }
   // Thủ quỹ: đăng nhập thành công nên ẩn form đăng nhập, nhưng KHÔNG mở khu vực quản trị đầy
