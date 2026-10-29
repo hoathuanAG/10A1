@@ -451,10 +451,11 @@
   /* ---------- SaaS KPI Metric Cards Strip ---------- */
   .saas-kpi-grid{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(5,1fr);
     gap:9px;
     margin-bottom:12px;
   }
+  @media (max-width:1200px){ .saas-kpi-grid{grid-template-columns:repeat(3,1fr);} }
   @media (max-width:960px){ .saas-kpi-grid{grid-template-columns:repeat(2,1fr);} }
   @media (max-width:520px){ .saas-kpi-grid{grid-template-columns:1fr;} }
 
@@ -556,6 +557,24 @@
     font-weight:700;
     color:#b45309;
     font-size:9.5px;
+  }
+  .saas-kpi-gt-row{
+    margin-bottom:2px;
+  }
+  .saas-kpi-gt-row .ten{
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--ink);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .saas-kpi-gt-row .giai{
+    font-size:9.5px;
+    color:#b45309;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
   }
   .saas-kpi-progress{
     width:100%;
@@ -1352,6 +1371,10 @@
   .ph-stat-label{font-size:11px; font-weight:700; letter-spacing:0.5px; color:var(--ink-soft);}
   .ph-stat-val{font-size:20px; font-weight:800; color:var(--ink); margin-top:4px;}
   .ph-stat-sub{font-size:12px; color:var(--ink-soft); margin-top:4px;}
+  .ph-stat-list{display:flex; flex-direction:column; gap:3px; margin-top:4px;}
+  .ph-stat-list-row{display:flex; align-items:center; gap:6px; font-size:12.5px; line-height:1.35;}
+  .ph-stat-list-ten{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; color:var(--ink);}
+  .ph-stat-list-so{flex-shrink:0; font-weight:700; color:#b45309; font-size:11.5px;}
   .ph-contact-card{border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:#f8fafc;}
   .ph-contact-row{display:flex; align-items:center; gap:10px; padding:6px 0; font-size:14px;}
   .ph-contact-row b{min-width:92px; display:inline-block; color:var(--ink-soft); font-weight:600; font-size:12.5px;}
@@ -2002,6 +2025,13 @@
             <div class="saas-kpi-top5" id="saasKpiTop5"><span class="saas-kpi-sub">Chưa có dữ liệu tuần này</span></div>
           </div>
           <div class="saas-kpi-ico amber">🏆</div>
+        </div>
+        <div class="saas-kpi-card" onclick="moTab('hoatdong','giaithuong')">
+          <div style="min-width:0;flex:1;">
+            <div class="saas-kpi-label">THÀNH TÍCH NỔI BẬT</div>
+            <div class="saas-kpi-top5" id="saasKpiGiaiThuong"><span class="saas-kpi-sub">Chưa có giải thưởng nào</span></div>
+          </div>
+          <div class="saas-kpi-ico rose">🏅</div>
         </div>
       </div>
 
@@ -3418,9 +3448,8 @@
           <div class="ph-stat-sub" id="phtqHoanCanh">2 học sinh cận nghèo · 2 học sinh khó khăn</div>
         </div>
         <div class="ph-stat-card">
-          <div class="ph-stat-label">TỈ LỆ HOÀN THÀNH BÀI TẬP</div>
-          <div class="ph-stat-val" id="phtqBaiTap">0%</div>
-          <div class="ph-stat-sub" id="phtqBaiTapSub">0/45 HS đã hoàn thành</div>
+          <div class="ph-stat-label">THÀNH TÍCH TỐT TRONG TUẦN</div>
+          <div class="ph-stat-list" id="phtqThanhTich"><span class="ph-stat-sub">Chưa có dữ liệu tuần này</span></div>
         </div>
       </div>
       <p class="section-note" style="margin-top:14px;">
@@ -4905,83 +4934,25 @@ function saasCapNhatKpiVaBreadcrumb(){
     const elPhHoanCanh = document.getElementById('phtqHoanCanh');
     if(elPhHoanCanh) elPhHoanCanh.textContent = '2 học sinh cận nghèo · 2 học sinh khó khăn';
 
-    // 4. Tỉ lệ hoàn thành bài tập — mục này đã rời khỏi lưới KPI trang chủ (được thay bằng "Cá nhân
-    // xuất sắc"), nhưng Góc Phụ Huynh vẫn cần số liệu này nên tính trực tiếp vào phtqBaiTap/Sub.
-    const elPhBaiTap = document.getElementById('phtqBaiTap'), elPhBaiTapSub = document.getElementById('phtqBaiTapSub');
-    if(elPhBaiTap){
-      const tongHS = (typeof roster !== 'undefined' && roster.length) ? roster.length : 45;
-      const nguonBt = (typeof baiTapVatLy10TatCa !== 'undefined' && Object.keys(baiTapVatLy10TatCa).length)
-        ? baiTapVatLy10TatCa
-        : (saasBaiTapPublicCache || {});
-      const dsUidNop = Object.keys(nguonBt);
-      const tenDaCoBai = new Set();
-      let tongSoBaiNop = 0;
-      const cacBaiCoNguoiNop = new Set();
+    // 4. Thành tích tốt trong tuần (Góc Phụ Huynh) + Cá nhân xuất sắc (trang chủ) — cùng lấy từ danh
+    // sách học sinh được ghi nhận "Điểm tốt" ở tuần mới nhất của "Tổng kết tuần theo Tổ".
+    const dsThanhTich = (typeof tinhThanhTichTotTuanNay === 'function' && typeof totuanState !== 'undefined')
+      ? tinhThanhTichTotTuanNay() : [];
 
-      dsUidNop.forEach(uid=>{
-        const rec = nguonBt[uid];
-        if(!rec) return;
-        const btMap = rec.baiTap || {};
-        const dsMaBai = Object.keys(btMap).filter(k=> btMap[k] && btMap[k].anhId);
-        if(dsMaBai.length || rec.anhId){
-          if(rec.hoTen) tenDaCoBai.add(rec.hoTen.trim().toLowerCase());
-          else tenDaCoBai.add(uid);
-          if(dsMaBai.length){
-            tongSoBaiNop += dsMaBai.length;
-            dsMaBai.forEach(k=> cacBaiCoNguoiNop.add(k));
-          } else {
-            tongSoBaiNop += 1;
-            cacBaiCoNguoiNop.add('bai1');
-          }
-        }
-      });
-
-      // Kết hợp thêm bảng điểm AI đã công bố (nếu chấm qua Google Photos/link không qua form nộp web)
-      if(typeof chamAiDaDuyet !== 'undefined' && chamAiDaDuyet){
-        Object.keys(chamAiDaDuyet).forEach(k=>{
-          const item = chamAiDaDuyet[k];
-          if(item && item.hoTen){
-            tenDaCoBai.add(item.hoTen.trim().toLowerCase());
-          }
-          const bId = (item && item.baiId) || (k.includes('|') ? k.split('|')[1] : 'bai1');
-          if(bId) cacBaiCoNguoiNop.add(bId);
-        });
-      }
-
-      const soHsHoanThanh = Math.min(tongHS, tenDaCoBai.size);
-      const tiLe = tongHS > 0 ? Math.min(100, Math.round((soHsHoanThanh / tongHS) * 100)) : 0;
-      const soBaiActive = cacBaiCoNguoiNop.size;
-      elPhBaiTap.textContent = `${tiLe}%`;
-      if(elPhBaiTapSub){
-        elPhBaiTapSub.textContent = soHsHoanThanh > 0
-          ? `${soHsHoanThanh}/${tongHS} HS đã nộp (${soBaiActive || 1} bài)`
-          : `0/${tongHS} HS đã nộp bài`;
-      }
+    const elPhThanhTich = document.getElementById('phtqThanhTich');
+    if(elPhThanhTich){
+      elPhThanhTich.innerHTML = dsThanhTich.length
+        ? dsThanhTich.map(hs=> `<div class="ph-stat-list-row">
+            <span class="ph-stat-list-ten">${esc(hs.hoTen)}</span>
+            <span class="ph-stat-list-so">${hs.soLuong} điểm tốt</span>
+          </div>`).join('')
+        : '<span class="ph-stat-sub">Chưa có dữ liệu tuần này</span>';
     }
 
-    // 5. Cá nhân xuất sắc tuần này — top 5 học sinh được ghi nhận "Điểm tốt" nhiều nhất trong
-    // tuần mới nhất (mỗi Tổ tự đánh số tuần riêng — "tuần này" = tuần có số thứ tự lớn nhất đã có
-    // ở ít nhất 1 Tổ, gộp "Điểm tốt" của đúng tuần đó ở MỌI Tổ đã nộp tới tuần đó).
+    // 5. Cá nhân xuất sắc tuần này — top 5 học sinh nhiều "Điểm tốt" nhất (trích từ dsThanhTich ở trên).
     const elTop5 = document.getElementById('saasKpiTop5');
-    if(elTop5 && typeof totuanState !== 'undefined'){
-      const soTuanMoiNhat = (typeof tkMaxSoTuan === 'function') ? tkMaxSoTuan() : 0;
-      const demTheoTen = {}; // { "tên chuẩn hoá": {hoTen gốc, soLuong} }
-      if(soTuanMoiNhat > 0){
-        [1,2,3,4].forEach(soTo=>{
-          const duLieuTo = totuanState['to'+soTo] || {};
-          const dsTuanId = Object.keys(duLieuTo).sort();
-          const tuanId = dsTuanId[soTuanMoiNhat - 1]; // tuần cuối cùng (mới nhất) của đúng Tổ này, nếu có
-          if(!tuanId) return;
-          const dsGhi = (duLieuTo[tuanId] || {}).diemTot || {};
-          Object.values(dsGhi).forEach(g=>{
-            if(!g || !g.hoTen) return;
-            const key = chuanTen(g.hoTen);
-            if(!demTheoTen[key]) demTheoTen[key] = { hoTen: g.hoTen, soLuong: 0 };
-            demTheoTen[key].soLuong += 1;
-          });
-        });
-      }
-      const top5 = Object.values(demTheoTen).sort((a,b)=> b.soLuong - a.soLuong).slice(0,5);
+    if(elTop5){
+      const top5 = dsThanhTich.slice(0,5);
       elTop5.innerHTML = top5.length
         ? top5.map((hs,i)=> `<div class="saas-kpi-top5-row">
             <span class="saas-kpi-top5-rank">#${i+1}</span>
@@ -9356,9 +9327,22 @@ let giaiThuongState = {};
 function renderGiaiThuong(){
   const box = $('gtAdminCard');
   if(box) box.style.display = isAdmin ? 'block' : 'none';
+  const ds = Object.entries(giaiThuongState || {}).sort((a,b)=> (b[1].luc||0) - (a[1].luc||0));
+
+  // KPI "Thành tích nổi bật" trang chủ — 3 giải thưởng mới cập nhật gần nhất.
+  const elKpiGt = $('saasKpiGiaiThuong');
+  if(elKpiGt){
+    const top3 = ds.slice(0,3).map(([,g])=> g);
+    elKpiGt.innerHTML = top3.length
+      ? top3.map(g=> `<div class="saas-kpi-gt-row">
+          <div class="ten">${esc(g.hoTen||'')}</div>
+          <div class="giai">${esc(g.tenGiai||'')}</div>
+        </div>`).join('')
+      : '<span class="saas-kpi-sub">Chưa có giải thưởng nào</span>';
+  }
+
   const host = $('gtDanhSach');
   if(!host) return;
-  const ds = Object.entries(giaiThuongState || {}).sort((a,b)=> (b[1].luc||0) - (a[1].luc||0));
   host.innerHTML = ds.length ? ds.map(([id,g])=> `<div class="gt-item">
       <div class="ico">🏅</div>
       <div class="noidung">
@@ -9691,6 +9675,29 @@ function tkMaxSoTuan(){
     if(n > max) max = n;
   });
   return max;
+}
+/* Danh sách học sinh được ghi nhận "Điểm tốt" trong tuần mới nhất, gộp cả 4 Tổ, sắp giảm dần theo
+   số lượng — dùng chung cho KPI "Cá nhân xuất sắc" (trang chủ, top 5) và "Thành tích tốt trong tuần"
+   (Góc Phụ Huynh, hiện cả danh sách). */
+function tinhThanhTichTotTuanNay(){
+  const soTuanMoiNhat = tkMaxSoTuan();
+  const demTheoTen = {}; // { "tên chuẩn hoá": {hoTen gốc, soLuong} }
+  if(soTuanMoiNhat > 0){
+    [1,2,3,4].forEach(soTo=>{
+      const duLieuTo = totuanState['to'+soTo] || {};
+      const dsTuanId = Object.keys(duLieuTo).sort();
+      const tuanId = dsTuanId[soTuanMoiNhat - 1]; // tuần cuối cùng (mới nhất) của đúng Tổ này, nếu có
+      if(!tuanId) return;
+      const dsGhi = (duLieuTo[tuanId] || {}).diemTot || {};
+      Object.values(dsGhi).forEach(g=>{
+        if(!g || !g.hoTen) return;
+        const key = chuanTen(g.hoTen);
+        if(!demTheoTen[key]) demTheoTen[key] = { hoTen: g.hoTen, soLuong: 0 };
+        demTheoTen[key].soLuong += 1;
+      });
+    });
+  }
+  return Object.values(demTheoTen).sort((a,b)=> b.soLuong - a.soLuong);
 }
 function tkCapNhatBoLocTuan(selId){
   const el = $(selId);
