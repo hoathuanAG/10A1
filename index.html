@@ -2403,7 +2403,7 @@
     <div class="card">
       <h2>Danh sách đã đăng ký <span class="count-badge" id="countBadge">0</span> <span id="ldDotBadge" style="font-weight:600;font-size:12px;color:var(--ink-soft);"></span></h2>
       <p class="section-note">Dòng có dấu ✋ là đăng ký của em — bấm nút Sửa để thay đổi.</p>
-      <div id="ldDanhSachAn" class="empty" style="display:none;">🙈 Giáo viên đang tạm ẩn danh sách này — em vẫn đăng ký bình thường ở trên, chỉ không xem được danh sách của các bạn.</div>
+      <div id="ldDanhSachAn" class="empty" style="display:none;"></div>
       <div id="ldDanhSachHienThi">
         <div class="scroll-x">
           <table>
@@ -5761,10 +5761,17 @@ function renderRegs(){
   const dotDangKhoa = !!ldCaiDat.dotKhoa[ldCaiDat.dotHienTai];
   const dsDotNay = regs.filter(r=> (r.dot||1) === ldCaiDat.dotHienTai);
 
-  // Ẩn/hiện danh sách theo cài đặt giáo viên — admin luôn thấy thật để quản lý.
-  const anVoiHocSinh = ldCaiDat.anDanhSach && !isAdmin;
-  $('ldDanhSachAn').style.display = anVoiHocSinh ? 'block' : 'none';
-  $('ldDanhSachHienThi').style.display = anVoiHocSinh ? 'none' : 'block';
+  // Ẩn/hiện danh sách theo cài đặt giáo viên — khi đã ẩn thì ẩn với TẤT CẢ mọi người, kể cả chính
+  // tài khoản giáo viên; hộp "⚙️ Quản lý đợt đăng ký" bên dưới luôn hiện riêng cho giáo viên để có
+  // chỗ bấm "Hiện danh sách" trở lại.
+  const dangAn = !!ldCaiDat.anDanhSach;
+  $('ldDanhSachAn').style.display = dangAn ? 'block' : 'none';
+  $('ldDanhSachHienThi').style.display = dangAn ? 'none' : 'block';
+  if(dangAn){
+    $('ldDanhSachAn').textContent = isAdmin
+      ? '🙈 Thầy đang tạm ẩn danh sách này với mọi người (kể cả chính tài khoản thầy). Bấm "Hiện danh sách" ở hộp quản lý bên dưới để xem lại.'
+      : '🙈 Giáo viên đang tạm ẩn danh sách này — em vẫn đăng ký bình thường ở trên, chỉ không xem được danh sách của các bạn.';
+  }
   $('ldDotBadge').textContent = `— Đợt ${ldCaiDat.dotHienTai}${dotDangKhoa?' (đã khóa)':''}`;
 
   // Khóa form đăng ký cho học sinh khi đợt hiện tại đã khóa.
