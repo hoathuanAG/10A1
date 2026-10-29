@@ -1273,6 +1273,21 @@
   .tc-quantri-dong .ten{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .tc-quantri-dong button{border:none; background:none; cursor:pointer; font-size:15px; padding:2px 6px;}
 
+  /* ---------- Góc Phụ Huynh ---------- */
+  .ph-stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:12px;}
+  @media (max-width:960px){ .ph-stat-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:520px){ .ph-stat-grid{grid-template-columns:1fr;} }
+  .ph-stat-card{border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:#f8fafc;}
+  .ph-stat-label{font-size:11px; font-weight:700; letter-spacing:0.5px; color:var(--ink-soft);}
+  .ph-stat-val{font-size:20px; font-weight:800; color:var(--ink); margin-top:4px;}
+  .ph-stat-sub{font-size:12px; color:var(--ink-soft); margin-top:4px;}
+  .ph-contact-card{border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:#f8fafc;}
+  .ph-contact-row{display:flex; align-items:center; gap:10px; padding:6px 0; font-size:14px;}
+  .ph-contact-row b{min-width:92px; display:inline-block; color:var(--ink-soft); font-weight:600; font-size:12.5px;}
+  .ph-guide-list{display:flex; flex-direction:column; gap:12px; margin-top:12px;}
+  .ph-guide-item{display:flex; gap:12px; align-items:flex-start; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#f8fafc; font-size:13.5px; line-height:1.5;}
+  .ph-guide-ico{font-size:20px; flex-shrink:0;}
+
   /* ---------- Sơ đồ lớp ---------- */
   .front-zone{display:grid; grid-template-columns:1fr 1.6fr 1fr; gap:12px; margin-bottom:22px;}
   .front-box{border-radius:12px; padding:12px 10px; text-align:center; font-size:12.5px; font-weight:700;
@@ -1967,6 +1982,7 @@
       <div class="subtabs" id="subtabs-hoatdongto" data-group="hoatdongto"></div>
       <div class="subtabs" id="subtabs-nhiemvu" data-group="nhiemvu"></div>
       <div class="subtabs" id="subtabs-games" data-group="games"></div>
+      <div class="subtabs" id="subtabs-phuhuynh" data-group="phuhuynh"></div>
 
   <!-- ============ TRANG CHỦ: SLIDESHOW + TIN TỨC + THÔNG BÁO ============ -->
   <div class="panel active" id="panel-trangchu">
@@ -3240,6 +3256,158 @@
     </script>
   </div>
 
+  <!-- ============ GÓC PHỤ HUYNH ============ -->
+  <!-- Màn hình khóa: hiện khi phụ huynh chưa nhập đúng mật khẩu chung của lớp. KHÔNG nằm trong
+       NHOM_TAB.phuhuynh nên không có nút subtab riêng — chỉ được JS bật/tắt (xem capNhatKhoaPhuHuynh). -->
+  <div class="panel" id="panel-phkhoa" data-group="phuhuynh">
+    <div class="card" style="max-width:420px;margin:30px auto;text-align:center;">
+      <div style="font-size:40px;margin-bottom:6px;">🔒</div>
+      <h2>Góc Phụ Huynh</h2>
+      <p class="section-note">
+        Khu vực dành riêng cho phụ huynh lớp 10A1. Thầy đã gửi mật khẩu chung qua nhóm Zalo lớp —
+        quý phụ huynh nhập mật khẩu đó để xem thông tin. Nếu chưa có mật khẩu, vui lòng liên hệ GVCN.
+      </p>
+      <div class="field" style="text-align:left;">
+        <label for="phaMatKhauInput">Mật khẩu phụ huynh</label>
+        <input type="password" id="phaMatKhauInput" placeholder="Nhập mật khẩu Thầy đã gửi" autocomplete="off">
+      </div>
+      <button type="button" class="btn btn-primary" id="phaMoKhoaBtn" style="width:100%;margin-top:6px;">Mở khóa</button>
+      <div id="phaKhoaMsg" class="msg"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-phtongquan" data-group="phuhuynh">
+    <div class="card">
+      <h2>📊 Tổng quan tình hình lớp 10A1</h2>
+      <p class="section-note">Số liệu chung của cả lớp, cập nhật theo thời gian thực — không hiện thông tin riêng của từng học sinh.</p>
+      <div class="ph-stat-grid">
+        <div class="ph-stat-card">
+          <div class="ph-stat-label">SĨ SỐ LỚP</div>
+          <div class="ph-stat-val" id="phtqSiSo">45/20 HS</div>
+          <div class="ph-stat-sub" id="phtqSiSoSub">Tổng số 45 · 20 Nữ (25 Nam)</div>
+        </div>
+        <div class="ph-stat-card">
+          <div class="ph-stat-label">DÂN TỘC/NỮ DÂN TỘC</div>
+          <div class="ph-stat-val" id="phtqDanToc">0/0 HS</div>
+          <div class="ph-stat-sub" id="phtqDanTocSub">Dân tộc thiểu số / Nữ dân tộc</div>
+        </div>
+        <div class="ph-stat-card">
+          <div class="ph-stat-label">HOÀN CẢNH</div>
+          <div class="ph-stat-sub" id="phtqHoanCanh">2 học sinh cận nghèo · 2 học sinh khó khăn</div>
+        </div>
+        <div class="ph-stat-card">
+          <div class="ph-stat-label">TỈ LỆ HOÀN THÀNH BÀI TẬP</div>
+          <div class="ph-stat-val" id="phtqBaiTap">0%</div>
+          <div class="ph-stat-sub" id="phtqBaiTapSub">0/45 HS đã hoàn thành</div>
+        </div>
+      </div>
+      <p class="section-note" style="margin-top:14px;">
+        Muốn xem chi tiết hơn (thời khóa biểu, bảng tin, thông báo...) quý phụ huynh có thể xem cùng
+        các mục khác ngay trên trang — những mục đó không cần mật khẩu riêng.
+      </p>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-phlienhe" data-group="phuhuynh">
+    <div class="card">
+      <h2>📞 Liên hệ với GVCN</h2>
+      <div class="ph-contact-card" id="phLienHeHienThi">
+        <p class="section-note">Thầy chủ nhiệm chưa cập nhật thông tin liên hệ ở mục này.</p>
+      </div>
+    </div>
+
+    <div id="phQuanTriBox" class="tc-quantri" style="display:none;">
+      <h3>⚙️ Cập nhật thông tin liên hệ &amp; mật khẩu Góc Phụ Huynh (chỉ thầy nhìn thấy mục này)</h3>
+      <div class="field">
+        <label for="phqtSdt">Số điện thoại</label>
+        <input type="text" id="phqtSdt" placeholder="09xxxxxxxx" maxlength="15">
+      </div>
+      <div class="field">
+        <label for="phqtZalo">Zalo</label>
+        <input type="text" id="phqtZalo" placeholder="Số Zalo hoặc link nhóm Zalo lớp" maxlength="120">
+      </div>
+      <div class="field">
+        <label for="phqtEmail">Email</label>
+        <input type="text" id="phqtEmail" placeholder="email@..." maxlength="100">
+      </div>
+      <div class="field">
+        <label for="phqtGhiChu">Giờ phản hồi / ghi chú thêm</label>
+        <input type="text" id="phqtGhiChu" placeholder="VD: Phản hồi trong giờ hành chính" maxlength="200">
+      </div>
+      <div class="field">
+        <label for="phqtMatKhau">Mật khẩu Góc Phụ Huynh (gửi cho phụ huynh qua Zalo)</label>
+        <input type="text" id="phqtMatKhau" placeholder="VD: 10A1-2026" maxlength="40">
+      </div>
+      <button type="button" class="btn btn-primary btn-sm" id="phqtLuuBtn">💾 Lưu</button>
+      <div id="phqtMsg" class="msg"></div>
+
+      <div class="tc-quantri-list">
+        <h3 style="margin-top:16px;">📨 Phản hồi / góp ý từ phụ huynh</h3>
+        <div id="phPhanHoiAdminList"><p class="section-note">Chưa có phản hồi nào.</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Gửi phản hồi / góp ý cho GVCN</h2>
+      <div class="rieng-tu">
+        🔒 <b>Mục này riêng tư.</b> Chỉ Thầy chủ nhiệm đọc được nội dung quý phụ huynh gửi.
+      </div>
+      <form id="phForm">
+        <div class="field">
+          <label for="phTenPH">Họ tên phụ huynh</label>
+          <input type="text" id="phTenPH" placeholder="Nguyễn Văn A" maxlength="60">
+        </div>
+        <div class="field">
+          <label for="phTenHS">Họ tên học sinh (con em)</label>
+          <input type="text" id="phTenHS" placeholder="Nguyễn Văn B — lớp 10A1" maxlength="60">
+        </div>
+        <div class="field">
+          <label for="phDienThoai">Số điện thoại liên hệ lại</label>
+          <input type="text" id="phDienThoai" placeholder="0912345678" maxlength="15">
+        </div>
+        <div class="field">
+          <label for="phNoiDung">Nội dung</label>
+          <textarea id="phNoiDung" maxlength="1000" placeholder="Nội dung muốn trao đổi/góp ý với Thầy chủ nhiệm..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" id="phSubmit">Gửi cho GVCN</button>
+        <div id="phMsg" class="msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-phhuongdan" data-group="phuhuynh">
+    <div class="card">
+      <h2>📖 Hướng dẫn sử dụng trang web</h2>
+      <p class="section-note">Hướng dẫn ngắn gọn cho quý phụ huynh chưa quen dùng trang web của lớp.</p>
+      <div class="ph-guide-list">
+        <div class="ph-guide-item">
+          <div class="ph-guide-ico">🏠</div>
+          <div><b>Trang chủ</b> — xem thông báo mới nhất, thời khóa biểu và các tin tức của lớp ngay khi mở trang, không cần đăng nhập.</div>
+        </div>
+        <div class="ph-guide-item">
+          <div class="ph-guide-ico">📰</div>
+          <div><b>Bảng tin lớp</b> — xem các bài viết, hình ảnh hoạt động của lớp do Thầy chủ nhiệm hoặc các bạn đăng.</div>
+        </div>
+        <div class="ph-guide-item">
+          <div class="ph-guide-ico">🙋</div>
+          <div><b>Các hoạt động của lớp</b> — theo dõi các phong trào, đăng ký lao động, và mục "Nhận hỗ trợ" nếu gia đình cần Thầy hỗ trợ (hoàn toàn riêng tư, chỉ Thầy đọc được).</div>
+        </div>
+        <div class="ph-guide-item">
+          <div class="ph-guide-ico">📞</div>
+          <div><b>Góc Phụ Huynh → Liên hệ &amp; góp ý</b> — xem số điện thoại/Zalo của Thầy chủ nhiệm, hoặc gửi phản hồi trực tiếp cho Thầy.</div>
+        </div>
+        <div class="ph-guide-item">
+          <div class="ph-guide-ico">📱</div>
+          <div><b>Dùng trên điện thoại</b> — mở trang bằng trình duyệt (Chrome/Safari) như mở một trang web bình thường, không cần cài đặt ứng dụng gì thêm.</div>
+        </div>
+        <div class="ph-guide-item">
+          <div class="ph-guide-ico">❓</div>
+          <div><b>Cần hỗ trợ thêm?</b> — liên hệ trực tiếp Thầy chủ nhiệm qua mục "Liên hệ &amp; góp ý với GVCN" ở trên.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ KHU VỰC GIÁO VIÊN ============ -->
   <details class="admin" id="adminDetails">
     <summary>🔒 Khu vực giáo viên / quản trị</summary>
@@ -3595,6 +3763,11 @@ const rosterRef = db.ref('lop10a1/roster');
 const regsRef   = db.ref('laodong2026/registrations');
 const tvRef     = db.ref('khaigiang2026/tivi');
 const htRef     = db.ref('hotro2026/dangky');      // riêng tư: khóa theo uid, chỉ chủ nhân và giáo viên đọc
+/* Góc Phụ Huynh: mật khẩu chung + thông tin liên hệ công khai (trong trangChu2026, ai cũng đọc được),
+   còn phản hồi/góp ý của phụ huynh thì RIÊNG TƯ (phuHuynh2026/phanHoi, khóa theo uid như hotro2026). */
+const phMatKhauRef = db.ref('trangChu2026/phuHuynhMatKhau');
+const phLienHeRef  = db.ref('trangChu2026/phuHuynhLienHe');
+const phPhanHoiRef = db.ref('phuHuynh2026/phanHoi');
 const btRef     = db.ref('bangtin2026/baiviet');   // bài đăng, ảnh nhỏ nằm kèm
 const btAnhRef  = db.ref('bangtin2026/anh');       // ảnh cỡ lớn, chỉ tải khi bấm xem
 const cambienRef  = db.ref('bangtin2026/cambien');   // thả cảm xúc — đọc công khai, mỗi người 1 dòng theo uid của mình
@@ -3998,6 +4171,123 @@ if($('phLuuBtn')) $('phLuuBtn').onclick = ()=>{
     if(typeof showSaaSToast === 'function') showSaaSToast('❌ Lỗi lưu banner: ' + err.message, 'err');
   });
 };
+
+/* -------------------- GÓC PHỤ HUYNH: khóa bằng mật khẩu chung + liên hệ + phản hồi -------------------- */
+let phDaXacThuc = false;
+let phMatKhauHienTai = '';
+let phLienHeHienTai = {};
+const PHA_PHIEN_KEY = 'pha_xt_10a1';
+try{ if(sessionStorage.getItem(PHA_PHIEN_KEY) === '1') phDaXacThuc = true; }catch(e){}
+
+/* Bật/tắt màn hình khóa cho đúng 3 panel con của "Góc Phụ Huynh" — gọi mỗi khi mở tab này. */
+function capNhatKhoaPhuHuynh(){
+  const khoa = $('panel-phkhoa');
+  if(!khoa) return;
+  if(phDaXacThuc){
+    khoa.classList.remove('active');
+  } else {
+    ['phtongquan','phlienhe','phhuongdan'].forEach(id=>{ const p = $('panel-'+id); if(p) p.classList.remove('active'); });
+    khoa.classList.add('active');
+  }
+}
+
+phMatKhauRef.on('value', snap=>{
+  phMatKhauHienTai = snap.val() || '';
+  if($('phqtMatKhau') && document.activeElement !== $('phqtMatKhau')) $('phqtMatKhau').value = phMatKhauHienTai;
+});
+
+function veLienHeHtml(lh){
+  if(!lh || (!lh.sdt && !lh.zalo && !lh.email && !lh.ghiChu)){
+    return '<p class="section-note">Thầy chủ nhiệm chưa cập nhật thông tin liên hệ ở mục này.</p>';
+  }
+  let h = '';
+  if(lh.sdt)   h += `<div class="ph-contact-row"><b>📞 Điện thoại</b>${esc(lh.sdt)}</div>`;
+  if(lh.zalo)  h += `<div class="ph-contact-row"><b>💬 Zalo</b>${esc(lh.zalo)}</div>`;
+  if(lh.email) h += `<div class="ph-contact-row"><b>✉️ Email</b>${esc(lh.email)}</div>`;
+  if(lh.ghiChu)h += `<div class="ph-contact-row"><b>🕒 Ghi chú</b>${esc(lh.ghiChu)}</div>`;
+  return h;
+}
+phLienHeRef.on('value', snap=>{
+  phLienHeHienTai = snap.val() || {};
+  if($('phLienHeHienThi')) $('phLienHeHienThi').innerHTML = veLienHeHtml(phLienHeHienTai);
+  if($('phqtSdt')   && document.activeElement !== $('phqtSdt'))   $('phqtSdt').value   = phLienHeHienTai.sdt || '';
+  if($('phqtZalo')  && document.activeElement !== $('phqtZalo'))  $('phqtZalo').value  = phLienHeHienTai.zalo || '';
+  if($('phqtEmail') && document.activeElement !== $('phqtEmail')) $('phqtEmail').value = phLienHeHienTai.email || '';
+  if($('phqtGhiChu')&& document.activeElement !== $('phqtGhiChu'))$('phqtGhiChu').value = phLienHeHienTai.ghiChu || '';
+});
+
+if($('phaMoKhoaBtn')) $('phaMoKhoaBtn').onclick = ()=>{
+  const nhap = ($('phaMatKhauInput').value || '').trim();
+  if(!nhap){ showMsg($('phaKhoaMsg'), 'Nhập mật khẩu Thầy đã gửi cho quý phụ huynh.', 'err'); return; }
+  if(!phMatKhauHienTai){ showMsg($('phaKhoaMsg'), 'Lớp chưa thiết lập mật khẩu — vui lòng liên hệ Thầy chủ nhiệm.', 'err'); return; }
+  if(nhap !== phMatKhauHienTai){ showMsg($('phaKhoaMsg'), 'Sai mật khẩu, vui lòng thử lại.', 'err'); return; }
+  phDaXacThuc = true;
+  try{ sessionStorage.setItem(PHA_PHIEN_KEY, '1'); }catch(e){}
+  $('phaMatKhauInput').value = '';
+  showMsg($('phaKhoaMsg'), '', '');
+  capNhatKhoaPhuHuynh();
+  moTab('phuhuynh', 'phtongquan');
+};
+if($('phaMatKhauInput')) $('phaMatKhauInput').addEventListener('keydown', e=>{ if(e.key === 'Enter') $('phaMoKhoaBtn').click(); });
+
+/* Admin: cập nhật liên hệ + mật khẩu Góc Phụ Huynh */
+if($('phqtLuuBtn')) $('phqtLuuBtn').onclick = async ()=>{
+  if(!isAdmin) return;
+  try{
+    await phLienHeRef.set({
+      sdt: $('phqtSdt').value.trim(),
+      zalo: $('phqtZalo').value.trim(),
+      email: $('phqtEmail').value.trim(),
+      ghiChu: $('phqtGhiChu').value.trim()
+    });
+    await phMatKhauRef.set($('phqtMatKhau').value.trim());
+    showMsg($('phqtMsg'), '✅ Đã lưu.', 'ok');
+  }catch(err){ showMsg($('phqtMsg'), baoLoi(err), 'err'); }
+};
+
+/* Phụ huynh gửi phản hồi — riêng tư, chỉ Thầy đọc được (xem phuHuynh2026/phanHoi trong Security Rules) */
+if($('phForm')) $('phForm').onsubmit = async e=>{
+  e.preventDefault();
+  if(!myUid){ showMsg($('phMsg'), 'Đang kết nối, thử lại sau vài giây.', 'info'); return; }
+  const tenPH = $('phTenPH').value.trim();
+  const tenHS = $('phTenHS').value.trim();
+  const dt = $('phDienThoai').value.trim();
+  const noiDung = $('phNoiDung').value.trim();
+  if(!tenPH){ showMsg($('phMsg'), 'Vui lòng nhập họ tên phụ huynh.', 'err'); return; }
+  if(!noiDung){ showMsg($('phMsg'), 'Vui lòng nhập nội dung muốn gửi.', 'err'); return; }
+  if(dt && !/^0\d{9}$/.test(dt)){ showMsg($('phMsg'), 'Số điện thoại phải có 10 chữ số, bắt đầu bằng 0.', 'err'); return; }
+  try{
+    await phPhanHoiRef.child(myUid).set({
+      tenPhuHuynh: tenPH, tenHocSinh: tenHS, dienThoai: dt, noiDung,
+      uid: myUid, time: new Date().toLocaleString('vi-VN')
+    });
+    $('phForm').reset();
+    showMsg($('phMsg'), '✅ Đã gửi cho Thầy chủ nhiệm. Thầy sẽ xem và liên hệ lại.', 'ok');
+  }catch(err){ showMsg($('phMsg'), baoLoi(err), 'err'); }
+};
+
+let phPhanHoiTatCa = [];
+async function napPhPhanHoiTatCa(){
+  if(!isAdmin){ phPhanHoiTatCa = []; return; }
+  try{
+    const v = (await phPhanHoiRef.once('value')).val();
+    phPhanHoiTatCa = v ? Object.values(v) : [];
+  }catch(e){ phPhanHoiTatCa = []; }
+  renderPhPhanHoiAdmin();
+}
+function renderPhPhanHoiAdmin(){
+  const host = $('phPhanHoiAdminList');
+  if(!host) return;
+  if(!phPhanHoiTatCa.length){ host.innerHTML = '<p class="section-note">Chưa có phản hồi nào.</p>'; return; }
+  const ds = phPhanHoiTatCa.slice().sort((a,b)=> String(b.time||'').localeCompare(String(a.time||'')));
+  host.innerHTML = ds.map(r=> `
+    <div class="tc-quantri-dong" style="align-items:flex-start;flex-direction:column;gap:3px;padding:10px 0;">
+      <div style="font-weight:700;">${esc(r.tenPhuHuynh||'(không rõ tên)')} ${r.tenHocSinh? '— PH của '+esc(r.tenHocSinh) : ''}</div>
+      <div style="font-size:12.5px;color:var(--ink-soft);">${r.dienThoai? '📞 '+esc(r.dienThoai)+' · ' : ''}${esc(r.time||'')}</div>
+      <div style="font-size:13.5px;">${esc(r.noiDung||'')}</div>
+    </div>`).join('');
+}
+
 function esc(s){
   return String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
@@ -4203,8 +4493,9 @@ const TAB_DINH_NGHIA = {
   bangtin:    {icon:'📰', ten:'Bảng tin lớp'},
   confession: {icon:'🎭', ten:'Confession'},
   games:      {icon:'🎮', ten:'Công cụ học tập'},
+  phuhuynh:   {icon:'👨‍👩‍👧', ten:'Góc Phụ Huynh'},
 };
-const THU_TU_CHINH_MAC_DINH = ['trangchu', 'thongtin', 'quylop', 'hoatdong', 'hoatdongto', 'nhiemvu', 'bangtin', 'confession', 'games'];
+const THU_TU_CHINH_MAC_DINH = ['trangchu', 'thongtin', 'quylop', 'hoatdong', 'hoatdongto', 'nhiemvu', 'bangtin', 'confession', 'games', 'phuhuynh'];
 
 const SUBTAB_DINH_NGHIA = {
   sodo:      {icon:'📍', ten:'Sơ đồ lớp'},
@@ -4227,6 +4518,9 @@ const SUBTAB_DINH_NGHIA = {
   ndkm:      {icon:'📷', ten:'Camera nhận diện học sinh'},
   duongdenngoivua: {icon:'👑', ten:'Đường đến ngôi vua'},
   dapmuoi:   {icon:'🦟', ten:'Đập muỗi'},
+  phtongquan: {icon:'📊', ten:'Tổng quan tình hình lớp'},
+  phlienhe:   {icon:'📞', ten:'Liên hệ & góp ý với GVCN'},
+  phhuongdan: {icon:'📖', ten:'Hướng dẫn sử dụng trang web'},
 };
 const NHOM_TAB = {
   thongtin: ['sodo', 'danhsachhs', 'vitri', 'thanhvien', 'hoso', 'bancansu', 'caulacbo', 'khoanthu'],
@@ -4234,6 +4528,7 @@ const NHOM_TAB = {
   hoatdongto: ['tongketTuan'],
   nhiemvu:  ['baitapvatly10', 'nopvideo10'],
   games:    ['quayten', 'dodoon', 'ndkm', 'duongdenngoivua', 'dapmuoi'],
+  phuhuynh: ['phtongquan', 'phlienhe', 'phhuongdan'],
 };
 /* Map link cũ (trước khi gộp nhóm) -> đúng nhóm mới, để link/bookmark cũ vẫn mở đúng chỗ */
 const TAB_CU_SANG_NHOM = {};
@@ -4327,6 +4622,7 @@ function moTab(tabId, subId){
   if(subDangMo === 'vitri') setTimeout(khoiTaoHoacCapNhatBanDoVitri, 50); // panel vừa hiện ra, chờ 1 nhịp để có đúng kích thước rồi mới vẽ bản đồ
   if(typeof saasCloseMobileSidebar === 'function') saasCloseMobileSidebar();
   if(typeof saasCapNhatKpiVaBreadcrumb === 'function') saasCapNhatKpiVaBreadcrumb();
+  if(tabId === 'phuhuynh' && typeof capNhatKhoaPhuHuynh === 'function') capNhatKhoaPhuHuynh();
 }
 
 /* -------------------- SAAS DASHBOARD SHELL (giao diện mới) -------------------- */
@@ -4428,6 +4724,9 @@ function saasCapNhatKpiVaBreadcrumb(){
         if(elRosterSub) elRosterSub.textContent = 'Tổng số 45 · 20 Nữ (25 Nam)';
       }
     }
+    // Góc Phụ Huynh — lặp lại đúng số liệu sĩ số cho mục "Tổng quan tình hình lớp"
+    const elPhSiSo = document.getElementById('phtqSiSo'), elPhSiSoSub = document.getElementById('phtqSiSoSub');
+    if(elPhSiSo && elRoster){ elPhSiSo.textContent = elRoster.textContent; if(elPhSiSoSub && elRosterSub) elPhSiSoSub.textContent = elRosterSub.textContent; }
 
     // 2. Dân tộc / Nữ dân tộc (đếm từ danh sách lớp các học sinh có dân tộc khác Kinh)
     const elEthnic = document.getElementById('saasKpiSeats');
@@ -4453,12 +4752,16 @@ function saasCapNhatKpiVaBreadcrumb(){
         elEthnic.textContent = '0/0 HS';
       }
     }
+    const elPhDanToc = document.getElementById('phtqDanToc'), elPhDanTocSub = document.getElementById('phtqDanTocSub');
+    if(elPhDanToc && elEthnic){ elPhDanToc.textContent = elEthnic.textContent; if(elPhDanTocSub && elEthnicSub) elPhDanTocSub.textContent = elEthnicSub.textContent; }
 
     // 3. Hoàn cảnh: 2 học sinh cận nghèo, 2 học sinh khó khăn
     const elFund = document.getElementById('saasKpiFund');
     if(elFund && !elFund.innerHTML.trim()){
       elFund.innerHTML = '<span class="saas-kpi-pill amber">2 học sinh cận nghèo</span><span class="saas-kpi-pill rose">2 học sinh khó khăn</span>';
     }
+    const elPhHoanCanh = document.getElementById('phtqHoanCanh');
+    if(elPhHoanCanh) elPhHoanCanh.textContent = '2 học sinh cận nghèo · 2 học sinh khó khăn';
 
     // 4. Tỉ lệ hoàn thành bài tập
     const elPosts = document.getElementById('saasKpiPosts');
@@ -4514,6 +4817,8 @@ function saasCapNhatKpiVaBreadcrumb(){
           ? `${soHsHoanThanh}/${tongHS} HS đã nộp (${soBaiActive || 1} bài)`
           : `0/${tongHS} HS đã nộp bài`;
       }
+      const elPhBaiTap = document.getElementById('phtqBaiTap'), elPhBaiTapSub = document.getElementById('phtqBaiTapSub');
+      if(elPhBaiTap){ elPhBaiTap.textContent = elPosts.textContent; if(elPhBaiTapSub && elPostsSub) elPhBaiTapSub.textContent = elPostsSub.textContent; }
     }
 
     const elView = document.getElementById('saasActiveViewName');
@@ -4598,6 +4903,12 @@ auth.onAuthStateChanged(async user=>{
   if(typeof capNhatGhiChuDdnv === 'function') capNhatGhiChuDdnv();
   if(typeof capNhatQuanTriTrangChu === 'function') capNhatQuanTriTrangChu();
   if(typeof renderHsCauHinhAdmin === 'function') renderHsCauHinhAdmin();
+  // Góc Phụ Huynh: giáo viên đã đăng nhập thật (Firebase Auth) thì khỏi cần nhập thêm mật khẩu chung
+  // của phụ huynh nữa — tự mở khóa; hộp quản trị (đổi liên hệ/mật khẩu) chỉ giáo viên mới thấy.
+  if(isAdmin) phDaXacThuc = true;
+  if($('phQuanTriBox')) $('phQuanTriBox').style.display = isAdmin ? 'block' : 'none';
+  if(typeof capNhatKhoaPhuHuynh === 'function') capNhatKhoaPhuHuynh();
+  if(isAdmin){ if(typeof napPhPhanHoiTatCa === 'function') napPhPhanHoiTatCa(); } else { phPhanHoiTatCa = []; }
   // Thủ quỹ: đăng nhập thành công nên ẩn form đăng nhập, nhưng KHÔNG mở khu vực quản trị đầy
   // đủ (dữ liệu riêng tư khác của học sinh) — chỉ mục Quỹ lớp mở khóa cho họ (xem renderQuyLop).
   $('adminLocked').style.display = (isAdmin || isThuQuy) ? 'none' : 'block';
