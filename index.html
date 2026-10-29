@@ -3470,6 +3470,14 @@
           <div class="ph-stat-label">THÀNH TÍCH TỐT TRONG TUẦN</div>
           <div class="ph-stat-list" id="phtqThanhTich"><span class="ph-stat-sub">Chưa có dữ liệu tuần này</span></div>
         </div>
+        <div class="ph-stat-card">
+          <div class="ph-stat-label">HỌC SINH ĐÃ ĐƯỢC HỖ TRỢ</div>
+          <div class="ph-stat-list" id="phtqHoTro"><span class="ph-stat-sub">Chưa có học sinh nào được công khai danh sách hỗ trợ.</span></div>
+          <p class="section-note" style="margin:6px 0 0;font-size:11px;">
+            Chỉ hiện Tên và Loại hỗ trợ, cho những em thầy chủ nhiệm đã xác nhận đã hỗ trợ và đồng ý công khai.
+            Hoàn cảnh gia đình và thông tin liên hệ luôn được giữ riêng tư.
+          </p>
+        </div>
       </div>
       <p class="section-note" style="margin-top:14px;">
         Muốn xem chi tiết hơn (thời khóa biểu, bảng tin, thông báo...) quý phụ huynh có thể xem cùng
@@ -3647,6 +3655,8 @@
       <div class="section-title">🔒 Danh sách nhận hỗ trợ <span class="count-badge" id="htCountBadge">0</span></div>
       <p class="section-note" style="margin:0 0 6px;">
         Dữ liệu nhạy cảm — chỉ tài khoản giáo viên đọc được. Không chia sẻ bảng này ra ngoài.
+        Bấm "Đánh dấu đã hỗ trợ" khi đã hỗ trợ xong cho em; bấm thêm "Cho hiện công khai" nếu em/phụ
+        huynh đồng ý để Tên + Loại hỗ trợ (không hoàn cảnh/mô tả/SĐT) hiện ở mục Góc Phụ Huynh.
       </p>
       <div class="scroll-x"><table id="htAdminTable"></table></div>
 
@@ -3953,6 +3963,8 @@ const regsRef   = db.ref('laodong2026/registrations');
 const ldCaiDatRef = db.ref('laodong2026/caiDat'); // ẩn/hiện danh sách + khóa theo đợt đăng ký — công khai đọc, chỉ giáo viên (admin) ghi
 const tvRef     = db.ref('khaigiang2026/tivi');
 const htRef     = db.ref('hotro2026/dangky');      // riêng tư: khóa theo uid, chỉ chủ nhân và giáo viên đọc
+const htCongKhaiRef = db.ref('hotro2026/congKhai'); // công khai (CHỈ Tên + Loại hỗ trợ — không hoàn cảnh/mô tả/SĐT),
+                                                     // giáo viên chủ động chọn từng em để đưa vào đây, công khai đọc, chỉ giáo viên ghi
 /* Góc Phụ Huynh: mật khẩu chung + thông tin liên hệ công khai (trong trangChu2026, ai cũng đọc được),
    còn phản hồi/góp ý của phụ huynh thì RIÊNG TƯ (phuHuynh2026/phanHoi, khóa theo uid như hotro2026). */
 const phMatKhauRef = db.ref('trangChu2026/phuHuynhMatKhau');
@@ -4129,7 +4141,7 @@ function batDauNhapNeuChua(){
   const thanh = $('soDoLuuThanh');
   if(thanh) thanh.style.display = 'flex';
 }
-let htCuaToi=null, htTatCa=[], baiViet=[], anhDangChon=[];
+let htCuaToi=null, htTatCa=[], htCongKhaiState={}, baiViet=[], anhDangChon=[];
 let confessionDaDuyet=[], confessionChoDuyet=[];
 let banCanSu = [];
 let clbState = {};
@@ -5980,8 +5992,10 @@ $('htForm').onsubmit = async e=>{
   try{
     const banGhi = { name, loai, hoanCanh: hc, moTa, dienThoai: dt, uid: myUid,
                      time: new Date().toLocaleString('vi-VN') };
-    await htRef.child(myUid).set(banGhi);
-    htCuaToi = banGhi;
+    // Dùng update() (không dùng set()) để không xóa mất cờ daHoTro/congKhai mà giáo viên đã đánh dấu
+    // trước đó, nếu em sửa và gửi lại đăng ký.
+    await htRef.child(myUid).update(banGhi);
+    htCuaToi = Object.assign({}, htCuaToi, banGhi);
     $('htForm').reset();
     renderHoTro();
     showMsg($('htMsg'),'Đã gửi. Thầy chủ nhiệm sẽ xem và liên hệ với em.','ok');
@@ -6007,6 +6021,23 @@ $('htXoaBtn').onclick = async ()=>{
     showMsg($('htMsg'),'Đã rút đăng ký.','ok');
   }catch(e){ showMsg($('htMsg'), baoLoi(e),'err'); }
 };
+
+/* Danh sách CÔNG KHAI "đã hỗ trợ" — chỉ hiện Tên + Loại hỗ trợ, cho những em giáo viên đã chủ động
+   đánh dấu "Đã hỗ trợ" VÀ bật "Cho hiện công khai" (xem khu vực giáo viên). Không bao giờ hiện hoàn
+   cảnh/mô tả/SĐT ở đây — dữ liệu công khai nằm ở nhánh hotro2026/congKhai riêng, tách khỏi bản ghi
+   riêng tư hotro2026/dangky, để không lộ các trường nhạy cảm ra API công khai. */
+function renderHoTroCongKhai(){
+  const host = $('phtqHoTro');
+  if(!host) return;
+  const ds = Object.values(htCongKhaiState || {}).sort((a,b)=> (b.luc||0) - (a.luc||0));
+  host.innerHTML = ds.length
+    ? ds.map(g=> `<div class="ph-stat-list-row">
+        <span class="ph-stat-list-ten">${esc(g.name)}</span>
+        <span class="ph-stat-list-so">${esc(g.loai)}</span>
+      </div>`).join('')
+    : '<span class="ph-stat-sub">Chưa có học sinh nào được công khai danh sách hỗ trợ.</span>';
+}
+htCongKhaiRef.on('value', s=>{ htCongKhaiState = s.val() || {}; renderHoTroCongKhai(); });
 
 /* ================================================================
    THẺ 5 — BẢNG TIN LỚP HỌC
@@ -10389,23 +10420,56 @@ function renderAdmin(){
   }
   $('ldMissingTable').innerHTML = h4;
 
-  /* Danh sách nhận hỗ trợ — dữ liệu nhạy cảm */
+  /* Danh sách nhận hỗ trợ — dữ liệu nhạy cảm.
+     "Đã hỗ trợ": giáo viên xác nhận đã hỗ trợ xong cho em này (riêng tư, chỉ để giáo viên theo dõi).
+     "Công khai": CHỈ bật được sau khi đã đánh dấu "Đã hỗ trợ" — khi bật, Tên + Loại hỗ trợ (KHÔNG
+     hoàn cảnh/mô tả/SĐT) được ghi sang nhánh công khai hotro2026/congKhai để hiện ở Góc Phụ Huynh;
+     tắt "Đã hỗ trợ" sẽ tự động tắt luôn "Công khai". */
   $('htCountBadge').textContent = htTatCa.length;
   let h5 = `<tr><th>STT</th><th>Họ tên</th><th>Loại hỗ trợ</th><th>Hoàn cảnh</th>
-            <th>Mô tả</th><th>Điện thoại</th><th>Gửi lúc</th><th></th></tr>`;
+            <th>Mô tả</th><th>Điện thoại</th><th>Gửi lúc</th><th>Đã hỗ trợ</th><th>Công khai</th><th></th></tr>`;
   if(!htTatCa.length){
-    h5 += `<tr><td colspan="8" style="text-align:center;color:var(--ink-soft);">Chưa có em nào đăng ký.</td></tr>`;
+    h5 += `<tr><td colspan="10" style="text-align:center;color:var(--ink-soft);">Chưa có em nào đăng ký.</td></tr>`;
   } else {
     htTatCa.forEach((r,i)=> h5 += `<tr>
       <td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.loai)}</td><td>${esc(r.hoanCanh)}</td>
       <td style="max-width:260px;">${esc(r.moTa)}</td><td>${esc(r.dienThoai)}</td><td>${esc(r.time)}</td>
+      <td><button class="btn ${r.daHoTro?'btn-primary':'btn-ghost'} btn-sm" data-htDaHoTro="${r.uid}">${r.daHoTro?'✅ Đã hỗ trợ':'Đánh dấu đã hỗ trợ'}</button></td>
+      <td><button class="btn ${r.congKhai?'btn-primary':'btn-ghost'} btn-sm" data-htCongKhai="${r.uid}" ${r.daHoTro?'':'disabled title="Đánh dấu Đã hỗ trợ trước"'}>${r.congKhai?'📢 Đang công khai':'Cho hiện công khai'}</button></td>
       <td><button class="btn btn-ghost btn-sm" data-xoaHt="${r.uid}">Xóa</button></td></tr>`);
   }
   $('htAdminTable').innerHTML = h5;
   document.querySelectorAll('[data-xoaHt]').forEach(b=> b.onclick = async ()=>{
     if(!confirm('Xóa đăng ký nhận hỗ trợ này?')) return;
     try{
-      await htRef.child(b.getAttribute('data-xoaHt')).remove();
+      const uid = b.getAttribute('data-xoaHt');
+      await htRef.child(uid).remove();
+      await htCongKhaiRef.child(uid).remove();
+      await napHoTroTatCa(); renderAdmin();
+    }catch(e){ showMsg($('adminMsg'), baoLoi(e),'err'); }
+  });
+  document.querySelectorAll('[data-htDaHoTro]').forEach(b=> b.onclick = async ()=>{
+    const uid = b.getAttribute('data-htDaHoTro');
+    const r = htTatCa.find(x=> x.uid===uid);
+    if(!r) return;
+    const batTat = !r.daHoTro;
+    try{
+      const capNhat = { daHoTro: batTat };
+      if(!batTat) capNhat.congKhai = false; // tắt "Đã hỗ trợ" thì tự động tắt luôn "Công khai"
+      await htRef.child(uid).update(capNhat);
+      if(!batTat) await htCongKhaiRef.child(uid).remove();
+      await napHoTroTatCa(); renderAdmin();
+    }catch(e){ showMsg($('adminMsg'), baoLoi(e),'err'); }
+  });
+  document.querySelectorAll('[data-htCongKhai]').forEach(b=> b.onclick = async ()=>{
+    const uid = b.getAttribute('data-htCongKhai');
+    const r = htTatCa.find(x=> x.uid===uid);
+    if(!r || !r.daHoTro) return;
+    const batTat = !r.congKhai;
+    try{
+      await htRef.child(uid).update({ congKhai: batTat });
+      if(batTat) await htCongKhaiRef.child(uid).set({ name: r.name, loai: r.loai, luc: Date.now() });
+      else await htCongKhaiRef.child(uid).remove();
       await napHoTroTatCa(); renderAdmin();
     }catch(e){ showMsg($('adminMsg'), baoLoi(e),'err'); }
   });
