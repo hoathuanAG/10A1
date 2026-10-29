@@ -3657,7 +3657,57 @@
         Dữ liệu nhạy cảm — chỉ tài khoản giáo viên đọc được. Không chia sẻ bảng này ra ngoài.
         Bấm "Đánh dấu đã hỗ trợ" khi đã hỗ trợ xong cho em; bấm thêm "Cho hiện công khai" nếu em/phụ
         huynh đồng ý để Tên + Loại hỗ trợ (không hoàn cảnh/mô tả/SĐT) hiện ở mục Góc Phụ Huynh.
+        Danh sách dưới đây lấy từ chính những đăng ký học sinh đã gửi ở mục "Đăng ký nhận hỗ trợ" —
+        nếu lớp chưa có em nào tự đăng ký, bảng sẽ trống; thầy có thể dùng form bên dưới để tự nhập
+        trực tiếp cho một em (ví dụ thầy biết hoàn cảnh nhưng em chưa/ngại tự đăng ký).
       </p>
+      <details style="margin-bottom:10px;">
+        <summary style="cursor:pointer;font-weight:700;font-size:13px;color:var(--leaf-dark);">+ Giáo viên tự nhập hỗ trợ cho một em</summary>
+        <div style="margin-top:8px;padding:10px;background:var(--bg-soft,#f7faf7);border-radius:8px;">
+          <div class="field">
+            <label for="htGvName">Họ và tên học sinh</label>
+            <input type="text" id="htGvName" placeholder="Nguyễn Văn A" maxlength="60">
+          </div>
+          <div class="field">
+            <label for="htGvLoai">Loại hỗ trợ</label>
+            <select id="htGvLoai">
+              <option value="">-- Chọn loại hỗ trợ --</option>
+              <option>Học bổng</option>
+              <option>Miễn giảm học phí</option>
+              <option>Quà Tết</option>
+              <option>Đồ dùng học tập, sách vở</option>
+              <option>Quần áo, đồng phục</option>
+              <option>Xe đạp đến trường</option>
+              <option>Bảo hiểm y tế</option>
+              <option>Hỗ trợ khác</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="htGvHoanCanh">Hoàn cảnh gia đình</label>
+            <select id="htGvHoanCanh">
+              <option value="">-- Chọn hoàn cảnh --</option>
+              <option>Hộ nghèo</option>
+              <option>Hộ cận nghèo</option>
+              <option>Mồ côi cha hoặc mẹ</option>
+              <option>Mồ côi cả cha và mẹ</option>
+              <option>Cha mẹ đi làm xa, ở với ông bà</option>
+              <option>Gia đình có người bệnh nặng</option>
+              <option>Khó khăn đột xuất</option>
+              <option>Hoàn cảnh khác</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="htGvMoTa">Mô tả thêm (tùy chọn)</label>
+            <textarea id="htGvMoTa" maxlength="500"></textarea>
+          </div>
+          <div class="field">
+            <label for="htGvDienThoai">Số điện thoại liên hệ (tùy chọn)</label>
+            <input type="text" id="htGvDienThoai" placeholder="0912345678" maxlength="15">
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="htGvThemBtn">Thêm vào danh sách</button>
+          <div id="htGvMsg" class="msg"></div>
+        </div>
+      </details>
       <div class="scroll-x"><table id="htAdminTable"></table></div>
 
       <div class="section-title">Hồ sơ đầu năm — đối chiếu ai chưa nộp</div>
@@ -10177,6 +10227,31 @@ async function napHoTroTatCa(){
     htTatCa = Object.keys(v).map(k=> Object.assign({uid:k}, v[k]));
   }catch(e){ htTatCa = []; }
 }
+
+/* Giáo viên tự nhập trực tiếp 1 bản ghi "nhận hỗ trợ" cho một em (không cần em tự đăng ký) — dùng
+   khóa giả "gv_..." (không trùng uid Firebase Auth thật nào) để bản ghi nằm độc lập, không ghi đè
+   lên đăng ký tự thân (nếu có sau này) của chính em đó. Hiện ngay vào bảng vì gọi lại napHoTroTatCa()
+   + renderAdmin() sau khi ghi thành công. */
+if($('htGvThemBtn')) $('htGvThemBtn').onclick = async ()=>{
+  const name = $('htGvName').value.trim();
+  const loai = $('htGvLoai').value;
+  const hc   = $('htGvHoanCanh').value;
+  const moTa = $('htGvMoTa').value.trim();
+  const dt   = $('htGvDienThoai').value.trim();
+  if(!name){ showMsg($('htGvMsg'),'Vui lòng nhập họ tên.','err'); return; }
+  if(!loai){ showMsg($('htGvMsg'),'Vui lòng chọn loại hỗ trợ.','err'); return; }
+  if(!hc){ showMsg($('htGvMsg'),'Vui lòng chọn hoàn cảnh gia đình.','err'); return; }
+  if(dt && !/^0\d{9}$/.test(dt)){ showMsg($('htGvMsg'),'Số điện thoại phải có 10 chữ số, bắt đầu bằng 0.','err'); return; }
+  const key = 'gv_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  try{
+    await htRef.child(key).set({ name, loai, hoanCanh: hc, moTa, dienThoai: dt, uid: key,
+                                 time: new Date().toLocaleString('vi-VN') });
+    $('htGvName').value=''; $('htGvLoai').value=''; $('htGvHoanCanh').value='';
+    $('htGvMoTa').value=''; $('htGvDienThoai').value='';
+    showMsg($('htGvMsg'), `Đã thêm "${name}" vào danh sách.`, 'ok');
+    await napHoTroTatCa(); renderAdmin();
+  }catch(e){ showMsg($('htGvMsg'), baoLoi(e), 'err'); }
+};
 
 async function duyetDoiCho(swapId){
   const sw = swaps.find(s=>s.id===swapId);
