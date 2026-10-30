@@ -1029,10 +1029,8 @@
   .tt-to-tieude{font-weight:800; color:var(--ink); font-size:15.5px; margin-bottom:4px; display:flex; align-items:center; justify-content:space-between; gap:8px; font-family:'Plus Jakarta Sans',sans-serif;}
   .tt-to-canbo{font-size:12px; color:var(--ink-soft); margin-bottom:12px;}
   .tt-tuan-the{background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px;}
-  .tt-tuan-the.tt-tuan-da-an{background:#f1f5f9; border:1px dashed #94a3b8; opacity:.75;}
+  .tt-tuan-the.tt-tuan-da-an{background:#f1f5f9; border:1px dashed #94a3b8;}
   .tt-tuan-an-nhan{font-weight:700; color:#64748b; font-size:11.5px;}
-  .tt-an-tuan-hang{margin:0 0 8px;}
-  .tt-an-tuan-hang label{font-size:12.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; cursor:pointer;}
   .tt-tuan-nhan{font-weight:700; color:#d97706; font-size:13px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;}
   .tt-tuan-muc{margin-bottom:6px; font-size:calc(clamp(16px, 4.6vw, 39px) * var(--tt-tuan-scale, 1)); line-height:1.2;}
   .tt-font-dieu-chinh{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 0 12px;}
@@ -2570,9 +2568,6 @@
         <span class="tt-font-nhan" id="ttFontNhan">100%</span>
         <button type="button" class="btn btn-ghost btn-sm" id="ttFontToBtn" title="Chữ to lên">A+</button>
         <button type="button" class="btn btn-ghost btn-sm" id="ttFontResetBtn" title="Về cỡ mặc định">Mặc định</button>
-      </div>
-      <div class="tt-an-tuan-hang" id="ttHienTuanAnHang" style="display:none;">
-        <label><input type="checkbox" id="ttHienTuanAnCheck"> 👁️ Hiện các tuần đã ẩn (để quản lý — chỉ thầy thấy mục này)</label>
       </div>
     </div>
 
@@ -4276,10 +4271,6 @@ ttFontApDung(ttFontScale); // áp ngay khi tải trang, theo cỡ chữ lần tr
 if($('ttFontNhoBtn')) $('ttFontNhoBtn').onclick = ()=> ttFontApDung(ttFontScale - TT_FONT_BUOC);
 if($('ttFontToBtn'))  $('ttFontToBtn').onclick  = ()=> ttFontApDung(ttFontScale + TT_FONT_BUOC);
 if($('ttFontResetBtn')) $('ttFontResetBtn').onclick = ()=> ttFontApDung(1);
-if($('ttHienTuanAnCheck')) $('ttHienTuanAnCheck').onchange = (e)=>{
-  ttHienCacTuanAn = e.target.checked;
-  if(typeof renderTongKetTuan === 'function') renderTongKetTuan();
-};
 
 /* -------------------- BANNER ĐẦU TRANG: kéo-thả logo/chữ + đổi chiều cao (chỉ giáo viên) --------------------
    Vị trí logo/chữ lưu dạng % theo chiều rộng/cao banner (không phải px) để co giãn hợp lý trên
@@ -9766,17 +9757,19 @@ function taoKhoiDiemTuan(soTo, tuanId, kieu, dsGhi, coQuyen){
 
 function taoTheTuan(soTo, id, d, soTuan, coQuyen){
   const anhKeys = d.anh ? Object.values(d.anh) : [];
-  const daAn = !!d.an; // tuần đã bị thầy ẩn bớt (gọn danh sách) — không phải xóa, dữ liệu vẫn còn nguyên
+  const daAn = !!d.an; // tuần đã được ẩn bớt NỘI DUNG cho gọn — tiêu đề vẫn luôn hiện, không phải xóa dữ liệu
   const nutSuaXoa = coQuyen ? `
         <button class="btn btn-blue btn-sm" data-sua-tuan data-to="${soTo}" data-id="${id}">Sửa</button>
         <button class="btn btn-ghost btn-sm" data-xoa-tuan data-to="${soTo}" data-id="${id}">Xóa</button>` : '';
-  const nutAn = isAdmin ? `
-        <button class="btn btn-ghost btn-sm" data-an-tuan data-to="${soTo}" data-id="${id}" data-an-hien="${daAn ? '0' : '1'}">${daAn ? '👁️ Hiện lại' : '🙈 Ẩn'}</button>` : '';
+  /* Tổ trưởng/Tổ phó của đúng Tổ, và giáo viên, đều được ẩn/hiện (coQuyenSuaTo đã gồm cả isAdmin). */
+  const nutAn = coQuyen ? `
+        <button class="btn btn-ghost btn-sm" data-an-tuan data-to="${soTo}" data-id="${id}" data-an-hien="${daAn ? '0' : '1'}">${daAn ? '👁️ Hiện' : '🙈 Ẩn nội dung'}</button>` : '';
   return `<div class="tt-tuan-the${daAn ? ' tt-tuan-da-an' : ''}">
     <div class="tt-tuan-nhan">
-      <span>📅 Tuần ${soTuan}${d.nguoiNop ? ' — '+esc(d.nguoiNop) : ''}${daAn ? ' <span class="tt-tuan-an-nhan">(đã ẩn)</span>' : ''}</span>
+      <span>📅 Tuần ${soTuan}${d.nguoiNop ? ' — '+esc(d.nguoiNop) : ''}${daAn ? ' <span class="tt-tuan-an-nhan">(đã ẩn nội dung)</span>' : ''}</span>
       ${(nutSuaXoa || nutAn) ? `<span>${nutSuaXoa}${nutAn}</span>` : ''}
     </div>
+    ${daAn ? '' : `
     <div class="tt-tuan-muc"><b>Ưu điểm:</b> ${esc(d.uuDiem || '(chưa có)')}</div>
     <div class="tt-tuan-muc"><b>Hạn chế:</b> ${esc(d.hanChe || '(chưa có)')}</div>
     <div class="tt-tuan-muc"><b>Kết quả trong tuần:</b> ${esc(d.ketQua || '(chưa có)')}</div>
@@ -9785,31 +9778,17 @@ function taoTheTuan(soTo, id, d, soTuan, coQuyen){
       <div class="tt-tuan-anh">${anhKeys.map(aid=> `<img src="${anhDriveNho(aid)}" onclick="window.open('${anhDriveLon(aid)}','_blank')">`).join('')}</div>
     </div>` : ''}
     ${taoKhoiDiemTuan(soTo, id, 'diemTot', d.diemTot, coQuyen)}
-    ${taoKhoiDiemTuan(soTo, id, 'viPham', d.viPham, coQuyen)}
+    ${taoKhoiDiemTuan(soTo, id, 'viPham', d.viPham, coQuyen)}`}
   </div>`;
 }
-
-/* Ẩn/hiện tuần đã tổng kết: chỉ ẩn bớt khỏi danh sách cho gọn (KHÔNG xóa dữ liệu).
-   - Lưu ở field "an" (boolean) ngay trong chính bản ghi tuần đó — bản ghi hiện có sẵn, không cần
-     thêm Rules mới vì node totuan2026/to{N}/$id không có $khac:false chặn field lạ.
-   - Chỉ giáo viên (isAdmin) mới thấy nút Ẩn/Hiện lại và ô "Hiện các tuần đã ẩn" — Tổ trưởng/Tổ phó
-     và học sinh luôn chỉ thấy danh sách đã gọn (không thấy tuần bị ẩn), tránh ai đó lỡ hiện/ẩn nhầm.
-   - Đánh số "Tuần N" luôn tính theo TOÀN BỘ danh sách gốc (kể cả tuần đang ẩn), để số thứ tự không
-     bị nhảy lung tung khi có tuần ở giữa bị ẩn. */
-let ttHienCacTuanAn = false;
 function renderTongKetTuan(){
   const host = $('ttLuoiTo');
   if(!host) return;
-  const hangAn = $('ttHienTuanAnHang');
-  if(hangAn) hangAn.style.display = isAdmin ? 'flex' : 'none';
   host.innerHTML = [1,2,3,4].map(soTo=>{
     try{
       const duLieuTo = totuanState['to'+soTo] || {};
-      const dsTuanIdDay = Object.keys(duLieuTo).sort(); // đầy đủ, kể cả tuần đã ẩn — dùng để đánh số ổn định
+      const dsTuanId = Object.keys(duLieuTo).sort();
       const coQuyen = coQuyenSuaTo(soTo);
-      const dsHienThi = dsTuanIdDay
-        .map((id,i)=> ({ id, soTuan: i+1, d: duLieuTo[id] || {} }))
-        .filter(x => !x.d.an || (isAdmin && ttHienCacTuanAn));
       const canBo = banCanSu.filter(x=>{
         const cv = chuanTen(x.chucVu);
         return cv.includes('tổ trưởng tổ '+soTo) || cv.includes('tổ phó tổ '+soTo);
@@ -9817,12 +9796,10 @@ function renderTongKetTuan(){
       return `<div class="tt-the-to">
         <div class="tt-to-tieude">
           <span>🚩 Tổ ${soTo}</span>
-          ${coQuyen ? `<button class="btn btn-primary btn-sm" data-them-tuan="${soTo}">+ Thêm Tuần ${dsTuanIdDay.length+1}</button>` : ''}
+          ${coQuyen ? `<button class="btn btn-primary btn-sm" data-them-tuan="${soTo}">+ Thêm Tuần ${dsTuanId.length+1}</button>` : ''}
         </div>
         <div class="tt-to-canbo">${canBo.length ? canBo.map(x=> esc(x.chucVu)+': '+esc(x.hoTen)).join(' · ') : 'Chưa có tổ trưởng/tổ phó'}</div>
-        ${!dsTuanIdDay.length ? '<p class="section-note">Chưa có tổng kết tuần nào.</p>'
-          : (dsHienThi.length ? dsHienThi.map(x=> taoTheTuan(soTo, x.id, x.d, x.soTuan, coQuyen)).join('')
-            : '<p class="section-note">Tất cả các tuần của Tổ này đang được ẩn bớt cho gọn. Tích "Hiện các tuần đã ẩn" ở trên để xem lại.</p>')}
+        ${dsTuanId.length ? dsTuanId.map((id,i)=> taoTheTuan(soTo, id, duLieuTo[id] || {}, i+1, coQuyen)).join('') : '<p class="section-note">Chưa có tổng kết tuần nào.</p>'}
       </div>`;
     }catch(loi){
       console.error('Lỗi hiển thị Tổ '+soTo+':', loi);
