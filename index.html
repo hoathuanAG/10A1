@@ -3331,10 +3331,13 @@
 
         <div class="section-title" style="margin-top:20px;">Bước 2 — Nạp dữ liệu khuôn mặt</div>
         <p class="section-note">
-          Lấy ảnh thẻ học sinh đã có sẵn ở mục "Thành viên lớp" (và ảnh bổ sung ở Bước 1 nếu có), cộng
-          với ảnh của những người bất kỳ đã thêm ở Bước 1b (nếu có), để AI học đặc điểm khuôn mặt từng
-          người (chỉ những ai đã có ít nhất 1 ảnh mới nhận diện được). Có thể nạp riêng từng phần —
-          nạp phần nào thì camera nhận diện được phần đó, không cần nạp đủ cả hai mới bật camera được.
+          ⚡ <b>Tự động:</b> ngay khi mở mục này, hệ thống đã tự nạp sẵn dữ liệu ở nền, không cần bấm
+          gì ở đây — đợi Bước 3 "Bật camera" hết mờ là dùng được. Mã đặc trưng khuôn mặt của ảnh thẻ
+          + ảnh bổ sung đều được <b>lưu cache lại trên Firebase</b> sau lần tính đầu tiên, nên
+          <b>chỉ chậm đúng 1 lần (ai mở trước thì người đó "mồi" sẵn cho cả lớp)</b> — những lần mở
+          sau, của bất kỳ ai, đều gần như tức thì vì chỉ cần tải lại số đã tính sẵn, không phải chạy
+          AI lại. Chỉ bấm nút bên dưới khi muốn <b>nạp lại thủ công</b> — ví dụ vừa thêm/xóa ảnh ở
+          Bước 1/1b xong và muốn cập nhật ngay, hoặc lần tự động bị lỗi mạng.
         </p>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-primary btn-sm" id="ndkmNapDuLieuBtn">🧠 Nạp học sinh + người Bước 1b (tất cả)</button>
@@ -4169,6 +4172,13 @@ const chsRef = db.ref('hosocanhan2026');    // dữ liệu cá nhân học sinh 
 const thanhVienRef = db.ref('thanhvien2026'); // bản CÔNG KHAI rút gọn (ảnh thẻ, tên, giới tính, ngày sinh) — không có CCCD/thành tích
 const ndkmAnhRef = db.ref('nhanDienAnhBoSung2026'); // ảnh bổ sung nhận diện khuôn mặt — RIÊNG TƯ, chỉ admin đọc/ghi (không công khai như thanhvien2026)
 const ndkmNguoiKhacRef = db.ref('nhanDienNguoiKhac2026'); // ảnh nhận diện khuôn mặt cho NGƯỜI BẤT KỲ ngoài học sinh lớp (vd. GV bộ môn, bảo vệ...) — RIÊNG TƯ, chỉ admin đọc/ghi, cùng mức bảo mật như nhanDienAnhBoSung2026
+// Cache mã đặc trưng (dacTrung) tính SẴN từ chính Ảnh thẻ (thanhvien2026/$uid/anhTheId) — để KHÔNG
+// phải tải lại ảnh + chạy AI lại mỗi lần "Nạp dữ liệu" (trước đây chỉ ảnh bổ sung Bước 1 mới được
+// cache, còn ảnh thẻ thì luôn tính lại từ đầu mỗi lần, kể cả lần thứ 2 trở đi). Đọc: admin hoặc ai
+// đã có hồ sơ Thành viên lớp (giống nhanDienAnhBoSung2026). Ghi: admin ghi được cho bất kỳ ai (để
+// thầy "mồi" sẵn 1 lần cho cả lớp), học sinh thường CHỈ ghi được cache của CHÍNH mình (tự tính
+// xong thì tự lưu lại cho lần sau, không ghi/ghi đè được cache của bạn khác).
+const ndkmTheDacTrungRef = db.ref('nhanDienTheDacTrung2026');
 const totuanRef = db.ref('totuan2026'); // tổng kết tuần theo Tổ — công khai đọc, tổ trưởng/tổ phó (đối chiếu tên) hoặc admin mới ghi được
 const vitriRef = db.ref('vitri2026'); // vị trí nhà + khoảng cách đến trường — công khai đọc, mỗi người tự ghi phần của mình
 const caiDatRef = db.ref('caidat2026'); // cài đặt chung (tọa độ trường...) — công khai đọc, chỉ admin ghi
@@ -5036,6 +5046,9 @@ function moTab(tabId, subId){
     location.hash = tabId;
   }
   if(subDangMo === 'vitri') setTimeout(khoiTaoHoacCapNhatBanDoVitri, 50); // panel vừa hiện ra, chờ 1 nhịp để có đúng kích thước rồi mới vẽ bản đồ
+  // Vừa mở mục "Camera nhận diện học sinh" — tự chuẩn bị sẵn dữ liệu nhận diện ngầm, khỏi bắt bấm
+  // "Nạp dữ liệu" tay trước mỗi lần (xem ndkmTuDongSanSangCamera).
+  if(subDangMo === 'ndkm' && typeof ndkmTuDongSanSangCamera === 'function') setTimeout(ndkmTuDongSanSangCamera, 50);
   if(typeof saasCloseMobileSidebar === 'function') saasCloseMobileSidebar();
   if(typeof saasCapNhatKpiVaBreadcrumb === 'function') saasCapNhatKpiVaBreadcrumb();
   if(tabId === 'phuhuynh' && typeof capNhatKhoaPhuHuynh === 'function') capNhatKhoaPhuHuynh();
@@ -12909,6 +12922,7 @@ if($('ndkmAnhToiDaNhan')) $('ndkmAnhToiDaNhan').textContent = String(NDKM_ANH_TO
 if($('ndkmNguoiKhacToiDaNhan')) $('ndkmNguoiKhacToiDaNhan').textContent = String(NDKM_ANH_TOI_DA);
 let ndkmAnhState = {}; // { uid: { anhId: {anhLink, thuMucId, luc, dacTrung?:[128 số]} } }
 let ndkmAnhChoXuLy = []; // [File,...] — ảnh đã chọn cho học sinh đang chọn, CHƯA bấm Lưu nên chưa tải lên đâu cả
+let ndkmTheDacTrungState = {}; // { uid: {anhId, dacTrung:[128 số]} } — cache mã đặc trưng tính sẵn từ ẢNH THẺ (xem ndkmTheDacTrungRef)
 
 // "Đủ điều kiện" để đọc dữ liệu NDKM dùng chung (Bước 2/3) — admin, HOẶC bất kỳ ai đã có hồ sơ
 // "Thành viên lớp" hợp lệ (có hoTen). Bước 1/1b (thêm/sửa ảnh) thì luôn phải isAdmin riêng, không
@@ -12918,9 +12932,11 @@ function ndkmDuocDungBuoc23(){
 }
 
 async function napNdkmAnhTatCa(){
-  if(!ndkmDuocDungBuoc23()){ ndkmAnhState = {}; return; }
+  if(!ndkmDuocDungBuoc23()){ ndkmAnhState = {}; ndkmTheDacTrungState = {}; return; }
   try{ ndkmAnhState = (await ndkmAnhRef.once('value')).val() || {}; }
   catch(e){ ndkmAnhState = {}; }
+  try{ ndkmTheDacTrungState = (await ndkmTheDacTrungRef.once('value')).val() || {}; }
+  catch(e){ ndkmTheDacTrungState = {}; }
   ndkmDienChonHocSinh();
   renderNdkmAnhDsHienTai();
 }
@@ -13466,6 +13482,11 @@ function capNhatHienThiNdkmCamera(){
   } else if(!duocDung){
     ndkmAnhState = {}; ndkmNguoiKhacState = {};
   }
+  // Nếu đang đứng sẵn ngay trong mục này mà vừa mới ĐỦ điều kiện (vd. em vừa tạo hồ sơ xong), tự
+  // chuẩn bị luôn dữ liệu nhận diện, khỏi bắt rời tab rồi quay lại mới tự nạp.
+  if(duocDung && typeof subDangMo !== 'undefined' && subDangMo === 'ndkm' && typeof ndkmTuDongSanSangCamera === 'function'){
+    setTimeout(ndkmTuDongSanSangCamera, 50);
+  }
 }
 
 function ndkmDienChonNguoiKhac(){
@@ -13614,14 +13635,23 @@ function ndkmDungLaiFaceMatcher(){
   $('ndkmBatCameraBtn').disabled = false;
 }
 
-$('ndkmNapDuLieuBtn').onclick = async ()=>{
+// Phần thực hiện thật sự của nút "🧠 Nạp học sinh + người Bước 1b (tất cả)" — tách ra hàm riêng để
+// vừa dùng được khi bấm nút tay, vừa dùng được để TỰ ĐỘNG nạp ngầm lúc vừa mở mục này (xem
+// ndkmTuDongSanSangCamera bên dưới) — khỏi bắt học sinh phải nhớ bấm "Nạp dữ liệu" trước mỗi lần.
+// tuDong=true: nạp ngầm, không disable nút cũng không báo lỗi ồn ào nếu chưa có ai để nạp (vì có
+// thể lớp mới chưa ai có ảnh thẻ) — chỉ báo lỗi thật (vd. mất mạng) để không im lặng khó hiểu.
+let ndkmDangNapDuLieu = false;
+async function ndkmNapDuLieuTatCa(tuDong){
+  if(ndkmDangNapDuLieu) return;
+  ndkmDangNapDuLieu = true;
   const btn = $('ndkmNapDuLieuBtn');
-  btn.disabled = true;
-  showMsg($('ndkmNapMsg'), '⏳ Đang tải mô hình AI (chỉ cần 1 lần mỗi phiên, có thể mất chút thời gian)...', 'info');
+  if(btn) btn.disabled = true;
+  if(!tuDong) showMsg($('ndkmNapMsg'), '⏳ Đang tải mô hình AI (chỉ cần 1 lần mỗi phiên, có thể mất chút thời gian)...', 'info');
   try{ await ndkmTaiModelNeuChua(); }
   catch(e){
-    showMsg($('ndkmNapMsg'), '❌ Không tải được mô hình AI — kiểm tra kết nối mạng rồi thử lại.', 'err');
-    btn.disabled = false;
+    if(!tuDong) showMsg($('ndkmNapMsg'), '❌ Không tải được mô hình AI — kiểm tra kết nối mạng rồi thử lại.', 'err');
+    if(btn) btn.disabled = false;
+    ndkmDangNapDuLieu = false;
     return;
   }
 
@@ -13631,8 +13661,9 @@ $('ndkmNapDuLieuBtn').onclick = async ()=>{
   // Người bất kỳ (Bước 1b) đủ điều kiện nạp = có ít nhất 1 ảnh
   const dsNguoiKhac = Object.entries(ndkmNguoiKhacState).filter(([id,x])=> Object.keys((x&&x.anh)||{}).length);
   if(!dsHocSinh.length && !dsNguoiKhac.length){
-    showMsg($('ndkmNapMsg'), '❌ Chưa có học sinh nào có ảnh thẻ/ảnh bổ sung (Bước 1), cũng chưa có người nào ở Bước 1b để nạp.', 'err');
-    btn.disabled = false;
+    if(!tuDong) showMsg($('ndkmNapMsg'), '❌ Chưa có học sinh nào có ảnh thẻ/ảnh bổ sung (Bước 1), cũng chưa có người nào ở Bước 1b để nạp.', 'err');
+    if(btn) btn.disabled = false;
+    ndkmDangNapDuLieu = false;
     return;
   }
 
@@ -13642,20 +13673,51 @@ $('ndkmNapDuLieuBtn').onclick = async ()=>{
   let tongSoAnhDaNap = 0;
   for(let i=0; i<dsHocSinh.length; i++){
     const [uid, x] = dsHocSinh[i];
-    // Dùng lại mã đặc trưng ĐÃ LƯU SẴN trong Firebase (từ Bước 1) — khỏi phải tải ảnh + chạy AI
-    // lại. Chỉ những ảnh CHƯA có mã đặc trưng lưu sẵn (ảnh thẻ cũ, hoặc ảnh bổ sung thêm từ trước
-    // khi có tính năng này) mới cần tính trực tiếp như cũ.
+    // Dùng lại mã đặc trưng ĐÃ LƯU SẴN trong Firebase (từ Bước 1, mục ndkmAnhLuuBtn) — khỏi phải
+    // tải ảnh + chạy AI lại. Chỉ những ảnh CHƯA có mã đặc trưng lưu sẵn mới cần tính trực tiếp.
     const dsDaLuuSan = ndkmDescriptorDaLuu(uid);
-    const dsAnhIdCanTinh = [];
-    if(x && x.anhTheId) dsAnhIdCanTinh.push(x.anhTheId);
+    const dsBoSungCanTinh = [];
     Object.entries(ndkmAnhState[uid]||{}).forEach(([anhId, anhX])=>{
-      if(!(anhX && Array.isArray(anhX.dacTrung) && anhX.dacTrung.length === 128)) dsAnhIdCanTinh.push(anhId);
+      if(!(anhX && Array.isArray(anhX.dacTrung) && anhX.dacTrung.length === 128)) dsBoSungCanTinh.push(anhId);
     });
 
-    showMsg($('ndkmNapMsg'), `⏳ Đang nạp học sinh ${i+1}/${dsHocSinh.length}: ${x.hoTen || uid} (${dsDaLuuSan.length} ảnh đã lưu sẵn + ${dsAnhIdCanTinh.length} ảnh cần tính)...`, 'info');
-    const dsTinhMoi = dsAnhIdCanTinh.length ? await ndkmTinhDsDescriptor(dsAnhIdCanTinh) : [];
-    const dsDescriptor = dsDaLuuSan.concat(dsTinhMoi);
-    if(!dsDescriptor.length){ dsLoi.push((x.hoTen||uid) + ` (không thấy khuôn mặt rõ trong ${dsAnhIdCanTinh.length} ảnh, hoặc không đọc được ảnh)`); continue; }
+    // Riêng ẢNH THẺ (thanhvien2026/$uid/anhTheId): cũng dùng cache (nhanDienTheDacTrung2026) nếu
+    // đã tính sẵn từ TRƯỚC cho ĐÚNG ảnh thẻ hiện tại (so khớp anhId lưu kèm cache — em nào vừa đổi
+    // ảnh thẻ mới thì cache cũ không khớp nữa, tự động tính lại đúng ảnh mới). Nhờ cache này mà từ
+    // lần nạp thứ 2 trở đi (của BẤT KỲ ai, không riêng người đã nạp lần đầu) sẽ nhanh hơn hẳn,
+    // không phải tải lại ảnh + chạy AI cho từng ảnh thẻ mỗi lần. Tính RIÊNG (không gộp chung mảng
+    // với ảnh bổ sung) để khỏi lẫn lộn thứ tự kết quả khi có ảnh lỗi bị bỏ qua giữa chừng.
+    let descriptorThe = null, anhTheIdCanTinh = null;
+    if(x && x.anhTheId){
+      const cacheThe = ndkmTheDacTrungState[uid];
+      if(cacheThe && cacheThe.anhId === x.anhTheId && Array.isArray(cacheThe.dacTrung) && cacheThe.dacTrung.length === 128){
+        descriptorThe = new Float32Array(cacheThe.dacTrung);
+      } else {
+        anhTheIdCanTinh = x.anhTheId;
+      }
+    }
+
+    const tongCanTinh = dsBoSungCanTinh.length + (anhTheIdCanTinh ? 1 : 0);
+    if(tongCanTinh){
+      showMsg($('ndkmNapMsg'), (tuDong ? '⏳ Đang tự động chuẩn bị dữ liệu nhận diện — ' : '⏳ ') + `Đang nạp học sinh ${i+1}/${dsHocSinh.length}: ${x.hoTen || uid} (${dsDaLuuSan.length + (descriptorThe?1:0)} ảnh đã có sẵn + ${tongCanTinh} ảnh cần tính)...`, 'info');
+    }
+    const dsBoSungTinhMoi = dsBoSungCanTinh.length ? await ndkmTinhDsDescriptor(dsBoSungCanTinh) : [];
+    if(anhTheIdCanTinh){
+      const ds1 = await ndkmTinhDsDescriptor([anhTheIdCanTinh]);
+      if(ds1.length){
+        descriptorThe = ds1[0];
+        // Lưu cache lại cho lần sau (fire-and-forget, không chặn tiến trình nạp) — học sinh thường
+        // chỉ ghi được cache của CHÍNH mình (Rules chặn ghi cho uid khác), giáo viên ghi được cho
+        // bất kỳ ai nên 1 lần nạp của giáo viên là "mồi" sẵn cache cho CẢ LỚP dùng về sau.
+        const banGhiCache = { anhId: anhTheIdCanTinh, dacTrung: Array.from(descriptorThe) };
+        ndkmTheDacTrungRef.child(uid).set(banGhiCache)
+          .then(()=>{ ndkmTheDacTrungState[uid] = banGhiCache; })
+          .catch(()=>{ /* không đủ quyền ghi cache cho uid này (vd. học sinh nạp hộ cả lớp) — bỏ qua, không ảnh hưởng kết quả nhận diện phiên này */ });
+      }
+    }
+
+    const dsDescriptor = dsDaLuuSan.concat(dsBoSungTinhMoi).concat(descriptorThe ? [descriptorThe] : []);
+    if(!dsDescriptor.length){ dsLoi.push((x.hoTen||uid) + ` (không thấy khuôn mặt rõ trong ${tongCanTinh} ảnh, hoặc không đọc được ảnh)`); continue; }
     ndkmDescriptorsHocSinh.push(new faceapi.LabeledFaceDescriptors(uid, dsDescriptor));
     tongSoAnhDaNap += dsDescriptor.length;
   }
@@ -13679,17 +13741,31 @@ $('ndkmNapDuLieuBtn').onclick = async ()=>{
   }
 
   ndkmDungLaiFaceMatcher();
-  btn.disabled = false;
+  if(btn) btn.disabled = false;
+  ndkmDangNapDuLieu = false;
   if(!ndkmLabeledDescriptors.length){
-    showMsg($('ndkmNapMsg'), '❌ Không nạp được ai — kiểm tra lại ảnh thẻ/ảnh bổ sung.', 'err');
+    if(!tuDong) showMsg($('ndkmNapMsg'), '❌ Không nạp được ai — kiểm tra lại ảnh thẻ/ảnh bổ sung.', 'err');
     return;
   }
-  const ketQuaChu = `✅ Đã nạp xong ${ndkmDescriptorsHocSinh.length}/${dsHocSinh.length} học sinh`
+  const ketQuaChu = (tuDong ? `✅ Đã tự động chuẩn bị xong — sẵn sàng bật camera. Đã nạp ` : `✅ Đã nạp xong `) + `${ndkmDescriptorsHocSinh.length}/${dsHocSinh.length} học sinh`
     + (dsNguoiKhac.length ? ` và ${soNguoiKhacDaNap}/${dsNguoiKhac.length} người khác` : '')
     + ` (tổng ${tongSoAnhDaNap} ảnh).`
     + (dsLoi.length ? ` ⚠️ Bỏ qua ${dsLoi.length}: ${dsLoi.join('; ')}` : '');
   showMsg($('ndkmNapMsg'), ketQuaChu, dsLoi.length ? 'info' : 'ok');
-};
+}
+$('ndkmNapDuLieuBtn').onclick = ()=> ndkmNapDuLieuTatCa(false);
+
+// Tự động chuẩn bị sẵn dữ liệu nhận diện ngay khi vừa mở mục này (không cần bấm "Nạp dữ liệu" tay)
+// — gọi từ moTab() mỗi khi mở subtab 'ndkm'. Chỉ nạp khi ĐỦ ĐIỀU KIỆN (Bước 2/3) và CHƯA nạp sẵn
+// trong phiên này (khỏi nạp lại mỗi lần ra vào tab, tốn dữ liệu di động + pin).
+async function ndkmTuDongSanSangCamera(){
+  if(!ndkmDuocDungBuoc23()) return;        // chưa đủ điều kiện (chưa có hồ sơ) — không nạp
+  if(ndkmLabeledDescriptors.length) return; // đã nạp sẵn từ trước trong phiên này rồi
+  if(ndkmDangNapDuLieu) return;
+  await napNdkmAnhTatCa();
+  await napNdkmNguoiKhacTatCa();
+  await ndkmNapDuLieuTatCa(true);
+}
 
 $('ndkmNapDuLieuNguoiKhacBtn').onclick = async ()=>{
   // Chỉ nạp riêng những người thêm ở Bước 1b — KHÔNG đụng tới dữ liệu học sinh đã nạp trước đó
