@@ -3247,8 +3247,11 @@
 
       <div id="ndkmChuaDangNhap">
         <p class="msg info show">
-          🔒 Tính năng này xử lý dữ liệu khuôn mặt học sinh nên chỉ giáo viên chủ nhiệm đã đăng nhập
-          ở mục "🔒 Khu vực giáo viên / quản trị" phía dưới mới bật được. Vui lòng đăng nhập trước.
+          🔒 Tính năng này xử lý dữ liệu khuôn mặt học sinh. Hai bước "🧠 Nạp dữ liệu" và "🎥 Bật
+          camera" dùng được cho bất kỳ ai ĐÃ CÓ hồ sơ "👤 Thành viên lớp" (mục phía trên) — hãy tạo hồ
+          sơ đó trước (cần có ảnh thẻ). Riêng việc thêm/sửa/xóa ảnh khuôn mặt dùng để nhận diện (Bước 1,
+          1b) thì chỉ giáo viên chủ nhiệm đã đăng nhập ở mục "🔒 Khu vực giáo viên / quản trị" phía dưới
+          mới làm được.
         </p>
       </div>
 
@@ -3259,8 +3262,10 @@
           <b>ngay trên trình duyệt</b>, không gửi hình ảnh video lên server nào. Riêng ảnh thêm ở Bước 1/1b
           bên dưới sẽ được <b>tải lên một thư mục Google Drive riêng (không công khai)</b>, và "mã đặc
           trưng khuôn mặt" tính từ ảnh đó (128 số, không phục dựng lại thành ảnh được) sẽ được
-          <b>lưu vào Firebase, chỉ tài khoản giáo viên đọc được</b> — để không phải nạp lại từ đầu mỗi
-          phiên làm việc. Theo Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân, dữ liệu sinh trắc học
+          <b>lưu vào Firebase</b> để không phải tính lại từ đầu mỗi lần nạp — giáo viên đọc được toàn
+          bộ; học sinh đã có hồ sơ "Thành viên lớp" chỉ đọc được khi tự bấm "🧠 Nạp dữ liệu" ở Bước 2
+          (để camera nhận diện được cả lớp ngay trên máy của em đó), không xem được dưới dạng ảnh gốc.
+          Theo Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân, dữ liệu sinh trắc học
           là dữ liệu nhạy cảm — <b>thầy cần được nhà trường phê duyệt và có sự đồng ý của phụ huynh/học
           sinh trước khi triển khai chính thức</b>, chỉ nên dùng thử nghiệm nội bộ trước đó. Độ chính xác
           cũng phụ thuộc ánh sáng, góc camera, chất lượng ảnh — chỉ mang tính hỗ trợ tham khảo (vd. chuẩn
@@ -3268,6 +3273,7 @@
           nhất cho việc gì.</b>
         </p>
 
+        <div id="ndkmAdminOnlyWrap" style="display:none;">
         <div class="section-title" style="margin-top:6px;">Bước 1 — (Tuỳ chọn) Thêm ảnh khuôn mặt bổ sung cho từng học sinh</div>
         <p class="section-note">
           Ảnh thẻ ở mục "Thành viên lớp" chỉ có 1 ảnh/góc mặt cho mỗi em — thêm vài ảnh góc khác nhau
@@ -3314,6 +3320,14 @@
           <button class="btn btn-ghost btn-sm" id="ndkmNguoiKhacXoaBtn">🗑️ Xóa hẳn người này</button>
         </div>
         <div id="ndkmNguoiKhacMsg" class="msg"></div>
+        </div>
+
+        <div id="ndkmHocSinhGhiChu" style="display:none;">
+          <p class="msg info show">
+            ℹ️ Ảnh khuôn mặt (Bước 1, 1b) do giáo viên quản lý nên không hiện ở đây. Em có thể tự
+            "🧠 Nạp dữ liệu" và "🎥 Bật camera" bên dưới bằng dữ liệu giáo viên đã chuẩn bị sẵn.
+          </p>
+        </div>
 
         <div class="section-title" style="margin-top:20px;">Bước 2 — Nạp dữ liệu khuôn mặt</div>
         <p class="section-note">
@@ -5281,10 +5295,9 @@ auth.onAuthStateChanged(async user=>{
   $('adminLocked').style.display = (isAdmin || isThuQuy) ? 'none' : 'block';
   $('adminPanel').style.display  = isAdmin ? 'block' : 'none';
   if(!isAdmin){
-    // Đăng xuất hoặc không phải giáo viên: đóng ngay camera nhận diện nếu đang bật, và ẩn tool đi.
-    if(typeof dungNdkmCamera === 'function') dungNdkmCamera();
-    if($('ndkmCard')) $('ndkmCard').style.display = 'none';
-    if($('ndkmChuaDangNhap')) $('ndkmChuaDangNhap').style.display = 'block';
+    // Đăng xuất hoặc không phải giáo viên: Bước 1/1b (thêm/sửa ảnh) luôn đóng. Bước 2/3 (nạp dữ
+    // liệu + bật camera) thì mở cho bất kỳ ai đã có hồ sơ "Thành viên lớp" — xem capNhatHienThiNdkmCamera().
+    if(typeof capNhatHienThiNdkmCamera === 'function') capNhatHienThiNdkmCamera();
   }
   capNhatNutTkbAdmin();
   renderThoiKhoaBieu();
@@ -5302,8 +5315,7 @@ auth.onAuthStateChanged(async user=>{
     await napChamAiChoDuyet();
     await napChamAiDaDuyet();
     await napChamAiLoi();
-    if($('ndkmChuaDangNhap')) $('ndkmChuaDangNhap').style.display = 'none';
-    if($('ndkmCard')) $('ndkmCard').style.display = 'block';
+    if(typeof capNhatHienThiNdkmCamera === 'function') capNhatHienThiNdkmCamera();
     await napNdkmAnhTatCa();
     await napNdkmNguoiKhacTatCa();
     renderAdmin();
@@ -10975,6 +10987,7 @@ thanhVienRef.on('value', s=>{
   thanhVienState = s.val() || {};
   renderThanhVien();
   if(typeof capNhatHienThiNdkmTuThem === 'function') capNhatHienThiNdkmTuThem();
+  if(typeof capNhatHienThiNdkmCamera === 'function') capNhatHienThiNdkmCamera();
   if(typeof renderDiemDanhCuaToi === 'function') renderDiemDanhCuaToi();
   if(isAdmin && typeof ddDienChonHsThay === 'function') ddDienChonHsThay();
 });
@@ -12829,17 +12842,27 @@ async function ndkmLayAnhChoAI(anhId){
 
 /* ---- Bước 1 (tuỳ chọn) — Ảnh khuôn mặt BỔ SUNG cho từng học sinh ----
    Lưu Ở RIÊNG (nhanDienAnhBoSung2026), tách khỏi thanhvien2026 (ảnh thẻ công khai) vì đây là ảnh
-   thu thập RIÊNG cho mục đích nhận diện khuôn mặt — nhạy cảm hơn nên: chỉ admin đọc/ghi được
-   (không công khai), chỉ admin upload được (không có đường nào cho học sinh tự up), và giới hạn
-   tối đa NDKM_ANH_TOI_DA ảnh/học sinh để hạn chế thu thập dư thừa (tối thiểu hoá dữ liệu). */
+   thu thập RIÊNG cho mục đích nhận diện khuôn mặt — nhạy cảm hơn nên: chỉ admin THÊM/SỬA/XÓA được
+   (không có đường nào cho học sinh tự up ở đây), và giới hạn tối đa NDKM_ANH_TOI_DA ảnh/học sinh
+   để hạn chế thu thập dư thừa (tối thiểu hoá dữ liệu). Việc ĐỌC (not write) thì từ khi mở Bước 2/3
+   cho học sinh, bất kỳ ai đã có hồ sơ "Thành viên lớp" cũng đọc được TOÀN BỘ dữ liệu này (mã đặc
+   trưng khuôn mặt + link Drive ảnh) khi tự bấm "🧠 Nạp dữ liệu" — cần thiết để camera nhận diện cả
+   lớp ngay trên máy của chính em đó (xử lý hoàn toàn phía trình duyệt, không qua server trung gian). */
 const NDKM_ANH_TOI_DA = 4;
 if($('ndkmAnhToiDaNhan')) $('ndkmAnhToiDaNhan').textContent = String(NDKM_ANH_TOI_DA);
 if($('ndkmNguoiKhacToiDaNhan')) $('ndkmNguoiKhacToiDaNhan').textContent = String(NDKM_ANH_TOI_DA);
 let ndkmAnhState = {}; // { uid: { anhId: {anhLink, thuMucId, luc, dacTrung?:[128 số]} } }
 let ndkmAnhChoXuLy = []; // [File,...] — ảnh đã chọn cho học sinh đang chọn, CHƯA bấm Lưu nên chưa tải lên đâu cả
 
+// "Đủ điều kiện" để đọc dữ liệu NDKM dùng chung (Bước 2/3) — admin, HOẶC bất kỳ ai đã có hồ sơ
+// "Thành viên lớp" hợp lệ (có hoTen). Bước 1/1b (thêm/sửa ảnh) thì luôn phải isAdmin riêng, không
+// dùng hàm này.
+function ndkmDuocDungBuoc23(){
+  return isAdmin || !!(myUid && thanhVienState[myUid] && thanhVienState[myUid].hoTen);
+}
+
 async function napNdkmAnhTatCa(){
-  if(!isAdmin){ ndkmAnhState = {}; return; }
+  if(!ndkmDuocDungBuoc23()){ ndkmAnhState = {}; return; }
   try{ ndkmAnhState = (await ndkmAnhRef.once('value')).val() || {}; }
   catch(e){ ndkmAnhState = {}; }
   ndkmDienChonHocSinh();
@@ -13360,11 +13383,33 @@ $('ddDiemDanhThayBtn') && ($('ddDiemDanhThayBtn').onclick = async ()=>{
 let ndkmNguoiKhacState = {}; // { id: { ten, anh: { anhId: {anhLink, thuMucId, luc} } } }
 
 async function napNdkmNguoiKhacTatCa(){
-  if(!isAdmin){ ndkmNguoiKhacState = {}; return; }
+  if(!ndkmDuocDungBuoc23()){ ndkmNguoiKhacState = {}; return; }
   try{ ndkmNguoiKhacState = (await ndkmNguoiKhacRef.once('value')).val() || {}; }
   catch(e){ ndkmNguoiKhacState = {}; }
   ndkmDienChonNguoiKhac();
   renderNdkmNguoiKhacDsHienTai();
+}
+
+// Cập nhật toàn bộ hiển thị của panel "Camera nhận diện học sinh" theo đúng quyền hiện tại:
+// - isAdmin: thấy hết Bước 1/1b/2/3.
+// - Không phải admin nhưng đã có hồ sơ "Thành viên lớp": chỉ thấy Bước 2/3 (ẩn Bước 1/1b).
+// - Chưa có hồ sơ gì: ẩn hẳn, chỉ thấy thông báo #ndkmChuaDangNhap.
+// Gọi lại mỗi khi trạng thái đăng nhập HOẶC dữ liệu thanhvien2026 (hồ sơ) thay đổi.
+function capNhatHienThiNdkmCamera(){
+  const duocDung = ndkmDuocDungBuoc23();
+  if(!duocDung && typeof dungNdkmCamera === 'function') dungNdkmCamera(); // mất quyền giữa chừng thì tắt camera ngay
+  if($('ndkmCard')) $('ndkmCard').style.display = duocDung ? 'block' : 'none';
+  if($('ndkmChuaDangNhap')) $('ndkmChuaDangNhap').style.display = duocDung ? 'none' : 'block';
+  if($('ndkmAdminOnlyWrap')) $('ndkmAdminOnlyWrap').style.display = isAdmin ? 'block' : 'none';
+  if($('ndkmHocSinhGhiChu')) $('ndkmHocSinhGhiChu').style.display = (duocDung && !isAdmin) ? 'block' : 'none';
+  if(duocDung && !isAdmin){
+    // Admin đã tự nạp ở luồng đăng nhập riêng (onAuthStateChanged); ở đây chỉ cần nạp cho trường
+    // hợp học sinh có hồ sơ, để Bước 2 "Nạp dữ liệu" có sẵn dữ liệu dùng ngay.
+    if(typeof napNdkmAnhTatCa === 'function') napNdkmAnhTatCa();
+    if(typeof napNdkmNguoiKhacTatCa === 'function') napNdkmNguoiKhacTatCa();
+  } else if(!duocDung){
+    ndkmAnhState = {}; ndkmNguoiKhacState = {};
+  }
 }
 
 function ndkmDienChonNguoiKhac(){
