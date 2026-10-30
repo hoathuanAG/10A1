@@ -3343,6 +3343,13 @@
         <div id="ndkmNapMsg" class="msg"></div>
 
         <div class="section-title">Bước 3 — Bật camera nhận diện</div>
+        <p class="section-note">
+          🙋 <b>Tự động điểm danh:</b> khi camera nhận ra MỘT học sinh đủ chắc và liên tục trong vài
+          khung hình, hệ thống sẽ <b>tự ghi điểm danh</b> cho em đó ở mục "🙋 Điểm danh" — không cần
+          bấm gì thêm. Mỗi em vẫn chỉ được ghi 1 lần/ngày như cũ. Giáo viên quét thì ghi được cho bất
+          kỳ em nào camera nhận ra (dùng khi đặt 1 camera ở cửa lớp); học sinh tự quét trên máy mình
+          thì chỉ tự ghi được cho chính mình, không ghi giùm bạn khác dù camera lỡ nhận ra.
+        </p>
         <div class="field" style="max-width:420px;">
           <label>Chế độ quét</label>
           <select id="ndkmCheDoQuetChon">
@@ -12812,6 +12819,55 @@ let ndkmStream = null, ndkmDangChay = false, ndkmHenGioNhanDien = null;
 let ndkmFacingMode = 'environment';
 const NDKM_NGUONG_KHOP = 0.5; // càng nhỏ càng khắt khe khi so khớp khuôn mặt (mặc định face-api.js gợi ý 0.5-0.6)
 
+/* ---- Điểm danh bằng camera AI (tự động) ----
+   Khi camera (Bước 3) nhận ra MỘT học sinh ĐỦ CHẮC (khoảng cách khớp nhỏ hơn hẳn mức khớp thường,
+   xem NDKM_DD_NGUONG_GHI) và liên tục trong vài khung hình (NDKM_DD_SO_KHUNG_CAN) — không phải chỉ
+   1 khung lỡ — thì tự ghi điểm danh vào đúng mục "🙋 Điểm danh" (diemDanh2026/ds), KHÔNG cần bấm gì
+   thêm. Phạm vi ai được ghi cho ai:
+     - Giáo viên (isAdmin) đang quét: ghi được cho BẤT KỲ học sinh nào camera nhận ra (dùng khi đặt
+       1 camera ở cửa lớp, lần lượt quét cả lớp đi vào).
+     - Học sinh tự quét trên máy mình (không phải admin): CHỈ ghi được cho CHÍNH mình (dù camera lỡ
+       nhận ra bạn khác đứng cạnh cũng không ghi giùm) — đúng tinh thần "mỗi em tự điểm danh".
+   Mỗi em vẫn chỉ được ghi 1 lần/ngày như cũ (Rules Firebase chặn ghi đè nếu không phải admin); nếu
+   em đã tự bấm tay ở mục Điểm danh từ trước thì camera thấy đã có bản ghi, bỏ qua, không ghi lại. */
+const NDKM_DD_NGUONG_GHI = 0.42;  // khắt khe hơn mức khớp hiển thị (0.5) — tránh ghi nhầm điểm danh vì nhận diện sai
+const NDKM_DD_SO_KHUNG_CAN = 3;   // số khung hình liên tiếp phải khớp mới ghi (mỗi khung ~350ms) — tránh ghi vì 1 khung lỡ
+let ndkmDiemDanhHomNayState = {}; // { uid: banGhi } — bản ghi điểm danh HÔM NAY của cả lớp, nạp khi mở camera, để biết ai đã điểm danh rồi mà bỏ qua
+let ndkmDiemDanhDangGhi = new Set(); // các uid đang trong lúc chờ ghi (await) — chặn ghi trùng khi 2 khung hình gần nhau cùng kích hoạt
+let ndkmDiemDanhLienTiep = {};     // { uid: số khung liên tiếp đã khớp đủ chắc } — đếm dồn, reset về 0 khi khung nào không khớp nữa
+
+async function ndkmNapDiemDanhHomNay(){
+  try{ ndkmDiemDanhHomNayState = (await diemDanhDsRef.child(ddNgayHomNay()).once('value')).val() || {}; }
+  catch(e){ ndkmDiemDanhHomNayState = {}; }
+}
+
+async function ndkmTuDongDiemDanh(uid, hoTen){
+  if(ndkmDiemDanhHomNayState[uid] || ndkmDiemDanhDangGhi.has(uid)) return; // đã điểm danh hôm nay, hoặc đang ghi dở — bỏ qua
+  if(!isAdmin && uid !== myUid) return; // học sinh tự quét thì chỉ được ghi cho chính mình
+  ndkmDiemDanhDangGhi.add(uid);
+  try{
+    const gio = (typeof ddHienTaiHHMM === 'function') ? ddHienTaiHHMM() : null;
+    if(!gio) return;
+    // Lưu ý: schema diemDanh2026/ds/$ngay/$uid CHỈ cho đúng 4 trường (hoTen, gio, trangThai, luc) —
+    // Rules Firebase có "$khac: validate false" chặn mọi trường thừa, nên KHÔNG thêm trường nào
+    // khác (ví dụ đánh dấu "ghi qua camera") vào đây, nếu không write sẽ bị từ chối âm thầm.
+    const banGhi = { hoTen: hoTen || uid, gio, trangThai: ddPhanLoai(gio), luc: new Date().toISOString() };
+    await diemDanhDsRef.child(ddNgayHomNay()).child(uid).set(banGhi);
+    ndkmDiemDanhHomNayState[uid] = banGhi;
+    if(uid === myUid){ diemDanhHomNayCuaToi = banGhi; if(typeof renderDiemDanhCuaToi === 'function') renderDiemDanhCuaToi(); }
+    if($('ddLocNgay') && $('ddLocNgay').value === ddNgayHomNay() && typeof diemDanhNgayState === 'object'){
+      diemDanhNgayState[uid] = banGhi;
+      if(typeof renderDiemDanhBang === 'function') renderDiemDanhBang();
+    }
+    if($('ndkmErr')) showMsg($('ndkmErr'), `✅ Đã tự điểm danh cho "${hoTen||uid}" lúc ${gio} (qua camera AI).`, 'ok');
+  }catch(e){
+    // Lỗi thường gặp nhất ở đây là do em đó đã có bản ghi hôm nay (vd tự bấm tay trước) nên Rules
+    // chặn ghi đè — coi như đã điểm danh, không cần báo lỗi làm phiền; chỉ cập nhật lại cache.
+    ndkmDiemDanhHomNayState[uid] = ndkmDiemDanhHomNayState[uid] || { hoTen };
+  }
+  ndkmDiemDanhDangGhi.delete(uid);
+}
+
 async function ndkmTaiModelNeuChua(){
   if(ndkmModelsDaTai) return;
   const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
@@ -13723,6 +13779,8 @@ async function ndkmBatCamera(){
   $('ndkmBatCameraBtn').style.display = 'none';
   $('ndkmDoiCameraBtn').style.display = 'inline-block';
   $('ndkmDungCameraBtn').style.display = 'inline-block';
+  await ndkmNapDiemDanhHomNay(); // nạp trước ai đã điểm danh hôm nay, để vòng lặp nhận diện biết ai cần bỏ qua
+  ndkmDiemDanhLienTiep = {};
   ndkmDangChay = true;
   ndkmVongLapNhanDien();
 }
@@ -13739,10 +13797,13 @@ async function ndkmVongLapNhanDien(){
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    const uidKhopKhungNay = new Set(); // các uid học sinh khớp ĐỦ CHẮC ở khung hình này — dùng để đếm dồn số khung liên tiếp
+
     cacKetQua.forEach(kq=>{
       const hop = kq.detection.box;
       let ten = 'Chưa rõ', maMau = '#94a3b8';
       let laNguoiNgoaiLop = false; // true nếu khuôn mặt này khớp với người thêm ở Bước 1b (nhãn dạng "oth_...")
+      let uidHocSinhKhop = null;   // uid học sinh, CHỈ gán khi khớp đủ chắc để tính vào điểm danh tự động
       if(ndkmFaceMatcher){
         const khop = ndkmFaceMatcher.findBestMatch(kq.descriptor);
         if(khop.label !== 'unknown'){
@@ -13753,6 +13814,7 @@ async function ndkmVongLapNhanDien(){
           } else if(thanhVienState[khop.label]){
             ten = thanhVienState[khop.label].hoTen || khop.label;
             maMau = '#22c55e'; // xanh lá: học sinh của lớp
+            if(khop.distance <= NDKM_DD_NGUONG_GHI) uidHocSinhKhop = khop.label;
           } else {
             ten = khop.label;
             maMau = '#22c55e';
@@ -13775,7 +13837,21 @@ async function ndkmVongLapNhanDien(){
       ctx.fillRect(hop.x, yNhan, Math.max(rongChu, hop.width), caoNhan);
       ctx.fillStyle = '#fff';
       ctx.fillText(ten, hop.x + 8, yNhan + 20);
+
+      // Điểm danh tự động: phải khớp đủ chắc LIÊN TỤC trong NDKM_DD_SO_KHUNG_CAN khung hình mới
+      // ghi — 1 khung lỡ khớp nhầm không đủ để tự ghi điểm danh cho ai.
+      if(uidHocSinhKhop){
+        uidKhopKhungNay.add(uidHocSinhKhop);
+        ndkmDiemDanhLienTiep[uidHocSinhKhop] = (ndkmDiemDanhLienTiep[uidHocSinhKhop] || 0) + 1;
+        if(ndkmDiemDanhLienTiep[uidHocSinhKhop] >= NDKM_DD_SO_KHUNG_CAN){
+          ndkmTuDongDiemDanh(uidHocSinhKhop, thanhVienState[uidHocSinhKhop] && thanhVienState[uidHocSinhKhop].hoTen);
+        }
+      }
     });
+
+    // Mặt nào khung này không còn thấy (hoặc không còn khớp đủ chắc) thì reset bộ đếm của uid đó
+    // về 0 — tránh trường hợp khớp rải rác, chập chờn vẫn bị tính dồn thành liên tục.
+    Object.keys(ndkmDiemDanhLienTiep).forEach(uid=>{ if(!uidKhopKhungNay.has(uid)) delete ndkmDiemDanhLienTiep[uid]; });
   }catch(e){ /* bỏ qua lỗi 1 khung hình lẻ (vd camera vừa tắt), vòng lặp sau sẽ tự thử lại */ }
 
   ndkmHenGioNhanDien = setTimeout(ndkmVongLapNhanDien, 350);
@@ -13783,6 +13859,7 @@ async function ndkmVongLapNhanDien(){
 
 function dungNdkmCamera(){
   ndkmDangChay = false;
+  ndkmDiemDanhLienTiep = {}; // tắt camera thì bỏ luôn bộ đếm khung liên tiếp, tránh dồn qua lần mở sau
   if(ndkmHenGioNhanDien){ clearTimeout(ndkmHenGioNhanDien); ndkmHenGioNhanDien = null; }
   if(ndkmStream){ ndkmStream.getTracks().forEach(t=> t.stop()); ndkmStream = null; }
   const video = $('ndkmVideo');
