@@ -3465,6 +3465,67 @@
     </script>
   </div>
 
+  <!-- ============ CÔNG CỤ: ĐIỂM DANH ============ -->
+  <div class="panel" id="panel-diemdanh" data-group="games">
+    <div class="card">
+      <h2>🙋 Điểm danh</h2>
+      <p class="section-note">Mỗi em tự bấm điểm danh khi đến lớp — hệ thống tự ghi giờ và phân loại quá sớm / đúng giờ / đi muộn theo mốc giờ thầy đã đặt bên dưới. Mỗi em chỉ điểm danh được <b>1 lần/ngày</b> (muốn sửa lại thì nhờ thầy ở khu quản trị).</p>
+      <div id="ddChuaCoHoSo" class="msg info" style="display:none;">Em cần chọn <b>Ảnh thẻ</b> ở mục "Nhập hồ sơ" trước, sau đó quay lại đây để điểm danh nhé.</div>
+      <div id="ddKhuBam">
+        <button type="button" class="btn btn-primary" id="ddBamBtn" style="font-size:16px; padding:14px 28px;">✅ Điểm danh ngay</button>
+      </div>
+      <div id="ddKetQuaCuaToi" class="msg" style="display:none; margin-top:10px;"></div>
+    </div>
+
+    <div class="card" id="ddCaiDatCard" style="display:none;">
+      <h2>⚙️ Cài đặt điểm danh (chỉ giáo viên)</h2>
+      <div class="grid2">
+        <div class="field">
+          <label>Trước giờ này = Quá sớm</label>
+          <input type="time" id="ddGioBatDau">
+        </div>
+        <div class="field">
+          <label>Sau giờ này = Đi muộn</label>
+          <input type="time" id="ddGioKetThuc">
+        </div>
+      </div>
+      <p class="section-note" style="margin:4px 0 10px;">Trong khoảng 2 mốc giờ này tính là "Đúng giờ". Mốc dùng chung cho mọi ngày học.</p>
+      <button type="button" class="btn btn-blue btn-sm" id="ddLuuCaiDatBtn">💾 Lưu mốc giờ</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="ddAnHienBtn" style="margin-left:8px;"></button>
+      <div id="ddCaiDatMsg" class="msg"></div>
+
+      <hr style="margin:18px 0; border:none; border-top:1px dashed var(--line);">
+
+      <h2>➕ Điểm danh thay / sửa cho 1 em</h2>
+      <p class="section-note">Dùng khi em nào quên bấm, bấm nhầm, hoặc không có điện thoại để tự điểm danh — ghi đè lên đúng ngày đang chọn ở bộ lọc bên dưới.</p>
+      <div class="grid2">
+        <div class="field">
+          <label>Chọn học sinh</label>
+          <select id="ddChonHsThay"></select>
+        </div>
+        <div class="field">
+          <label>Giờ (để trống = giờ hiện tại)</label>
+          <input type="time" id="ddGioThay">
+        </div>
+      </div>
+      <button type="button" class="btn btn-blue btn-sm" id="ddDiemDanhThayBtn">Ghi điểm danh cho em này</button>
+      <div id="ddThayMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 Danh sách điểm danh</h2>
+      <div class="field" style="max-width:220px;">
+        <label>Xem theo ngày</label>
+        <input type="date" id="ddLocNgay">
+      </div>
+      <div id="ddDanhSachAn" class="msg info" style="display:none;"></div>
+      <div id="ddDanhSachHienThi">
+        <div class="scroll-x"><table id="ddBangDiemDanh"></table></div>
+        <div id="ddDsRong" class="empty" style="display:none;">Chưa có ai điểm danh ngày này.</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ GÓC PHỤ HUYNH ============ -->
   <!-- Màn hình khóa: hiện khi phụ huynh chưa nhập đúng mật khẩu chung của lớp. KHÔNG nằm trong
        NHOM_TAB.phuhuynh nên không có nút subtab riêng — chỉ được JS bật/tắt (xem capNhatKhoaPhuHuynh). -->
@@ -4104,6 +4165,8 @@ const taiKhoanHocSinhRef = db.ref('taiKhoanHocSinh2026'); // sổ ghi lại tài
 const phongTraoRef = db.ref('phongtrao2026'); // phong trào của lớp — công khai đọc/ghi, giống Bảng tin/Đăng ký lao động
 const hosoRef   = db.ref('hoso2026/hoso');         // riêng tư: khóa theo uid, giống hotro2026
 const hsCauHinhRef = db.ref('hsCauHinh2026'); // cấu hình mục nào bắt buộc / ẩn trong form "Hồ sơ đầu năm" — công khai đọc (để mọi học sinh render đúng form), CHỈ giáo viên (admin) ghi được
+const diemDanhCaiDatRef = db.ref('diemDanh2026/caiDat'); // mốc giờ quá sớm/đi muộn + ẩn-hiện danh sách — công khai đọc, chỉ giáo viên (admin) ghi
+const diemDanhDsRef = db.ref('diemDanh2026/ds'); // danh sách điểm danh theo từng ngày (key "YYYY-MM-DD") — công khai đọc, mỗi học sinh tự ghi ĐÚNG 1 lần/ngày cho chính mình (khóa theo uid), giáo viên sửa/xóa được mọi lúc
 
 const LANES     = [ {id:1,desks:7}, {id:2,desks:6}, {id:3,desks:6}, {id:4,desks:6} ];
 
@@ -4839,6 +4902,7 @@ const SUBTAB_DINH_NGHIA = {
   ndkm:      {icon:'📷', ten:'Camera nhận diện học sinh'},
   duongdenngoivua: {icon:'👑', ten:'Đường đến ngôi vua'},
   dapmuoi:   {icon:'🦟', ten:'Đập muỗi'},
+  diemdanh:  {icon:'🙋', ten:'Điểm danh'},
   phtongquan: {icon:'📊', ten:'Tổng quan tình hình lớp'},
   phlienhe:   {icon:'📞', ten:'Liên hệ với GVCN'},
   phgopy:     {icon:'💬', ten:'Góp ý trực tiếp'},
@@ -4849,7 +4913,7 @@ const NHOM_TAB = {
   hoatdong: ['laodong', 'phongtrao', 'giaithuong', 'khaigiang', 'hotro'],
   hoatdongto: ['tongketTuan', 'thongkeDiemTot', 'thongkeViPham'],
   nhiemvu:  ['baitapvatly10', 'nopvideo10'],
-  games:    ['quayten', 'dodoon', 'ndkm', 'duongdenngoivua', 'dapmuoi'],
+  games:    ['quayten', 'dodoon', 'ndkm', 'duongdenngoivua', 'dapmuoi', 'diemdanh'],
   phuhuynh: ['phtongquan', 'phlienhe', 'phgopy', 'phhuongdan'],
 };
 /* Màu khung mặc định cho các mục con của "Góc Phụ Huynh" — tô màu sẵn (không cần giáo viên tự chỉnh
@@ -5253,6 +5317,11 @@ auth.onAuthStateChanged(async user=>{
   await napHoSoCuaToi();
   await napDuLieuCaNhanCuaToi();
   await napNdkmCuaToi();
+  await napDiemDanhHomNayCuaToi();
+  if($('ddLocNgay') && !$('ddLocNgay').value) $('ddLocNgay').value = ddNgayHomNay();
+  await napDiemDanhNgay($('ddLocNgay') ? ($('ddLocNgay').value || ddNgayHomNay()) : ddNgayHomNay());
+  if($('ddCaiDatCard')) $('ddCaiDatCard').style.display = isAdmin ? 'block' : 'none';
+  if(isAdmin) ddDienChonHsThay();
   await napKhoanThuCuaToi();
   await napBaiTapVatLy10CuaToi();
   await napVideoBaiTapCuaToi();
@@ -10906,6 +10975,8 @@ thanhVienRef.on('value', s=>{
   thanhVienState = s.val() || {};
   renderThanhVien();
   if(typeof capNhatHienThiNdkmTuThem === 'function') capNhatHienThiNdkmTuThem();
+  if(typeof renderDiemDanhCuaToi === 'function') renderDiemDanhCuaToi();
+  if(isAdmin && typeof ddDienChonHsThay === 'function') ddDienChonHsThay();
 });
 
 clbDinhNghiaRef.on('value', s=>{
@@ -13104,6 +13175,183 @@ function ndkmTatCamera(){
 // Đóng modal bằng nút "Đóng"/bấm ra ngoài cũng phải tắt camera, không để camera chạy ngầm phí pin/lộ hình ảnh.
 const __ndkmCloseModalGoc = closeModal;
 closeModal = function(){ ndkmTatCamera(); __ndkmCloseModalGoc(); };
+
+/* ================================================================
+   ĐIỂM DANH — mỗi em tự bấm khi đến lớp (gắn theo đúng myUid, giống hệt cách "Thành viên lớp"
+   đang hoạt động), hệ thống tự ghi giờ + phân loại quá sớm/đúng giờ/đi muộn theo 2 mốc giờ giáo
+   viên đặt. Mỗi em CHỈ ghi được đúng 1 lần/ngày cho CHÍNH MÌNH (Rules chỉ cho tạo mới, không cho
+   ghi đè nếu không phải admin) — muốn sửa/điểm danh thay cho em nào thì phải là giáo viên.
+   ================================================================ */
+let diemDanhCaiDat = { gioBatDauDung:'06:30', gioKetThucDung:'06:45', an:false };
+let diemDanhNgayState = {};      // dữ liệu điểm danh của NGÀY đang được LỌC để xem trong bảng
+let diemDanhHomNayCuaToi = null; // bản ghi của CHÍNH MÌNH trong ngày HÔM NAY — tách riêng khỏi bộ lọc xem
+
+function ddSo2(n){ return String(n).padStart(2,'0'); }
+function ddNgayHomNay(){
+  const d = new Date();
+  return d.getFullYear() + '-' + ddSo2(d.getMonth()+1) + '-' + ddSo2(d.getDate());
+}
+function ddHienTaiHHMM(){
+  const d = new Date();
+  return ddSo2(d.getHours()) + ':' + ddSo2(d.getMinutes());
+}
+// So sánh chuỗi "HH:mm" (luôn đúng 5 ký tự, có số 0 ở đầu) theo thứ tự từ điển vẫn cho kết quả
+// đúng như so sánh thời gian thật trong cùng 1 ngày.
+function ddPhanLoai(gioHHMM){
+  const batDau = diemDanhCaiDat.gioBatDauDung || '00:00';
+  const ketThuc = diemDanhCaiDat.gioKetThucDung || '23:59';
+  if(gioHHMM < batDau) return 'qua-som';
+  if(gioHHMM > ketThuc) return 'di-muon';
+  return 'dung-gio';
+}
+const DD_NHAN_TRANG_THAI = { 'qua-som': '🌅 Quá sớm', 'dung-gio': '✅ Đúng giờ', 'di-muon': '⏰ Đi muộn' };
+
+diemDanhCaiDatRef.on('value', s=>{
+  const v = s.val() || {};
+  diemDanhCaiDat = Object.assign({ gioBatDauDung:'06:30', gioKetThucDung:'06:45', an:false }, v);
+  renderDiemDanhCaiDat();
+});
+
+function renderDiemDanhCaiDat(){
+  if($('ddGioBatDau') && document.activeElement !== $('ddGioBatDau')) $('ddGioBatDau').value = diemDanhCaiDat.gioBatDauDung || '';
+  if($('ddGioKetThuc') && document.activeElement !== $('ddGioKetThuc')) $('ddGioKetThuc').value = diemDanhCaiDat.gioKetThucDung || '';
+  if($('ddAnHienBtn')) $('ddAnHienBtn').textContent = diemDanhCaiDat.an ? '👁️ Hiện danh sách' : '🙈 Ẩn danh sách';
+  if($('ddDanhSachAn')){
+    $('ddDanhSachAn').style.display = diemDanhCaiDat.an ? 'block' : 'none';
+    $('ddDanhSachAn').textContent = '🙈 Danh sách điểm danh đang được thầy tạm ẩn.';
+  }
+  if($('ddDanhSachHienThi')) $('ddDanhSachHienThi').style.display = diemDanhCaiDat.an ? 'none' : 'block';
+}
+
+async function napDiemDanhHomNayCuaToi(){
+  if(!myUid){ diemDanhHomNayCuaToi = null; return; }
+  try{ diemDanhHomNayCuaToi = (await diemDanhDsRef.child(ddNgayHomNay()).child(myUid).once('value')).val() || null; }
+  catch(e){ diemDanhHomNayCuaToi = null; }
+  renderDiemDanhCuaToi();
+}
+
+function renderDiemDanhCuaToi(){
+  const coHoSo = !!(myUid && thanhVienState[myUid] && thanhVienState[myUid].hoTen);
+  if($('ddChuaCoHoSo')) $('ddChuaCoHoSo').style.display = coHoSo ? 'none' : 'block';
+  if($('ddKhuBam')) $('ddKhuBam').style.display = coHoSo ? 'block' : 'none';
+  if(!coHoSo) return;
+  const host = $('ddKetQuaCuaToi');
+  const nutBam = $('ddBamBtn');
+  if(diemDanhHomNayCuaToi){
+    if(nutBam){ nutBam.disabled = true; nutBam.textContent = '✅ Đã điểm danh'; }
+    if(host){
+      host.style.display = 'block';
+      host.className = 'msg show ' + (diemDanhHomNayCuaToi.trangThai === 'di-muon' ? 'err' : 'ok');
+      host.textContent = `Em đã điểm danh lúc ${diemDanhHomNayCuaToi.gio} hôm nay — ${DD_NHAN_TRANG_THAI[diemDanhHomNayCuaToi.trangThai] || ''}`;
+    }
+  } else {
+    if(nutBam){ nutBam.disabled = false; nutBam.textContent = '✅ Điểm danh ngay'; }
+    if(host) host.style.display = 'none';
+  }
+}
+
+$('ddBamBtn') && ($('ddBamBtn').onclick = async ()=>{
+  if(!myUid) return;
+  const coHoSo = thanhVienState[myUid] && thanhVienState[myUid].hoTen;
+  if(!coHoSo){ showMsg($('ddKetQuaCuaToi'), 'Em cần chọn Ảnh thẻ ở mục "Nhập hồ sơ" trước đã nhé.', 'err'); return; }
+  if(diemDanhHomNayCuaToi) return; // đã điểm danh rồi — nút cũng đã bị khóa, phòng trường hợp bấm quá nhanh
+  const nutBam = $('ddBamBtn');
+  nutBam.disabled = true;
+  const gio = ddHienTaiHHMM();
+  const banGhi = { hoTen: thanhVienState[myUid].hoTen, gio, trangThai: ddPhanLoai(gio), luc: new Date().toISOString() };
+  try{
+    await diemDanhDsRef.child(ddNgayHomNay()).child(myUid).set(banGhi);
+    diemDanhHomNayCuaToi = banGhi;
+    renderDiemDanhCuaToi();
+    if($('ddLocNgay') && $('ddLocNgay').value === ddNgayHomNay()){ diemDanhNgayState[myUid] = banGhi; renderDiemDanhBang(); }
+  }catch(e){
+    nutBam.disabled = false;
+    showMsg($('ddKetQuaCuaToi'), baoLoi(e), 'err');
+  }
+});
+
+async function napDiemDanhNgay(ngay){
+  try{ diemDanhNgayState = (await diemDanhDsRef.child(ngay).once('value')).val() || {}; }
+  catch(e){ diemDanhNgayState = {}; }
+  renderDiemDanhBang();
+}
+
+function renderDiemDanhBang(){
+  const host = $('ddBangDiemDanh');
+  const rong = $('ddDsRong');
+  if(!host) return;
+  const ds = Object.entries(diemDanhNgayState).sort((a,b)=> (a[1].gio||'').localeCompare(b[1].gio||''));
+  if(!ds.length){
+    host.innerHTML = '';
+    if(rong) rong.style.display = 'block';
+    return;
+  }
+  if(rong) rong.style.display = 'none';
+  const coNutXoa = isAdmin;
+  host.innerHTML = `<tr><th>Họ tên</th><th>Giờ</th><th>Trạng thái</th>${coNutXoa?'<th></th>':''}</tr>` +
+    ds.map(([uid,x])=> `<tr>
+      <td>${esc(x.hoTen||uid)}</td>
+      <td>${esc(x.gio||'')}</td>
+      <td>${DD_NHAN_TRANG_THAI[x.trangThai] || esc(x.trangThai||'')}</td>
+      ${coNutXoa ? `<td><button class="btn btn-ghost btn-sm" data-dd-xoa="${esc(uid)}">🗑️ Xóa</button></td>` : ''}
+    </tr>`).join('');
+  if(coNutXoa) host.querySelectorAll('[data-dd-xoa]').forEach(btn=> btn.onclick = ()=> ddXoaDong(btn.getAttribute('data-dd-xoa')));
+}
+
+async function ddXoaDong(uid){
+  const ngay = ($('ddLocNgay') && $('ddLocNgay').value) || ddNgayHomNay();
+  if(!confirm('Xóa dòng điểm danh này?')) return;
+  try{
+    await diemDanhDsRef.child(ngay).child(uid).remove();
+    delete diemDanhNgayState[uid];
+    renderDiemDanhBang();
+    if(uid === myUid && ngay === ddNgayHomNay()){ diemDanhHomNayCuaToi = null; renderDiemDanhCuaToi(); }
+  }catch(e){ alert(baoLoi(e)); }
+}
+
+$('ddLocNgay') && ($('ddLocNgay').onchange = ()=> napDiemDanhNgay($('ddLocNgay').value || ddNgayHomNay()));
+
+$('ddLuuCaiDatBtn') && ($('ddLuuCaiDatBtn').onclick = async ()=>{
+  const batDau = $('ddGioBatDau').value, ketThuc = $('ddGioKetThuc').value;
+  if(!batDau || !ketThuc){ showMsg($('ddCaiDatMsg'), 'Vui lòng chọn đủ 2 mốc giờ.', 'err'); return; }
+  if(batDau >= ketThuc){ showMsg($('ddCaiDatMsg'), 'Mốc "Quá sớm" phải sớm hơn mốc "Đi muộn".', 'err'); return; }
+  try{
+    await diemDanhCaiDatRef.update({ gioBatDauDung: batDau, gioKetThucDung: ketThuc });
+    showMsg($('ddCaiDatMsg'), '✅ Đã lưu mốc giờ.', 'ok');
+  }catch(e){ showMsg($('ddCaiDatMsg'), baoLoi(e), 'err'); }
+});
+
+$('ddAnHienBtn') && ($('ddAnHienBtn').onclick = async ()=>{
+  try{ await diemDanhCaiDatRef.update({ an: !diemDanhCaiDat.an }); }
+  catch(e){ showMsg($('ddCaiDatMsg'), baoLoi(e), 'err'); }
+});
+
+function ddDienChonHsThay(){
+  const sel = $('ddChonHsThay');
+  if(!sel) return;
+  const giaTriCu = sel.value;
+  const ds = Object.entries(thanhVienState).map(([uid,x])=> ({uid, hoTen:(x&&x.hoTen)||uid}))
+    .sort((a,b)=> a.hoTen.localeCompare(b.hoTen,'vi'));
+  sel.innerHTML = ds.length ? ds.map(x=> `<option value="${esc(x.uid)}">${esc(x.hoTen)}</option>`).join('')
+    : `<option value="">-- Chưa có học sinh nào ở "Thành viên lớp" --</option>`;
+  if(ds.some(x=> x.uid === giaTriCu)) sel.value = giaTriCu;
+}
+
+$('ddDiemDanhThayBtn') && ($('ddDiemDanhThayBtn').onclick = async ()=>{
+  const uid = $('ddChonHsThay').value;
+  if(!uid){ showMsg($('ddThayMsg'), 'Vui lòng chọn học sinh.', 'err'); return; }
+  const ngay = ($('ddLocNgay') && $('ddLocNgay').value) || ddNgayHomNay();
+  const gio = $('ddGioThay').value || ddHienTaiHHMM();
+  const hoTen = (thanhVienState[uid] && thanhVienState[uid].hoTen) || uid;
+  const banGhi = { hoTen, gio, trangThai: ddPhanLoai(gio), luc: new Date().toISOString() };
+  try{
+    await diemDanhDsRef.child(ngay).child(uid).set(banGhi);
+    diemDanhNgayState[uid] = banGhi;
+    renderDiemDanhBang();
+    if(uid === myUid && ngay === ddNgayHomNay()){ diemDanhHomNayCuaToi = banGhi; renderDiemDanhCuaToi(); }
+    showMsg($('ddThayMsg'), `✅ Đã ghi điểm danh cho "${hoTen}" lúc ${gio}.`, 'ok');
+  }catch(e){ showMsg($('ddThayMsg'), baoLoi(e), 'err'); }
+});
 
 /* ---- Bước 1b (tuỳ chọn) — Ảnh khuôn mặt cho NGƯỜI BẤT KỲ, không phải học sinh của lớp ----
    Lưu ở nhánh riêng (nhanDienNguoiKhac2026), cùng mức bảo mật admin-only như ảnh bổ sung của học
