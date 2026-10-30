@@ -2881,6 +2881,27 @@
       <div id="chsAnhMsg" class="msg"></div>
     </div>
 
+    <div class="card" id="ndkmTuThemCard" style="display:none;">
+      <h2>🧠 Ảnh bổ sung nhận diện khuôn mặt (tuỳ chọn)</h2>
+      <div class="rieng-tu">
+        🔒 Dùng để AI nhận diện khuôn mặt của em chính xác hơn khi điểm danh bằng camera — <b>không</b>
+        dùng để tự động điểm danh thay thầy, không công khai, chỉ thầy chủ nhiệm xem được. Thêm tối đa
+        4 ảnh ở các góc mặt khác nhau (chính diện, nghiêng nhẹ trái/phải...). Lưu ý: em có thể THÊM ảnh
+        mới bất cứ lúc nào nhưng không tự xoá được ảnh đã lưu — nhắn thầy nếu cần xoá ảnh nào đó.
+      </div>
+      <p class="section-note" id="ndkmTuThemSoLuong">Đã có 0/4 ảnh bổ sung.</p>
+      <div id="ndkmTuThemDsHienTai" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:4px;"></div>
+      <div id="ndkmTuThemChoXemTruoc"></div>
+      <button type="button" class="btn btn-blue btn-sm" id="ndkmTuThemChonBtn">📷 Thêm ảnh</button>
+      <button type="button" class="btn btn-primary btn-sm" id="ndkmTuThemLuuBtn" style="display:none; margin-left:8px;">💾 Lưu ảnh đã chọn</button>
+      <input type="file" id="ndkmTuThemAnhInput" accept="image/*" multiple style="display:none;">
+      <div id="ndkmTuThemMsg" class="msg"></div>
+    </div>
+    <div class="card" id="ndkmTuThemChuaCoAnhTheCard" style="display:none;">
+      <h2>🧠 Ảnh bổ sung nhận diện khuôn mặt</h2>
+      <p class="section-note">Em cần chọn <b>Ảnh thẻ</b> ở mục ngay phía trên trước, sau đó quay lại đây để thêm ảnh bổ sung nhận diện khuôn mặt nhé.</p>
+    </div>
+
     <div class="card">
       <h2>Hình CCCD (VNEID)</h2>
       <div class="rieng-tu">
@@ -5231,6 +5252,7 @@ auth.onAuthStateChanged(async user=>{
   await napHoTroCuaToi();
   await napHoSoCuaToi();
   await napDuLieuCaNhanCuaToi();
+  await napNdkmCuaToi();
   await napKhoanThuCuaToi();
   await napBaiTapVatLy10CuaToi();
   await napVideoBaiTapCuaToi();
@@ -10883,6 +10905,7 @@ khoanThuRef.on('value', ()=>{ if(isAdmin) renderDanhSachKhoanThu(); });
 thanhVienRef.on('value', s=>{
   thanhVienState = s.val() || {};
   renderThanhVien();
+  if(typeof capNhatHienThiNdkmTuThem === 'function') capNhatHienThiNdkmTuThem();
 });
 
 clbDinhNghiaRef.on('value', s=>{
@@ -12832,24 +12855,20 @@ $('ndkmAnhInput') && ($('ndkmAnhInput').onchange = (e)=>{
   renderNdkmAnhChoXemTruoc();
 });
 
-$('ndkmAnhLuuBtn') && ($('ndkmAnhLuuBtn').onclick = async ()=>{
-  const uid = $('ndkmAnhChonHs').value;
-  const hoTen = (thanhVienState[uid] && thanhVienState[uid].hoTen) || uid;
-  if(!uid || !ndkmAnhChoXuLy.length) return;
-  if(!dungNdkmDrive()){ showMsg($('ndkmAnhMsg'), 'Chưa cấu hình nơi lưu ảnh (Drive) cho mục này — báo kỹ thuật kiểm tra NDKM_DRIVE_URL.', 'err'); return; }
-  const nutLuu = $('ndkmAnhLuuBtn');
-  nutLuu.disabled = true;
-  const dsCanLuu = ndkmAnhChoXuLy.slice(); // chụp lại danh sách tại thời điểm bấm Lưu
+/* Lõi dùng chung: nén -> tải Drive -> (nếu có model AI) tính mã đặc trưng 128 số -> ghi Firebase.
+   Dùng chung cho CẢ giáo viên (chọn học sinh bất kỳ) LẪN học sinh tự thêm ảnh của chính mình,
+   để không lặp code và đảm bảo 2 luồng luôn ghi đúng cùng 1 cấu trúc bản ghi. */
+async function ndkmLuuAnhBoSungChoUid(uid, hoTen, dsFile, elMsg){
   let soDaLuu = 0, soNhanDienDuoc = 0;
   const dsLoi = [];
   try{ await ndkmTaiModelNeuChua(); }
   catch(e){ /* vẫn tiếp tục lưu ảnh dù tải model AI lỗi — chỉ là không tính được mã đặc trưng ngay lúc này */ }
-  for(let i=0; i<dsCanLuu.length; i++){
-    const file = dsCanLuu[i];
-    showMsg($('ndkmAnhMsg'), `⏳ Đang lưu ảnh ${i+1}/${dsCanLuu.length} cho "${hoTen}"...`, 'info');
+  for(let i=0; i<dsFile.length; i++){
+    const file = dsFile[i];
+    if(elMsg) showMsg(elMsg, `⏳ Đang lưu ảnh ${i+1}/${dsFile.length}${hoTen? ' cho "'+hoTen+'"':''}...`, 'info');
     try{
       const anhNen = await nenAnh(file, 1000, 0.85);
-      const kqDrive = await guiAnhNdkmLenDrive(anhNen, hoTen + ' - nhan dien');
+      const kqDrive = await guiAnhNdkmLenDrive(anhNen, (hoTen||uid) + ' - nhan dien');
       const banGhi = { anhLink: kqDrive.link, thuMucId: kqDrive.thuMucId, luc: new Date().toISOString() };
       // Tính luôn mã đặc trưng khuôn mặt (128 số) từ CHÍNH ảnh vừa nén trong bộ nhớ (không tải lại
       // từ Drive — vừa nhanh hơn, vừa tránh lỗi CORS khi đọc pixel ảnh từ Drive). Ảnh nào AI không
@@ -12866,10 +12885,25 @@ $('ndkmAnhLuuBtn') && ($('ndkmAnhLuuBtn').onclick = async ()=>{
         }catch(e){ /* bỏ qua lỗi tính mã đặc trưng của riêng ảnh này — ảnh vẫn được lưu */ }
       }
       await ndkmAnhRef.child(uid).child(kqDrive.id).set(banGhi);
-      ndkmAnhState[uid] = Object.assign({}, ndkmAnhState[uid]||{}, { [kqDrive.id]: banGhi });
       soDaLuu++;
     }catch(err){ dsLoi.push(baoLoi(err)); }
   }
+  return { soDaLuu, soNhanDienDuoc, dsLoi };
+}
+
+$('ndkmAnhLuuBtn') && ($('ndkmAnhLuuBtn').onclick = async ()=>{
+  const uid = $('ndkmAnhChonHs').value;
+  const hoTen = (thanhVienState[uid] && thanhVienState[uid].hoTen) || uid;
+  if(!uid || !ndkmAnhChoXuLy.length) return;
+  if(!dungNdkmDrive()){ showMsg($('ndkmAnhMsg'), 'Chưa cấu hình nơi lưu ảnh (Drive) cho mục này — báo kỹ thuật kiểm tra NDKM_DRIVE_URL.', 'err'); return; }
+  const nutLuu = $('ndkmAnhLuuBtn');
+  nutLuu.disabled = true;
+  const dsCanLuu = ndkmAnhChoXuLy.slice(); // chụp lại danh sách tại thời điểm bấm Lưu
+  const {soDaLuu, soNhanDienDuoc, dsLoi} = await ndkmLuuAnhBoSungChoUid(uid, hoTen, dsCanLuu, $('ndkmAnhMsg'));
+  if(soDaLuu) ndkmAnhState[uid] = Object.assign({}, ndkmAnhState[uid]||{});
+  // (các bản ghi đã được ndkmLuuAnhBoSungChoUid ghi lên Firebase; nạp lại từ state cục bộ để hiển thị
+  // ngay — ta không có access tới banGhi từng ảnh ở đây nên đọc lại nhanh từ Firebase cho chắc.)
+  try{ ndkmAnhState[uid] = (await ndkmAnhRef.child(uid).once('value')).val() || {}; }catch(e){}
   ndkmAnhChoXuLy = [];
   nutLuu.disabled = false;
   ndkmDienChonHocSinh();
@@ -12890,6 +12924,186 @@ async function ndkmXoaAnhBoSung(uid, anhId){
     renderNdkmAnhDsHienTai();
   }catch(e){ showMsg($('ndkmAnhMsg'), baoLoi(e), 'err'); }
 }
+
+/* ================================================================
+   HỌC SINH TỰ THÊM ẢNH BỔ SUNG (mục "Nhập hồ sơ" > sau "Ảnh thẻ") — mỗi em CHỈ thêm được ảnh
+   của CHÍNH MÌNH (gắn theo đúng myUid, giống hệt cách hồ sơ "Thành viên lớp" hiện đang hoạt động),
+   KHÔNG xem/sửa/xóa được ảnh của bạn khác. Học sinh chỉ được THÊM, không tự xóa được ảnh đã lưu
+   (muốn xóa phải nhờ thầy ở khu quản trị) — khác với luồng admin ở trên vốn xóa được thoải mái.
+   ================================================================ */
+let ndkmAnhCuaToi = {};      // { anhId: {anhLink, thuMucId, luc, dacTrung?} } — CHỈ của myUid
+let ndkmTuThemChoXuLy = [];  // [File,...] — ảnh (chụp hoặc chọn từ máy) đang chờ bấm Lưu
+let ndkmCamStream = null;    // MediaStream camera đang mở (nếu có), để tắt khi đóng modal
+
+async function napNdkmCuaToi(){
+  if(!myUid){ ndkmAnhCuaToi = {}; return; }
+  try{ ndkmAnhCuaToi = (await ndkmAnhRef.child(myUid).once('value')).val() || {}; }
+  catch(e){ ndkmAnhCuaToi = {}; } // chưa có hồ sơ/chưa đủ quyền đọc -> coi như chưa có ảnh nào
+  ndkmTuThemChoXuLy = [];
+  capNhatHienThiNdkmTuThem();
+  renderNdkmTuThemDsHienTai();
+  renderNdkmTuThemChoXemTruoc();
+}
+
+// Chỉ hiện mục này khi em đã có hồ sơ "Thành viên lớp" (tức đã từng tải Ảnh thẻ) — để ảnh bổ
+// sung luôn gắn được với một danh tính ổn định, tránh ảnh "mồ côi" không biết của ai.
+function capNhatHienThiNdkmTuThem(){
+  const coHoSo = !!(myUid && thanhVienState[myUid] && thanhVienState[myUid].hoTen);
+  if($('ndkmTuThemCard')) $('ndkmTuThemCard').style.display = coHoSo ? 'block' : 'none';
+  if($('ndkmTuThemChuaCoAnhTheCard')) $('ndkmTuThemChuaCoAnhTheCard').style.display = coHoSo ? 'none' : 'block';
+}
+
+function ndkmTuThemConLai(){
+  return NDKM_ANH_TOI_DA - Object.keys(ndkmAnhCuaToi).length - ndkmTuThemChoXuLy.length;
+}
+
+function renderNdkmTuThemDsHienTai(){
+  const host = $('ndkmTuThemDsHienTai');
+  if(!host) return;
+  const ds = Object.entries(ndkmAnhCuaToi);
+  if($('ndkmTuThemSoLuong')) $('ndkmTuThemSoLuong').textContent = `Đã có ${ds.length}/${NDKM_ANH_TOI_DA} ảnh bổ sung.`;
+  if(!ds.length){ host.innerHTML = ''; return; }
+  host.innerHTML = ds.map(([anhId,x])=>
+    `<div style="text-align:center;">
+       <img src="${anhDriveNho(anhId)}" alt="Ảnh bổ sung" style="width:80px;height:100px;object-fit:cover;border-radius:8px;border:2px solid var(--line);display:block;">
+       <div style="font-size:11px;color:var(--ink-soft);">${x && Array.isArray(x.dacTrung) && x.dacTrung.length===128 ? '🧠 Đã nhận diện' : '⚠️ Chưa rõ mặt'}</div>
+     </div>`).join('');
+}
+
+function renderNdkmTuThemChoXemTruoc(){
+  const host = $('ndkmTuThemChoXemTruoc');
+  const nutLuu = $('ndkmTuThemLuuBtn');
+  if(!host) return;
+  if(!ndkmTuThemChoXuLy.length){ host.innerHTML = ''; if(nutLuu) nutLuu.style.display = 'none'; return; }
+  if(nutLuu) nutLuu.style.display = '';
+  host.innerHTML = `<p class="section-note" style="margin:6px 0;">Ảnh đã chọn, CHƯA lưu — bấm "💾 Lưu ảnh đã chọn" bên dưới để lưu thật:</p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">` + ndkmTuThemChoXuLy.map((file,i)=>
+    `<div style="text-align:center;">
+       <img src="${URL.createObjectURL(file)}" alt="Ảnh chờ lưu" style="width:80px;height:100px;object-fit:cover;border-radius:8px;border:2px dashed #f59e0b;display:block;">
+       <button class="btn btn-ghost btn-sm" style="margin-top:2px;" data-ndkmtt-huy="${i}">✕ Bỏ</button>
+     </div>`).join('') + `</div>`;
+  host.querySelectorAll('[data-ndkmtt-huy]').forEach(btn=> btn.onclick = ()=>{
+    ndkmTuThemChoXuLy.splice(+btn.getAttribute('data-ndkmtt-huy'), 1);
+    renderNdkmTuThemChoXemTruoc();
+  });
+}
+
+$('ndkmTuThemChonBtn') && ($('ndkmTuThemChonBtn').onclick = ()=>{
+  const conLai = ndkmTuThemConLai();
+  if(conLai <= 0){ showMsg($('ndkmTuThemMsg'), `Em đã đủ ${NDKM_ANH_TOI_DA} ảnh bổ sung (kể cả ảnh đang chờ lưu) — bấm "💾 Lưu" ở trên nếu đang chờ, hoặc nhờ thầy xóa bớt nếu muốn đổi ảnh khác.`, 'err'); return; }
+  openModal(`
+    <h3>📷 Thêm ảnh bổ sung</h3>
+    <p class="section-note">Còn thêm được tối đa <b>${conLai}</b> ảnh nữa.</p>
+    <div class="modal-btns" style="flex-direction:column; align-items:stretch; gap:8px;">
+      <button class="btn btn-blue btn-sm" id="ndkmTuThemChupBtn">📸 Chụp ảnh bằng camera</button>
+      <button class="btn btn-ghost btn-sm" id="ndkmTuThemThietBiBtn">🖼️ Chọn ảnh có sẵn trên máy</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Đóng</button>
+    </div>`, 'gen');
+  if($('ndkmTuThemThietBiBtn')) $('ndkmTuThemThietBiBtn').onclick = ()=>{ closeModal(); $('ndkmTuThemAnhInput').click(); };
+  if($('ndkmTuThemChupBtn')) $('ndkmTuThemChupBtn').onclick = ()=> ndkmMoCameraChup();
+});
+
+$('ndkmTuThemAnhInput') && ($('ndkmTuThemAnhInput').onchange = (e)=>{
+  const dsFile = Array.from(e.target.files || []);
+  e.target.value = '';
+  if(!dsFile.length) return;
+  const dsAnhHopLe = dsFile.filter(f=> /^image\//.test(f.type));
+  if(dsAnhHopLe.length < dsFile.length) showMsg($('ndkmTuThemMsg'), '⚠️ Đã bỏ qua những tệp không phải ảnh.', 'info');
+  const conLai = ndkmTuThemConLai();
+  const dsNhan = dsAnhHopLe.slice(0, Math.max(0, conLai));
+  if(dsAnhHopLe.length > dsNhan.length){
+    showMsg($('ndkmTuThemMsg'), `⚠️ Chỉ nhận thêm được ${dsNhan.length} ảnh nữa (tối đa ${NDKM_ANH_TOI_DA} ảnh) — ${dsAnhHopLe.length - dsNhan.length} ảnh dư đã bị bỏ qua.`, 'info');
+  }
+  ndkmTuThemChoXuLy = ndkmTuThemChoXuLy.concat(dsNhan);
+  renderNdkmTuThemChoXemTruoc();
+});
+
+$('ndkmTuThemLuuBtn') && ($('ndkmTuThemLuuBtn').onclick = async ()=>{
+  if(!myUid || !ndkmTuThemChoXuLy.length) return;
+  if(!dungNdkmDrive()){ showMsg($('ndkmTuThemMsg'), 'Chưa cấu hình nơi lưu ảnh (Drive) cho mục này — báo thầy kiểm tra lại.', 'err'); return; }
+  const hoTen = (thanhVienState[myUid] && thanhVienState[myUid].hoTen) || '';
+  const nutLuu = $('ndkmTuThemLuuBtn');
+  nutLuu.disabled = true;
+  const dsCanLuu = ndkmTuThemChoXuLy.slice();
+  const {soDaLuu, soNhanDienDuoc, dsLoi} = await ndkmLuuAnhBoSungChoUid(myUid, hoTen, dsCanLuu, $('ndkmTuThemMsg'));
+  try{ ndkmAnhCuaToi = (await ndkmAnhRef.child(myUid).once('value')).val() || {}; }catch(e){}
+  ndkmTuThemChoXuLy = [];
+  nutLuu.disabled = false;
+  renderNdkmTuThemDsHienTai();
+  renderNdkmTuThemChoXemTruoc();
+  const chuKetQua = `✅ Đã lưu ${soDaLuu}/${dsCanLuu.length} ảnh (${soNhanDienDuoc} ảnh AI nhận ra khuôn mặt rõ, dùng được ngay cho nhận diện).`
+    + (dsLoi.length ? ` ⚠️ Lỗi ${dsLoi.length} ảnh: ${dsLoi.join('; ')}` : '');
+  showMsg($('ndkmTuThemMsg'), chuKetQua, dsLoi.length ? 'info' : 'ok');
+});
+
+/* ---- Chụp ảnh trực tiếp bằng camera (getUserMedia) — mở trong modal chung của trang.
+   Mỗi lần bấm "Chụp" là CHỤP VÀ THÊM NGAY vào danh sách chờ lưu (ndkmTuThemChoXuLy), rồi hiện
+   2 lựa chọn: chụp tiếp ảnh khác, hoặc bấm Xong để đóng camera và quay lại màn hình Lưu. ---- */
+async function ndkmMoCameraChup(){
+  if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
+    showMsg($('ndkmTuThemMsg'), 'Thiết bị/trình duyệt này không hỗ trợ mở camera trực tiếp — hãy dùng "Chọn ảnh có sẵn trên máy" thay thế.', 'err');
+    return;
+  }
+  let huongCamera = 'user'; // mặc định camera trước (selfie), phù hợp để tự chụp mặt mình
+  openModal(`
+    <h3>📸 Chụp ảnh khuôn mặt</h3>
+    <video id="ndkmCamVideo" autoplay playsinline muted style="width:100%;max-height:360px;object-fit:cover;background:#000;border-radius:10px;display:block;"></video>
+    <p class="section-note" id="ndkmCamDem"></p>
+    <div class="modal-btns" style="flex-wrap:wrap; gap:8px;">
+      <button class="btn btn-primary btn-sm" id="ndkmCamChupBtn">📸 Chụp</button>
+      <button class="btn btn-ghost btn-sm" id="ndkmCamDoiBtn">🔄 Đổi camera trước/sau</button>
+      <button class="btn btn-ghost btn-sm" id="ndkmCamXongBtn">✅ Xong</button>
+    </div>
+    <div id="ndkmCamMsg" class="msg"></div>`, 'gen');
+
+  function capNhatDemCam(){
+    const conLai = ndkmTuThemConLai();
+    if($('ndkmCamDem')) $('ndkmCamDem').textContent = conLai > 0
+      ? `Còn chụp thêm được tối đa ${conLai} ảnh nữa.`
+      : `Đã đủ ${NDKM_ANH_TOI_DA} ảnh — bấm "✅ Xong" để quay lại và lưu.`;
+    if($('ndkmCamChupBtn')) $('ndkmCamChupBtn').disabled = conLai <= 0;
+  }
+  async function moLaiCamera(){
+    ndkmTatCamera();
+    try{
+      ndkmCamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: huongCamera }, audio: false });
+      if($('ndkmCamVideo')) $('ndkmCamVideo').srcObject = ndkmCamStream;
+    }catch(e){
+      showMsg($('ndkmCamMsg'), 'Không mở được camera — kiểm tra lại đã cho phép trình duyệt dùng camera chưa, hoặc dùng "Chọn ảnh có sẵn trên máy" thay thế.', 'err');
+    }
+  }
+  capNhatDemCam();
+  await moLaiCamera();
+
+  if($('ndkmCamChupBtn')) $('ndkmCamChupBtn').onclick = ()=>{
+    const conLai = ndkmTuThemConLai();
+    if(conLai <= 0) return;
+    const video = $('ndkmCamVideo');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 480; canvas.height = video.videoHeight || 640;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob=>{
+      if(!blob) { showMsg($('ndkmCamMsg'), 'Chụp ảnh thất bại, thử lại.', 'err'); return; }
+      const file = new File([blob], 'chup-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+      ndkmTuThemChoXuLy.push(file);
+      renderNdkmTuThemChoXemTruoc();
+      capNhatDemCam();
+      showMsg($('ndkmCamMsg'), `✅ Đã chụp ảnh ${ndkmTuThemChoXuLy.length > 0 ? '' : ''}— bấm "📸 Chụp" để chụp ảnh tiếp theo, hoặc "✅ Xong" nếu đủ rồi.`, 'ok');
+    }, 'image/jpeg', 0.9);
+  };
+  if($('ndkmCamDoiBtn')) $('ndkmCamDoiBtn').onclick = ()=>{
+    huongCamera = (huongCamera === 'user') ? 'environment' : 'user';
+    moLaiCamera();
+  };
+  if($('ndkmCamXongBtn')) $('ndkmCamXongBtn').onclick = ()=>{ ndkmTatCamera(); closeModal(); };
+}
+function ndkmTatCamera(){
+  if(ndkmCamStream){ ndkmCamStream.getTracks().forEach(t=> t.stop()); ndkmCamStream = null; }
+}
+// Đóng modal bằng nút "Đóng"/bấm ra ngoài cũng phải tắt camera, không để camera chạy ngầm phí pin/lộ hình ảnh.
+const __ndkmCloseModalGoc = closeModal;
+closeModal = function(){ ndkmTatCamera(); __ndkmCloseModalGoc(); };
 
 /* ---- Bước 1b (tuỳ chọn) — Ảnh khuôn mặt cho NGƯỜI BẤT KỲ, không phải học sinh của lớp ----
    Lưu ở nhánh riêng (nhanDienNguoiKhac2026), cùng mức bảo mật admin-only như ảnh bổ sung của học
