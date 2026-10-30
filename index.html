@@ -1029,7 +1029,11 @@
   .tt-to-tieude{font-weight:800; color:var(--ink); font-size:15.5px; margin-bottom:4px; display:flex; align-items:center; justify-content:space-between; gap:8px; font-family:'Plus Jakarta Sans',sans-serif;}
   .tt-to-canbo{font-size:12px; color:var(--ink-soft); margin-bottom:12px;}
   .tt-tuan-the{background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px;}
-  .tt-tuan-nhan{font-weight:700; color:#d97706; font-size:13px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
+  .tt-tuan-the.tt-tuan-da-an{background:#f1f5f9; border:1px dashed #94a3b8; opacity:.75;}
+  .tt-tuan-an-nhan{font-weight:700; color:#64748b; font-size:11.5px;}
+  .tt-an-tuan-hang{margin:0 0 8px;}
+  .tt-an-tuan-hang label{font-size:12.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; cursor:pointer;}
+  .tt-tuan-nhan{font-weight:700; color:#d97706; font-size:13px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;}
   .tt-tuan-muc{margin-bottom:6px; font-size:calc(clamp(16px, 4.6vw, 39px) * var(--tt-tuan-scale, 1)); line-height:1.2;}
   .tt-font-dieu-chinh{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 0 12px;}
   .tt-font-nhan{font-weight:700; font-size:13px; color:var(--ink-soft); min-width:44px; text-align:center;}
@@ -2567,6 +2571,9 @@
         <button type="button" class="btn btn-ghost btn-sm" id="ttFontToBtn" title="Chữ to lên">A+</button>
         <button type="button" class="btn btn-ghost btn-sm" id="ttFontResetBtn" title="Về cỡ mặc định">Mặc định</button>
       </div>
+      <div class="tt-an-tuan-hang" id="ttHienTuanAnHang" style="display:none;">
+        <label><input type="checkbox" id="ttHienTuanAnCheck"> 👁️ Hiện các tuần đã ẩn (để quản lý — chỉ thầy thấy mục này)</label>
+      </div>
     </div>
 
     <!-- Nhận quyền chỉnh sửa — thay cho cách đối chiếu tên cũ, được Firebase xác thực thật -->
@@ -3233,11 +3240,9 @@
         <p class="msg err show" style="line-height:1.6;">
           ⚠️ <b>Lưu ý bắt buộc trước khi dùng thật trong lớp:</b> đây là tính năng <b>nhận diện khuôn mặt</b>
           (xử lý dữ liệu sinh trắc học của học sinh vị thành niên). Toàn bộ việc phân tích chạy
-          <b>ngay trên trình duyệt của thầy</b> — video từ camera KHÔNG được gửi lên máy chủ nào.
-          Riêng "mã đặc trưng khuôn mặt" (128 con số/ảnh, không phải ảnh) của từng học sinh được
-          <b>lưu vào Firebase, chỉ tài khoản admin của thầy đọc/ghi được</b>, để lần sau bật camera
-          là dùng ngay không phải tính lại; thầy có nút <b>"🗑 Xóa dữ liệu khuôn mặt đã lưu"</b> ở Bước 2
-          để xóa sạch bất cứ lúc nào. Theo Nghị định 13/2023/NĐ-CP về
+          <b>ngay trên trình duyệt của thầy</b> — ảnh/video KHÔNG được gửi lên bất kỳ máy chủ nào,
+          KHÔNG lưu vào Firebase hay bất kỳ đâu, và "mã đặc trưng khuôn mặt" chỉ tồn tại tạm trong
+          bộ nhớ trình duyệt lúc đang dùng, tắt camera là mất. Dù vậy, theo Nghị định 13/2023/NĐ-CP về
           bảo vệ dữ liệu cá nhân, dữ liệu sinh trắc học là dữ liệu nhạy cảm — <b>thầy cần được nhà
           trường phê duyệt và có sự đồng ý của phụ huynh/học sinh trước khi triển khai chính thức</b>,
           chỉ nên dùng thử nghiệm nội bộ trước đó. Độ chính xác cũng phụ thuộc ánh sáng, góc camera,
@@ -3295,16 +3300,10 @@
           với ảnh của những người bất kỳ đã thêm ở Bước 1b (nếu có), để AI học đặc điểm khuôn mặt từng
           người (chỉ những ai đã có ít nhất 1 ảnh mới nhận diện được). Có thể nạp riêng từng phần —
           nạp phần nào thì camera nhận diện được phần đó, không cần nạp đủ cả hai mới bật camera được.
-          <b>Thầy có thể bỏ qua bước này:</b> mã khuôn mặt đã tính được lưu sẵn trên cơ sở dữ liệu, mở trang
-          xong bấm "🎥 Bật camera" ở Bước 3 là chạy ngay (hệ thống tự đọc mã đã lưu, không tải lại ảnh).
-          Chỉ học sinh nào vừa thêm/xóa/đổi ảnh mới được tính lại và lưu lại — những em khác giữ nguyên.
-          Lần đầu tiên chưa có mã nào được lưu thì sẽ mất thời gian tính một lần.
         </p>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-primary btn-sm" id="ndkmNapDuLieuBtn">🧠 Nạp học sinh + người Bước 1b (tất cả)</button>
           <button class="btn btn-blue btn-sm" id="ndkmNapDuLieuNguoiKhacBtn">🧠 Chỉ nạp người ở Bước 1b</button>
-          <button class="btn btn-sm" id="ndkmTinhLaiTatCaBtn" title="Bỏ qua mã đã lưu, tính lại từ ảnh cho tất cả mọi người">🔄 Tính lại tất cả</button>
-          <button class="btn btn-sm" id="ndkmXoaMaBtn" style="color:#c0392b;">🗑 Xóa dữ liệu khuôn mặt đã lưu</button>
         </div>
         <div id="ndkmNapMsg" class="msg"></div>
 
@@ -3316,18 +3315,8 @@
             <option value="ngoailop">Chỉ người ở Bước 1b (bỏ qua học sinh lớp)</option>
           </select>
         </div>
-        <div class="dd-cam-box" id="ddCamBox">
-          <label class="dd-cam-check"><input type="checkbox" id="ddTuGhiCam" checked> ✅ Tự ghi <b>điểm danh hôm nay</b> khi nhận ra học sinh</label>
-          <p class="section-note" style="margin:6px 0 0;">
-            Mặc định bật (bỏ tích nếu chỉ muốn xem camera nhận diện mà không ghi). Khi bật: em nào được nhận ra liên tục khoảng 1 giây sẽ được ghi "Có mặt" (hoặc "Đi muộn" nếu
-            quá giờ vào lớp cài ở mục Điểm danh) kèm tiếng "bíp". Em đã có trạng thái hôm nay (kể cả thầy
-            vừa sửa tay) sẽ không bị ghi đè. Chỉ lưu <b>họ tên + giờ</b>, không lưu ảnh hay mã khuôn mặt.
-            Kết quả xem và sửa ở mục "Điểm danh".
-          </p>
-          <div id="ddCamTrangThai" class="dd-cam-tt"></div>
-        </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
-          <button class="btn btn-primary btn-sm" id="ndkmBatCameraBtn">🎥 Bật camera</button>
+          <button class="btn btn-primary btn-sm" id="ndkmBatCameraBtn" disabled>🎥 Bật camera</button>
           <button class="btn btn-ghost btn-sm" id="ndkmDoiCameraBtn" style="display:none;">🔄 Đổi camera trước/sau</button>
           <button class="btn btn-ghost btn-sm" id="ndkmDungCameraBtn" style="display:none;">⏹ Tắt camera</button>
         </div>
@@ -3337,83 +3326,6 @@
           <video id="ndkmVideo" autoplay playsinline muted></video>
           <canvas id="ndkmCanvas"></canvas>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ ĐIỂM DANH HỌC SINH (CHỈ GIÁO VIÊN) ============ -->
-  <div class="panel" id="panel-diemdanh" data-group="hoatdong">
-    <style>
-      .dd-bar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px;}
-      .dd-bar input[type=date], .dd-bar input[type=time], .dd-bar input[type=month]{padding:7px 10px; border:1px solid var(--line); border-radius:8px; font:inherit;}
-      .dd-ngay-chu{font-weight:700; color:var(--ink);}
-      .dd-chip{display:inline-flex; gap:6px; align-items:center; padding:6px 12px; border-radius:999px; font-size:13px; font-weight:600; border:1px solid var(--line); background:#f8fafc;}
-      .dd-bang{width:100%; border-collapse:collapse;}
-      .dd-bang th, .dd-bang td{border:1px solid var(--line); padding:6px 8px; font-size:14px; vertical-align:middle;}
-      .dd-bang th{background:#f1f5f9; text-align:center;}
-      .dd-chon{padding:6px 8px; border-radius:8px; border:1px solid var(--line); font:inherit; font-weight:600; min-width:170px;}
-      .dd-ghichu{width:100%; min-width:140px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; font:inherit;}
-      .dd-vang-nhieu{color:#b91c1c; font-weight:700;}
-      .dd-cam-box{background:#f8fafc; border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; margin:0 0 12px;}
-      .dd-cam-check{display:flex; gap:8px; align-items:center; font-weight:600; cursor:pointer;}
-      .dd-cam-tt{margin-top:8px; font-size:13px; color:var(--ink-soft); line-height:1.6;}
-    </style>
-    <div class="card">
-      <h2>✅ Điểm danh học sinh</h2>
-
-      <div id="ddChuaDangNhap">
-        <p class="msg info show">
-          🔒 Mục này chứa dữ liệu chuyên cần của học sinh nên chỉ giáo viên chủ nhiệm đã đăng nhập ở
-          mục "🔒 Khu vực giáo viên / quản trị" phía dưới mới xem và ghi được. Vui lòng đăng nhập trước.
-        </p>
-      </div>
-
-      <div id="ddCard" style="display:none;">
-        <p class="section-note">
-          Lớp học buổi sáng nên mỗi ngày điểm danh <b>một lần</b>. Chọn trạng thái từng em (tự lưu ngay,
-          mọi máy đang mở trang cùng thấy), hoặc bật camera ở mục
-          <a href="javascript:void(0)" id="ddMoCamera">📷 Camera nhận diện học sinh</a> để máy tự ghi khi
-          học sinh bước vào lớp. Em nào camera ghi sai hoặc không nhận ra, thầy sửa tay ở bảng bên dưới.
-        </p>
-
-        <div class="dd-bar">
-          <button class="btn btn-ghost btn-sm" id="ddNgayTruoc" title="Ngày trước">‹</button>
-          <input type="date" id="ddNgay">
-          <button class="btn btn-ghost btn-sm" id="ddNgaySau" title="Ngày sau">›</button>
-          <button class="btn btn-blue btn-sm" id="ddHomNay">Hôm nay</button>
-          <span class="dd-ngay-chu" id="ddThuNgay"></span>
-        </div>
-        <div class="dd-bar">
-          <label for="ddGioVao" style="font-weight:600;">Giờ vào lớp (sau giờ này camera ghi là "Đi muộn"):</label>
-          <input type="time" id="ddGioVao" value="07:00">
-          <button class="btn btn-ghost btn-sm" id="ddLuuGioVao">💾 Lưu</button>
-        </div>
-
-        <div class="dd-bar" id="ddTomTat"></div>
-
-        <div class="dd-bar">
-          <button class="btn btn-primary btn-sm" id="ddTatCaCoMat">✅ Chưa điểm danh → Có mặt</button>
-          <button class="btn btn-ghost btn-sm" id="ddTatCaVang">🚫 Chưa điểm danh → Vắng không phép</button>
-          <button class="btn btn-blue btn-sm" id="ddSaoChepVang">📋 Sao chép danh sách vắng (gửi Zalo)</button>
-          <button class="btn btn-ghost btn-sm" id="ddXuatNgay">⬇️ Xuất Excel ngày này</button>
-          <button class="btn btn-ghost btn-sm" id="ddXoaNgay">🗑️ Xóa điểm danh ngày này</button>
-        </div>
-        <div id="ddMsg" class="msg"></div>
-
-        <div class="scroll-x"><table class="dd-bang" id="ddBang"></table></div>
-
-        <div class="section-title" style="margin-top:22px;">📊 Thống kê chuyên cần theo tháng</div>
-        <div class="dd-bar">
-          <input type="month" id="ddThang">
-          <button class="btn btn-ghost btn-sm" id="ddLamMoiThongKe">🔄 Làm mới</button>
-          <button class="btn btn-primary btn-sm" id="ddXuatThang">⬇️ Xuất Excel cả tháng (tổng hợp + sổ điểm danh)</button>
-        </div>
-        <p class="section-note">
-          Ký hiệu trong Excel: <b>x</b> = Có mặt · <b>M</b> = Đi muộn · <b>P</b> = Vắng có phép ·
-          <b>K</b> = Vắng không phép · để trống = chưa điểm danh. Tỷ lệ chuyên cần = (Có mặt + Đi muộn) /
-          số buổi lớp đã điểm danh trong tháng. Tên đỏ = vắng không phép từ 3 buổi trở lên.
-        </p>
-        <div class="scroll-x"><table class="dd-bang" id="ddThongKe"></table></div>
       </div>
     </div>
   </div>
@@ -4364,6 +4276,10 @@ ttFontApDung(ttFontScale); // áp ngay khi tải trang, theo cỡ chữ lần tr
 if($('ttFontNhoBtn')) $('ttFontNhoBtn').onclick = ()=> ttFontApDung(ttFontScale - TT_FONT_BUOC);
 if($('ttFontToBtn'))  $('ttFontToBtn').onclick  = ()=> ttFontApDung(ttFontScale + TT_FONT_BUOC);
 if($('ttFontResetBtn')) $('ttFontResetBtn').onclick = ()=> ttFontApDung(1);
+if($('ttHienTuanAnCheck')) $('ttHienTuanAnCheck').onchange = (e)=>{
+  ttHienCacTuanAn = e.target.checked;
+  if(typeof renderTongKetTuan === 'function') renderTongKetTuan();
+};
 
 /* -------------------- BANNER ĐẦU TRANG: kéo-thả logo/chữ + đổi chiều cao (chỉ giáo viên) --------------------
    Vị trí logo/chữ lưu dạng % theo chiều rộng/cao banner (không phải px) để co giãn hợp lý trên
@@ -4896,7 +4812,6 @@ const SUBTAB_DINH_NGHIA = {
   giaithuong: {icon:'🏅', ten:'Giải thưởng'},
   khaigiang: {icon:'📺', ten:'Chuẩn bị khai giảng'},
   hotro:     {icon:'🤝', ten:'Nhận hỗ trợ'},
-  diemdanh:  {icon:'✅', ten:'Điểm danh'},
   tongketTuan: {icon:'📊', ten:'Tổng kết tuần'},
   thongkeDiemTot: {icon:'⭐', ten:'Thống kê điểm tốt'},
   thongkeViPham:  {icon:'⚠️', ten:'Thống kê vi phạm'},
@@ -4914,7 +4829,7 @@ const SUBTAB_DINH_NGHIA = {
 };
 const NHOM_TAB = {
   thongtin: ['sodo', 'danhsachhs', 'vitri', 'thanhvien', 'hoso', 'bancansu', 'caulacbo', 'khoanthu'],
-  hoatdong: ['laodong', 'phongtrao', 'giaithuong', 'khaigiang', 'hotro', 'diemdanh'],
+  hoatdong: ['laodong', 'phongtrao', 'giaithuong', 'khaigiang', 'hotro'],
   hoatdongto: ['tongketTuan', 'thongkeDiemTot', 'thongkeViPham'],
   nhiemvu:  ['baitapvatly10', 'nopvideo10'],
   games:    ['quayten', 'dodoon', 'ndkm', 'duongdenngoivua', 'dapmuoi'],
@@ -5266,7 +5181,6 @@ auth.onAuthStateChanged(async user=>{
   myUid = user.uid;
   isAdmin = (user.uid === ADMIN_UID);
   isThuQuy = !isAdmin && THU_QUY_UIDS.includes(user.uid);
-  if(typeof ddCapNhatQuyen === 'function') ddCapNhatQuyen(); // mục Điểm danh: bật/tắt theo quyền giáo viên
   // Nút "✏️ Chỉnh banner" chỉ giáo viên mới thấy; nếu đang mở dở chế độ chỉnh mà bị đăng xuất thì đóng lại luôn.
   if($('phSuaBtn')) $('phSuaBtn').style.display = (isAdmin && !phDangSua) ? 'inline-block' : 'none';
   if(!isAdmin && typeof phDongCheDoSua === 'function' && phDangSua) phDongCheDoSua();
@@ -5311,7 +5225,6 @@ auth.onAuthStateChanged(async user=>{
     if($('ndkmCard')) $('ndkmCard').style.display = 'block';
     await napNdkmAnhTatCa();
     await napNdkmNguoiKhacTatCa();
-    if(typeof ndkmChuanBiSan === 'function') ndkmChuanBiSan(); // không chờ — chạy ngầm
     renderAdmin();
   } else if(isThuQuy){
     showMsg($('pageMsg'), '💰 Đã đăng nhập với quyền Thủ quỹ — có thể quản lý mục "Quỹ lớp".', 'ok');
@@ -9853,13 +9766,16 @@ function taoKhoiDiemTuan(soTo, tuanId, kieu, dsGhi, coQuyen){
 
 function taoTheTuan(soTo, id, d, soTuan, coQuyen){
   const anhKeys = d.anh ? Object.values(d.anh) : [];
-  return `<div class="tt-tuan-the">
-    <div class="tt-tuan-nhan">
-      <span>📅 Tuần ${soTuan}${d.nguoiNop ? ' — '+esc(d.nguoiNop) : ''}</span>
-      ${coQuyen ? `<span>
+  const daAn = !!d.an; // tuần đã bị thầy ẩn bớt (gọn danh sách) — không phải xóa, dữ liệu vẫn còn nguyên
+  const nutSuaXoa = coQuyen ? `
         <button class="btn btn-blue btn-sm" data-sua-tuan data-to="${soTo}" data-id="${id}">Sửa</button>
-        <button class="btn btn-ghost btn-sm" data-xoa-tuan data-to="${soTo}" data-id="${id}">Xóa</button>
-      </span>` : ''}
+        <button class="btn btn-ghost btn-sm" data-xoa-tuan data-to="${soTo}" data-id="${id}">Xóa</button>` : '';
+  const nutAn = isAdmin ? `
+        <button class="btn btn-ghost btn-sm" data-an-tuan data-to="${soTo}" data-id="${id}" data-an-hien="${daAn ? '0' : '1'}">${daAn ? '👁️ Hiện lại' : '🙈 Ẩn'}</button>` : '';
+  return `<div class="tt-tuan-the${daAn ? ' tt-tuan-da-an' : ''}">
+    <div class="tt-tuan-nhan">
+      <span>📅 Tuần ${soTuan}${d.nguoiNop ? ' — '+esc(d.nguoiNop) : ''}${daAn ? ' <span class="tt-tuan-an-nhan">(đã ẩn)</span>' : ''}</span>
+      ${(nutSuaXoa || nutAn) ? `<span>${nutSuaXoa}${nutAn}</span>` : ''}
     </div>
     <div class="tt-tuan-muc"><b>Ưu điểm:</b> ${esc(d.uuDiem || '(chưa có)')}</div>
     <div class="tt-tuan-muc"><b>Hạn chế:</b> ${esc(d.hanChe || '(chưa có)')}</div>
@@ -9873,14 +9789,27 @@ function taoTheTuan(soTo, id, d, soTuan, coQuyen){
   </div>`;
 }
 
+/* Ẩn/hiện tuần đã tổng kết: chỉ ẩn bớt khỏi danh sách cho gọn (KHÔNG xóa dữ liệu).
+   - Lưu ở field "an" (boolean) ngay trong chính bản ghi tuần đó — bản ghi hiện có sẵn, không cần
+     thêm Rules mới vì node totuan2026/to{N}/$id không có $khac:false chặn field lạ.
+   - Chỉ giáo viên (isAdmin) mới thấy nút Ẩn/Hiện lại và ô "Hiện các tuần đã ẩn" — Tổ trưởng/Tổ phó
+     và học sinh luôn chỉ thấy danh sách đã gọn (không thấy tuần bị ẩn), tránh ai đó lỡ hiện/ẩn nhầm.
+   - Đánh số "Tuần N" luôn tính theo TOÀN BỘ danh sách gốc (kể cả tuần đang ẩn), để số thứ tự không
+     bị nhảy lung tung khi có tuần ở giữa bị ẩn. */
+let ttHienCacTuanAn = false;
 function renderTongKetTuan(){
   const host = $('ttLuoiTo');
   if(!host) return;
+  const hangAn = $('ttHienTuanAnHang');
+  if(hangAn) hangAn.style.display = isAdmin ? 'flex' : 'none';
   host.innerHTML = [1,2,3,4].map(soTo=>{
     try{
       const duLieuTo = totuanState['to'+soTo] || {};
-      const dsTuanId = Object.keys(duLieuTo).sort();
+      const dsTuanIdDay = Object.keys(duLieuTo).sort(); // đầy đủ, kể cả tuần đã ẩn — dùng để đánh số ổn định
       const coQuyen = coQuyenSuaTo(soTo);
+      const dsHienThi = dsTuanIdDay
+        .map((id,i)=> ({ id, soTuan: i+1, d: duLieuTo[id] || {} }))
+        .filter(x => !x.d.an || (isAdmin && ttHienCacTuanAn));
       const canBo = banCanSu.filter(x=>{
         const cv = chuanTen(x.chucVu);
         return cv.includes('tổ trưởng tổ '+soTo) || cv.includes('tổ phó tổ '+soTo);
@@ -9888,10 +9817,12 @@ function renderTongKetTuan(){
       return `<div class="tt-the-to">
         <div class="tt-to-tieude">
           <span>🚩 Tổ ${soTo}</span>
-          ${coQuyen ? `<button class="btn btn-primary btn-sm" data-them-tuan="${soTo}">+ Thêm Tuần ${dsTuanId.length+1}</button>` : ''}
+          ${coQuyen ? `<button class="btn btn-primary btn-sm" data-them-tuan="${soTo}">+ Thêm Tuần ${dsTuanIdDay.length+1}</button>` : ''}
         </div>
         <div class="tt-to-canbo">${canBo.length ? canBo.map(x=> esc(x.chucVu)+': '+esc(x.hoTen)).join(' · ') : 'Chưa có tổ trưởng/tổ phó'}</div>
-        ${dsTuanId.length ? dsTuanId.map((id,i)=> taoTheTuan(soTo, id, duLieuTo[id] || {}, i+1, coQuyen)).join('') : '<p class="section-note">Chưa có tổng kết tuần nào.</p>'}
+        ${!dsTuanIdDay.length ? '<p class="section-note">Chưa có tổng kết tuần nào.</p>'
+          : (dsHienThi.length ? dsHienThi.map(x=> taoTheTuan(soTo, x.id, x.d, x.soTuan, coQuyen)).join('')
+            : '<p class="section-note">Tất cả các tuần của Tổ này đang được ẩn bớt cho gọn. Tích "Hiện các tuần đã ẩn" ở trên để xem lại.</p>')}
       </div>`;
     }catch(loi){
       console.error('Lỗi hiển thị Tổ '+soTo+':', loi);
@@ -9906,6 +9837,13 @@ function renderTongKetTuan(){
     if(!confirm('Xóa hẳn tổng kết tuần này? Không thể hoàn tác.')) return;
     try{ await totuanRef.child('to'+b.dataset.to).child(b.dataset.id).remove(); }
     catch(e){ alert(baoLoi(e)); }
+  });
+  host.querySelectorAll('[data-an-tuan]').forEach(b=> b.onclick = async ()=>{
+    const soTo = b.dataset.to, id = b.dataset.id, anMoi = b.dataset.anHien === '1';
+    b.disabled = true;
+    try{ await totuanRef.child('to'+soTo).child(id).child('an').set(anMoi ? true : null); }
+    catch(e){ alert(baoLoi(e)); }
+    b.disabled = false; // renderTongKetTuan() sẽ tự vẽ lại ngay khi Firebase báo có thay đổi
   });
 
   /* Thêm 1 ghi nhận Điểm tốt/Vi phạm cho 1 học sinh — lưu riêng từng em (push key) trong đúng Tuần/Tổ. */
@@ -13005,8 +12943,6 @@ $('ndkmNguoiKhacXoaBtn') && ($('ndkmNguoiKhacXoaBtn').onclick = async ()=>{
   try{
     const cacAnhId = Object.keys((ndkmNguoiKhacState[id]||{}).anh||{});
     await ndkmNguoiKhacRef.child(id).remove();
-    ndkmMaRef.child('oth').child(id).remove().catch(()=>{}); // xóa luôn mã khuôn mặt đã lưu của người này
-    if(ndkmMaDaLuu && ndkmMaDaLuu.oth) delete ndkmMaDaLuu.oth[id];
     delete ndkmNguoiKhacState[id];
     cacAnhId.forEach(anhId=> xoaAnhNdkmTrenDrive(anhId).catch(()=>{})); // best-effort
     ndkmDienChonNguoiKhac();
@@ -13020,73 +12956,6 @@ $('ndkmNguoiKhacXoaBtn') && ($('ndkmNguoiKhacXoaBtn').onclick = async ()=>{
 // kho lại thành 1 FaceMatcher duy nhất và bật nút camera nếu có ít nhất 1 người đã nạp được.
 let ndkmDescriptorsHocSinh = [];   // [faceapi.LabeledFaceDescriptors] — nhãn = uid học sinh
 let ndkmDescriptorsNguoiKhac = []; // [faceapi.LabeledFaceDescriptors] — nhãn = "oth_<id>"
-
-// ===== Mã khuôn mặt LƯU SẴN trên Firebase (nhanDienMaKhuonMat2026 — chỉ admin đọc/ghi) =====
-// Mỗi người: { v: chữ ký = danh sách anhId (đổi ảnh là chữ ký đổi → tự tính lại đúng người đó),
-//              d: các mã 128 số, mỗi ảnh 1 mã, ngăn cách bằng ';' }.
-const ndkmMaRef = db.ref('nhanDienMaKhuonMat2026');
-let ndkmMaDaLuu = null;     // { hs:{uid:{v,d}}, oth:{id:{v,d}} } — đọc 1 lần/phiên
-let ndkmMaCanLuu = {};      // { "hs/uid": {v,d} } — những mã mới tính, chờ ghi lên Firebase
-let ndkmBuocTinhLai = false; // true = bỏ qua mã đã lưu (nút "Tính lại tất cả")
-function ndkmMaHoa(dsDescriptor){ return dsDescriptor.map(d=> Array.from(d, x=> x.toFixed(4)).join(',')).join(';'); }
-function ndkmMaGiai(chuoi){
-  try{
-    return String(chuoi||'').split(';').filter(Boolean).map(p=>{
-      const a = Float32Array.from(p.split(',').map(Number));
-      if(a.length !== 128 || a.some(x=> isNaN(x))) throw new Error('mã hỏng');
-      return a;
-    });
-  }catch(e){ return []; }
-}
-function ndkmChuKy(dsAnhId){ return dsAnhId.slice().sort().join('|'); }
-function ndkmDsAnhIdHocSinh(uid, x){
-  const ds = [];
-  if(x && x.anhTheId) ds.push(x.anhTheId);
-  Object.keys(ndkmAnhState[uid]||{}).forEach(anhId=> ds.push(anhId));
-  return ds;
-}
-async function ndkmDocMaDaLuu(){
-  if(ndkmMaDaLuu) return ndkmMaDaLuu;
-  try{
-    const v = (await ndkmMaRef.once('value')).val() || {};
-    ndkmMaDaLuu = { hs: v.hs || {}, oth: v.oth || {} };
-  }catch(e){ ndkmMaDaLuu = { hs: {}, oth: {} }; } // không đọc được → coi như chưa lưu, tính từ ảnh
-  return ndkmMaDaLuu;
-}
-function ndkmCoMaHopLe(loai, id, dsAnhId){
-  if(ndkmBuocTinhLai || !ndkmMaDaLuu) return false;
-  const cu = (ndkmMaDaLuu[loai]||{})[id];
-  return !!cu && cu.v === ndkmChuKy(dsAnhId) && ndkmMaGiai(cu.d).length > 0;
-}
-// Trả về các mã của 1 người: dùng mã đã lưu nếu còn khớp ảnh, nếu không thì tính từ ảnh (cần mô hình AI đã tải)
-async function ndkmMaChoNguoi(loai, id, dsAnhId){
-  if(ndkmCoMaHopLe(loai, id, dsAnhId)) return { ds: ndkmMaGiai(ndkmMaDaLuu[loai][id].d), moi: false };
-  const ds = await ndkmTinhDsDescriptor(dsAnhId);
-  if(ds.length) ndkmMaCanLuu[loai + '/' + id] = { v: ndkmChuKy(dsAnhId), d: ndkmMaHoa(ds) };
-  return { ds, moi: true };
-}
-// Ghi các mã mới tính (và xóa mã của người không còn ảnh) lên Firebase. Lỗi ghi không chặn việc điểm danh.
-async function ndkmLuuMaLenFirebase(dsConHieuLuc){
-  const capNhat = Object.assign({}, ndkmMaCanLuu);
-  ndkmMaCanLuu = {};
-  if(dsConHieuLuc && ndkmMaDaLuu){
-    ['hs','oth'].forEach(loai=>{
-      Object.keys(ndkmMaDaLuu[loai]||{}).forEach(id=>{
-        if(!(dsConHieuLuc[loai]||new Set()).has(id)) capNhat[loai + '/' + id] = null;
-      });
-    });
-  }
-  const khoa = Object.keys(capNhat);
-  if(!khoa.length) return { luu: 0, loi: null };
-  try{
-    await ndkmMaRef.update(capNhat);
-    khoa.forEach(k=>{
-      const [loai, id] = k.split('/');
-      if(capNhat[k] === null) delete ndkmMaDaLuu[loai][id]; else ndkmMaDaLuu[loai][id] = capNhat[k];
-    });
-    return { luu: khoa.filter(k=> capNhat[k] !== null).length, loi: null };
-  }catch(e){ return { luu: 0, loi: e }; }
-}
 
 async function ndkmTinhDsDescriptor(dsAnhId){
   // Tính descriptor khuôn mặt cho từng ảnh trong danh sách anhId, bỏ qua (không chặn cả danh
@@ -13110,18 +12979,23 @@ function ndkmDungLaiFaceMatcher(){
   ndkmLabeledDescriptors = ndkmDescriptorsHocSinh.concat(ndkmDescriptorsNguoiKhac);
   if(!ndkmLabeledDescriptors.length){
     ndkmFaceMatcher = null;
+    $('ndkmBatCameraBtn').disabled = true;
     return;
   }
   ndkmFaceMatcher = new faceapi.FaceMatcher(ndkmLabeledDescriptors, NDKM_NGUONG_KHOP);
   $('ndkmBatCameraBtn').disabled = false;
 }
 
-async function ndkmNapTatCa(chiTuMaDaLuu){
-  // chiTuMaDaLuu = true: chạy ngầm lúc mở trang — chỉ nạp nếu KHÔNG phải tính lại ảnh nào cả.
+$('ndkmNapDuLieuBtn').onclick = async ()=>{
   const btn = $('ndkmNapDuLieuBtn');
   btn.disabled = true;
-  showMsg($('ndkmNapMsg'), '⏳ Đang đọc dữ liệu khuôn mặt đã lưu...', 'info');
-  await ndkmDocMaDaLuu();
+  showMsg($('ndkmNapMsg'), '⏳ Đang tải mô hình AI (chỉ cần 1 lần mỗi phiên, có thể mất chút thời gian)...', 'info');
+  try{ await ndkmTaiModelNeuChua(); }
+  catch(e){
+    showMsg($('ndkmNapMsg'), '❌ Không tải được mô hình AI — kiểm tra kết nối mạng rồi thử lại.', 'err');
+    btn.disabled = false;
+    return;
+  }
 
   // Học sinh đủ điều kiện nạp = có ảnh thẻ (anhTheId) HOẶC có ít nhất 1 ảnh bổ sung (Bước 1)
   const dsHocSinh = Object.entries(thanhVienState).filter(([uid,x])=>
@@ -13129,41 +13003,29 @@ async function ndkmNapTatCa(chiTuMaDaLuu){
   // Người bất kỳ (Bước 1b) đủ điều kiện nạp = có ít nhất 1 ảnh
   const dsNguoiKhac = Object.entries(ndkmNguoiKhacState).filter(([id,x])=> Object.keys((x&&x.anh)||{}).length);
   if(!dsHocSinh.length && !dsNguoiKhac.length){
-    if(!chiTuMaDaLuu) showMsg($('ndkmNapMsg'), '❌ Chưa có học sinh nào có ảnh thẻ/ảnh bổ sung (Bước 1), cũng chưa có người nào ở Bước 1b để nạp.', 'err');
-    else showMsg($('ndkmNapMsg'), '', '');
+    showMsg($('ndkmNapMsg'), '❌ Chưa có học sinh nào có ảnh thẻ/ảnh bổ sung (Bước 1), cũng chưa có người nào ở Bước 1b để nạp.', 'err');
     btn.disabled = false;
     return;
-  }
-
-  // Có ai phải tính lại từ ảnh không? Nếu không thì khỏi tải ảnh, khỏi chờ mô hình AI.
-  const canTinh = dsHocSinh.filter(([uid,x])=> !ndkmCoMaHopLe('hs', uid, ndkmDsAnhIdHocSinh(uid,x))).length
-    + dsNguoiKhac.filter(([id,x])=> !ndkmCoMaHopLe('oth', id, Object.keys(x.anh||{}))).length;
-  if(chiTuMaDaLuu && canTinh){ showMsg($('ndkmNapMsg'), '', ''); btn.disabled = false; return; }
-  if(canTinh){
-    showMsg($('ndkmNapMsg'), `⏳ Đang tải mô hình AI để tính mã cho ${canTinh} người chưa có mã lưu sẵn (chỉ lần đầu / khi đổi ảnh)...`, 'info');
-    try{ await ndkmTaiModelNeuChua(); }
-    catch(e){
-      showMsg($('ndkmNapMsg'), '❌ Không tải được mô hình AI — kiểm tra kết nối mạng rồi thử lại.', 'err');
-      btn.disabled = false;
-      return;
-    }
   }
 
   ndkmDescriptorsHocSinh = [];
   ndkmTenNguoiKhacTheoNhan = {};
   const dsLoi = [];
-  let tongSoAnhDaNap = 0, soTinhMoi = 0;
+  let tongSoAnhDaNap = 0;
   for(let i=0; i<dsHocSinh.length; i++){
     const [uid, x] = dsHocSinh[i];
     // Gộp ảnh thẻ (nếu có) + toàn bộ ảnh bổ sung của đúng học sinh này thành 1 danh sách anhId
-    // để có NHIỀU mã cho cùng 1 nhãn (uid) — giúp so khớp chính xác hơn 1 ảnh duy nhất.
-    const dsAnhId = ndkmDsAnhIdHocSinh(uid, x);
-    if(!ndkmCoMaHopLe('hs', uid, dsAnhId)) showMsg($('ndkmNapMsg'), `⏳ Đang tính mã học sinh ${i+1}/${dsHocSinh.length}: ${x.hoTen || uid} (${dsAnhId.length} ảnh)...`, 'info');
-    const kq = await ndkmMaChoNguoi('hs', uid, dsAnhId);
-    if(kq.moi) soTinhMoi++;
-    if(!kq.ds.length){ dsLoi.push((x.hoTen||uid) + ` (không thấy khuôn mặt rõ trong ${dsAnhId.length} ảnh, hoặc không đọc được ảnh)`); continue; }
-    ndkmDescriptorsHocSinh.push(new faceapi.LabeledFaceDescriptors(uid, kq.ds));
-    tongSoAnhDaNap += kq.ds.length;
+    // để tính NHIỀU descriptor cho cùng 1 nhãn (uid) — theo đúng cách face-api.js hỗ trợ nhận
+    // nhiều ảnh/góc mặt cho 1 người, giúp so khớp chính xác hơn 1 ảnh duy nhất.
+    const dsAnhId = [];
+    if(x && x.anhTheId) dsAnhId.push(x.anhTheId);
+    Object.keys(ndkmAnhState[uid]||{}).forEach(anhId=> dsAnhId.push(anhId));
+
+    showMsg($('ndkmNapMsg'), `⏳ Đang nạp học sinh ${i+1}/${dsHocSinh.length}: ${x.hoTen || uid} (${dsAnhId.length} ảnh)...`, 'info');
+    const dsDescriptor = await ndkmTinhDsDescriptor(dsAnhId);
+    if(!dsDescriptor.length){ dsLoi.push((x.hoTen||uid) + ` (không thấy khuôn mặt rõ trong ${dsAnhId.length} ảnh, hoặc không đọc được ảnh)`); continue; }
+    ndkmDescriptorsHocSinh.push(new faceapi.LabeledFaceDescriptors(uid, dsDescriptor));
+    tongSoAnhDaNap += dsDescriptor.length;
   }
 
   // Nạp thêm những người bất kỳ ở Bước 1b — dùng nhãn riêng "oth_<id>" (khác hẳn không gian uid
@@ -13174,21 +13036,17 @@ async function ndkmNapTatCa(chiTuMaDaLuu){
     const [id, x] = dsNguoiKhac[i];
     const ten = (x && x.ten) || 'Người khác';
     const dsAnhId = Object.keys((x && x.anh) || {});
-    if(!ndkmCoMaHopLe('oth', id, dsAnhId)) showMsg($('ndkmNapMsg'), `⏳ Đang tính mã người khác ${i+1}/${dsNguoiKhac.length}: ${ten} (${dsAnhId.length} ảnh)...`, 'info');
-    const kq = await ndkmMaChoNguoi('oth', id, dsAnhId);
-    if(kq.moi) soTinhMoi++;
-    if(!kq.ds.length){ dsLoi.push(ten + ` (không thấy khuôn mặt rõ trong ${dsAnhId.length} ảnh, hoặc không đọc được ảnh)`); continue; }
+    showMsg($('ndkmNapMsg'), `⏳ Đang nạp người khác ${i+1}/${dsNguoiKhac.length}: ${ten} (${dsAnhId.length} ảnh)...`, 'info');
+    const dsDescriptor = await ndkmTinhDsDescriptor(dsAnhId);
+    if(!dsDescriptor.length){ dsLoi.push(ten + ` (không thấy khuôn mặt rõ trong ${dsAnhId.length} ảnh, hoặc không đọc được ảnh)`); continue; }
     const nhan = 'oth_' + id;
-    ndkmDescriptorsNguoiKhac.push(new faceapi.LabeledFaceDescriptors(nhan, kq.ds));
+    ndkmDescriptorsNguoiKhac.push(new faceapi.LabeledFaceDescriptors(nhan, dsDescriptor));
     ndkmTenNguoiKhacTheoNhan[nhan] = ten;
-    tongSoAnhDaNap += kq.ds.length;
+    tongSoAnhDaNap += dsDescriptor.length;
     soNguoiKhacDaNap++;
   }
 
   ndkmDungLaiFaceMatcher();
-  // Lưu mã mới tính lên Firebase (và dọn mã của người không còn ảnh) để lần sau khỏi tính lại
-  const conHieuLuc = { hs: new Set(dsHocSinh.map(e=> e[0])), oth: new Set(dsNguoiKhac.map(e=> e[0])) };
-  const luu = await ndkmLuuMaLenFirebase(conHieuLuc);
   btn.disabled = false;
   if(!ndkmLabeledDescriptors.length){
     showMsg($('ndkmNapMsg'), '❌ Không nạp được ai — kiểm tra lại ảnh thẻ/ảnh bổ sung.', 'err');
@@ -13197,35 +13055,9 @@ async function ndkmNapTatCa(chiTuMaDaLuu){
   const ketQuaChu = `✅ Đã nạp xong ${ndkmDescriptorsHocSinh.length}/${dsHocSinh.length} học sinh`
     + (dsNguoiKhac.length ? ` và ${soNguoiKhacDaNap}/${dsNguoiKhac.length} người khác` : '')
     + ` (tổng ${tongSoAnhDaNap} ảnh).`
-    + (soTinhMoi ? ` Tính mới ${soTinhMoi} người` + (luu.loi ? ' nhưng CHƯA lưu được lên Firebase (kiểm tra rules nhánh nhanDienMaKhuonMat2026) — lần sau sẽ phải tính lại.' : ` và đã lưu sẵn (${luu.luu}) cho lần sau.`) : ' Dùng mã đã lưu sẵn, không phải tính lại.')
     + (dsLoi.length ? ` ⚠️ Bỏ qua ${dsLoi.length}: ${dsLoi.join('; ')}` : '');
   showMsg($('ndkmNapMsg'), ketQuaChu, dsLoi.length ? 'info' : 'ok');
-}
-$('ndkmNapDuLieuBtn').onclick = ()=> ndkmNapTatCa(false);
-$('ndkmTinhLaiTatCaBtn').onclick = async ()=>{
-  if(!confirm('Tính lại mã khuôn mặt của TẤT CẢ mọi người từ ảnh (mất vài phút) và ghi đè mã đã lưu?')) return;
-  ndkmBuocTinhLai = true;
-  try{ await ndkmNapTatCa(false); } finally { ndkmBuocTinhLai = false; }
 };
-$('ndkmXoaMaBtn').onclick = async ()=>{
-  if(!confirm('Xóa TOÀN BỘ mã khuôn mặt đã lưu trên Firebase? (Ảnh gốc không bị xóa; lần bật camera sau sẽ phải tính lại từ ảnh.)')) return;
-  try{
-    await ndkmMaRef.remove();
-    ndkmMaDaLuu = { hs: {}, oth: {} };
-    ndkmMaCanLuu = {};
-    showMsg($('ndkmNapMsg'), '🗑 Đã xóa toàn bộ mã khuôn mặt đã lưu trên Firebase. (Bản đang nằm trong bộ nhớ trình duyệt này sẽ mất khi tải lại trang.)', 'ok');
-  }catch(e){ showMsg($('ndkmNapMsg'), baoLoi(e), 'err'); }
-};
-// Chạy ngầm sau khi đăng nhập admin: tải sẵn mô hình AI và dựng sẵn bộ so khớp từ mã đã lưu,
-// để bấm "Bật camera" là chạy ngay. Nếu có ai phải tính lại từ ảnh thì KHÔNG tự tính (chờ thầy bấm).
-async function ndkmChuanBiSan(){
-  if(!isAdmin || ndkmFaceMatcher || ndkmDangTuNap) return;
-  try{
-    ndkmTaiModelNeuChua().catch(()=>{});
-    if(typeof faceapi === 'undefined') return;
-    await ndkmNapTatCa(true);
-  }catch(e){}
-}
 
 $('ndkmNapDuLieuNguoiKhacBtn').onclick = async ()=>{
   // Chỉ nạp riêng những người thêm ở Bước 1b — KHÔNG đụng tới dữ liệu học sinh đã nạp trước đó
@@ -13233,7 +13065,13 @@ $('ndkmNapDuLieuNguoiKhacBtn').onclick = async ()=>{
   // 1-2 người ngoài lớp (vd. vừa thêm xong 1 ảnh cho bảo vệ, GV bộ môn).
   const btn = $('ndkmNapDuLieuNguoiKhacBtn');
   btn.disabled = true;
-  await ndkmDocMaDaLuu();
+  showMsg($('ndkmNapMsg'), '⏳ Đang tải mô hình AI (chỉ cần 1 lần mỗi phiên, có thể mất chút thời gian)...', 'info');
+  try{ await ndkmTaiModelNeuChua(); }
+  catch(e){
+    showMsg($('ndkmNapMsg'), '❌ Không tải được mô hình AI — kiểm tra kết nối mạng rồi thử lại.', 'err');
+    btn.disabled = false;
+    return;
+  }
 
   const dsNguoiKhac = Object.entries(ndkmNguoiKhacState).filter(([id,x])=> Object.keys((x&&x.anh)||{}).length);
   if(!dsNguoiKhac.length){
@@ -13242,15 +13080,6 @@ $('ndkmNapDuLieuNguoiKhacBtn').onclick = async ()=>{
     return;
   }
 
-  if(dsNguoiKhac.some(([id,x])=> !ndkmCoMaHopLe('oth', id, Object.keys(x.anh||{})))){
-    showMsg($('ndkmNapMsg'), '⏳ Đang tải mô hình AI (chỉ cần 1 lần mỗi phiên, có thể mất chút thời gian)...', 'info');
-    try{ await ndkmTaiModelNeuChua(); }
-    catch(e){
-      showMsg($('ndkmNapMsg'), '❌ Không tải được mô hình AI — kiểm tra kết nối mạng rồi thử lại.', 'err');
-      btn.disabled = false;
-      return;
-    }
-  }
   ndkmDescriptorsNguoiKhac = [];
   // Xóa các nhãn "oth_*" cũ khỏi bảng tra tên trước khi nạp lại, tránh còn sót tên của người đã
   // bị xóa hoặc đổi ảnh.
@@ -13262,7 +13091,7 @@ $('ndkmNapDuLieuNguoiKhacBtn').onclick = async ()=>{
     const ten = (x && x.ten) || 'Người khác';
     const dsAnhId = Object.keys((x && x.anh) || {});
     showMsg($('ndkmNapMsg'), `⏳ Đang nạp người ở Bước 1b ${i+1}/${dsNguoiKhac.length}: ${ten} (${dsAnhId.length} ảnh)...`, 'info');
-    const dsDescriptor = (await ndkmMaChoNguoi('oth', id, dsAnhId)).ds;
+    const dsDescriptor = await ndkmTinhDsDescriptor(dsAnhId);
     if(!dsDescriptor.length){ dsLoi.push(ten + ` (không thấy khuôn mặt rõ trong ${dsAnhId.length} ảnh, hoặc không đọc được ảnh)`); continue; }
     const nhan = 'oth_' + id;
     ndkmDescriptorsNguoiKhac.push(new faceapi.LabeledFaceDescriptors(nhan, dsDescriptor));
@@ -13272,7 +13101,6 @@ $('ndkmNapDuLieuNguoiKhacBtn').onclick = async ()=>{
   }
 
   ndkmDungLaiFaceMatcher();
-  await ndkmLuuMaLenFirebase(null); // chỉ ghi mã mới tính, không dọn mã người khác
   btn.disabled = false;
   if(!soNguoiKhacDaNap){
     showMsg($('ndkmNapMsg'), '❌ Không nạp được người nào ở Bước 1b — kiểm tra lại ảnh đã thêm (ảnh cần thấy rõ khuôn mặt).', 'err');
@@ -13286,29 +13114,7 @@ $('ndkmNapDuLieuNguoiKhacBtn').onclick = async ()=>{
 
 $('ndkmCheDoQuetChon').onchange = (e)=>{ ndkmCheDoQuet = e.target.value; };
 
-/* Bấm "Bật camera": nếu chưa nạp dữ liệu khuôn mặt trong lần mở trang này thì TỰ NẠP từ ảnh thẻ/ảnh
-   bổ sung đã lưu (giống bấm nút ở Bước 2), nạp xong mới bật camera — thầy không cần bấm Bước 2 nữa. */
-let ndkmDangTuNap = false;
-async function ndkmBatCameraTuNap(){
-  if(ndkmDangTuNap) return; // đang nạp rồi, bấm thêm cũng không làm gì
-  if(typeof ddMoAmThanh === 'function') ddMoAmThanh(); // mở sẵn âm thanh "bíp" ngay trong lúc bấm nút
-  if(!ndkmFaceMatcher){
-    ndkmDangTuNap = true;
-    $('ndkmBatCameraBtn').disabled = true;
-    try{ await $('ndkmNapDuLieuBtn').onclick(); }
-    catch(e){ /* lỗi đã được báo ở khung Bước 2 */ }
-    ndkmDangTuNap = false;
-    $('ndkmBatCameraBtn').disabled = false;
-    if(!ndkmFaceMatcher){
-      showMsg($('ndkmErr'), 'Chưa nạp được dữ liệu khuôn mặt nên chưa bật camera — xem thông báo ở Bước 2.', 'err');
-      return;
-    }
-  }
-  try{ await ndkmTaiModelNeuChua(); } // mã đã lưu thì có thể chưa tải mô hình AI — camera vẫn cần mô hình
-  catch(e){ showMsg($('ndkmErr'), 'Không tải được mô hình AI — kiểm tra kết nối mạng rồi thử lại.', 'err'); return; }
-  await ndkmBatCamera();
-}
-$('ndkmBatCameraBtn').onclick = ()=> ndkmBatCameraTuNap();
+$('ndkmBatCameraBtn').onclick = ()=> ndkmBatCamera();
 $('ndkmDoiCameraBtn').onclick = ()=>{
   ndkmFacingMode = (ndkmFacingMode === 'environment') ? 'user' : 'environment';
   ndkmBatCamera();
@@ -13361,7 +13167,6 @@ async function ndkmVongLapNhanDien(){
       const hop = kq.detection.box;
       let ten = 'Chưa rõ', maMau = '#94a3b8';
       let laNguoiNgoaiLop = false; // true nếu khuôn mặt này khớp với người thêm ở Bước 1b (nhãn dạng "oth_...")
-      let nhanHs = null; // học sinh lớp vừa được nhận ra trong khung hình này (dùng cho điểm danh tự động)
       if(ndkmFaceMatcher){
         const khop = ndkmFaceMatcher.findBestMatch(kq.descriptor);
         if(khop.label !== 'unknown'){
@@ -13372,7 +13177,6 @@ async function ndkmVongLapNhanDien(){
           } else if(thanhVienState[khop.label]){
             ten = thanhVienState[khop.label].hoTen || khop.label;
             maMau = '#22c55e'; // xanh lá: học sinh của lớp
-            nhanHs = { label: khop.label, ten: ten, khoangCach: khop.distance };
           } else {
             ten = khop.label;
             maMau = '#22c55e';
@@ -13383,24 +13187,18 @@ async function ndkmVongLapNhanDien(){
       // chỉ vẽ khung cho những ai khớp với người đã thêm ở Bước 1b — dùng khi chỉ cần kiểm tra
       // nhanh một người ngoài lớp (vd. bảo vệ, GV bộ môn) mà không muốn bị rối bởi khung học sinh.
       if(ndkmCheDoQuet === 'ngoailop' && !laNguoiNgoaiLop) return;
-      // Điểm danh tự động (mục "Điểm danh"): chỉ chạy khi thầy bật ô "Tự ghi điểm danh hôm nay".
-      // Hàm trả 'da' nếu em này đã có điểm danh hôm nay → hiện thêm dấu ✓ trên khung tên.
-      let tenVe = ten;
-      if(nhanHs && typeof ddXuLyNhanDien === 'function'){
-        try{ if(ddXuLyNhanDien(nhanHs.label, nhanHs.ten, nhanHs.khoangCach) === 'da') tenVe = ten + ' ✓'; }catch(e){}
-      }
       ctx.strokeStyle = maMau;
       ctx.lineWidth = 3;
       ctx.strokeRect(hop.x, hop.y, hop.width, hop.height);
 
       ctx.font = 'bold 18px "Trebuchet MS", Arial, sans-serif';
-      const rongChu = ctx.measureText(tenVe).width + 16;
+      const rongChu = ctx.measureText(ten).width + 16;
       const caoNhan = 28;
       const yNhan = Math.max(0, hop.y - caoNhan);
       ctx.fillStyle = maMau;
       ctx.fillRect(hop.x, yNhan, Math.max(rongChu, hop.width), caoNhan);
       ctx.fillStyle = '#fff';
-      ctx.fillText(tenVe, hop.x + 8, yNhan + 20);
+      ctx.fillText(ten, hop.x + 8, yNhan + 20);
     });
   }catch(e){ /* bỏ qua lỗi 1 khung hình lẻ (vd camera vừa tắt), vòng lặp sau sẽ tự thử lại */ }
 
@@ -13421,512 +13219,6 @@ function dungNdkmCamera(){
   if($('ndkmDungCameraBtn')) $('ndkmDungCameraBtn').style.display = 'none';
 }
 window.addEventListener('beforeunload', dungNdkmCamera); // đảm bảo tắt camera khi rời trang, dù quên bấm Tắt camera
-</script>
-
-<script>
-/* ================================================================
-   ĐIỂM DANH HỌC SINH 10A1 — chỉ giáo viên (ADMIN) đọc/ghi.
-   Dữ liệu lưu trên Firebase Realtime Database, nhánh "diemDanh2026":
-     diemDanh2026/caiDat/gioVao                       = "07:00"  (sau giờ này camera ghi "đi muộn")
-     diemDanh2026/ngay/<YYYY-MM-DD>/<khóa học sinh>   = { n: họ tên, t: cm|tre|vcp|vkp,
-                                                          g: "HH:MM" (nếu có), s: cam|tay, c: ghi chú }
-   Khóa học sinh = họ tên bỏ dấu, chữ thường, nối bằng "_" (vd "Nguyễn Văn An" -> "nguyen_van_an").
-   Danh sách lớp lấy từ lop10a1/roster — sửa ở mục "Danh sách học sinh" là mục này tự theo.
-   Camera: mục "Camera nhận diện học sinh" gọi ddXuLyNhanDien() cho mỗi khuôn mặt nhận ra.
-   ================================================================ */
-(function(){
-'use strict';
-
-const DD_TEN_TRUONG = 'TRƯỜNG THCS & THPT HÒA THUẬN';
-const DD_TEN_LOP = 'LỚP 10A1';
-const DD_GVCN = 'Nguyễn Thanh Nhân';
-const DD_NAM_HOC = '2026 – 2027';
-const DD_NGUONG_CAMERA = 0.45;   // khoảng cách khuôn mặt tối đa để TỰ GHI (chặt hơn ngưỡng vẽ khung 0.5)
-const DD_SO_LAN_XAC_NHAN = 3;    // số lần nhận ra liên tiếp (mỗi ~0,35 giây) trước khi ghi
-const DD_CUA_SO_MS = 3000;       // 2 lần nhận ra cách nhau quá 3 giây thì đếm lại từ đầu
-
-const DD_TT = {
-  cm:  { ten:'Có mặt',          ky:'x', mau:'#15803d', nen:'#ecfdf5' },
-  tre: { ten:'Đi muộn',         ky:'M', mau:'#b45309', nen:'#fffbeb' },
-  vcp: { ten:'Vắng có phép',    ky:'P', mau:'#1d4ed8', nen:'#eff6ff' },
-  vkp: { ten:'Vắng không phép', ky:'K', mau:'#b91c1c', nen:'#fef2f2' },
-};
-const DD_THU = ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
-const DD_THU_NGAN = ['CN','T2','T3','T4','T5','T6','T7'];
-
-const ddRef = db.ref('diemDanh2026');
-let ddRoster = [];
-let ddCaiDat = { gioVao: '07:00' };
-let ddNgayXem = '';
-let ddDuLieu = {};          // điểm danh của ngày đang xem
-let ddDuLieuHomNay = {};    // điểm danh của hôm nay (luôn theo dõi, phục vụ camera)
-let ddRefXem = null, ddRefHomNay = null, ddNgayHomNayKey = '';
-let ddRosterCb = null, ddCaiDatRef = null, ddCaiDatCb = null;
-let ddDaKhoiTao = false;
-let ddThongKe = null;       // { thang: 'YYYY-MM', ngayObj: {...} }
-let ddCamTheoDoi = {}, ddCamDaBao = {}, ddCamGanDay = [], ddAudio = null;
-
-/* ---------- Tiện ích ngày giờ & tên ---------- */
-function ddPad(n){ return String(n).padStart(2, '0'); }
-function ddIso(d){ return d.getFullYear() + '-' + ddPad(d.getMonth() + 1) + '-' + ddPad(d.getDate()); }
-function ddHomNay(){ return ddIso(new Date()); }
-function ddGioHienTai(){ const d = new Date(); return ddPad(d.getHours()) + ':' + ddPad(d.getMinutes()); }
-function ddVN(iso){ const p = String(iso).split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
-function ddThuCua(iso){ return DD_THU[new Date(iso + 'T00:00:00').getDay()]; }
-function ddCongNgay(iso, n){ const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return ddIso(d); }
-function ddKey(ten){
-  return String(ten || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'hs';
-}
-function ddDsHs(){
-  const dem = {};
-  return ddRoster.map((h, i)=>{
-    const name = String((h && h.name) || '').trim();
-    let key = ddKey(name);
-    dem[key] = (dem[key] || 0) + 1;
-    if(dem[key] > 1) key += '_' + dem[key];   // trùng họ tên: thêm hậu tố để không đè dữ liệu nhau
-    return { stt: i + 1, name, key };
-  }).filter(h=> h.name);
-}
-function ddTimHs(hoTen){
-  const ds = ddDsHs();
-  const ct = chuanTen(hoTen), k = ddKey(hoTen);
-  return ds.find(h=> chuanTen(h.name) === ct) || ds.find(h=> h.key === k) || null;
-}
-function ddLoi(e){
-  const m = String((e && (e.code || e.message)) || e);
-  if(/permission/i.test(m)) return 'Chưa có quyền đọc/ghi nhánh "diemDanh2026" trên Firebase — cần thêm Rules cho nhánh này (xem hướng dẫn cài đặt).';
-  return baoLoi(e);
-}
-function ddBaoLoiCoDinh(text){
-  const el = $('ddMsg'); if(!el) return;
-  el.textContent = text; el.className = 'msg show err';
-}
-function ddSaoChep(text){
-  if(navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
-  return new Promise((ok, loi)=>{
-    try{
-      const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      const xong = document.execCommand('copy'); document.body.removeChild(ta);
-      xong ? ok() : loi(new Error('Không sao chép được'));
-    }catch(e){ loi(e); }
-  });
-}
-
-/* ---------- Nạp dữ liệu ---------- */
-function ddNapNgayXem(){
-  if(ddRefXem) ddRefXem.off();
-  if(!ddNgayXem) return;
-  ddRefXem = ddRef.child('ngay').child(ddNgayXem);
-  ddRefXem.on('value', s=>{
-    ddDuLieu = s.val() || {};
-    ddRender();
-    // Giữ bảng thống kê tháng luôn khớp với ngày vừa sửa (khỏi bấm Làm mới)
-    if(ddThongKe && ddThongKe.thang === ddNgayXem.slice(0, 7)){
-      if(Object.keys(ddDuLieu).length) ddThongKe.ngayObj[ddNgayXem] = ddDuLieu; else delete ddThongKe.ngayObj[ddNgayXem];
-      ddRenderThongKe();
-    }
-  }, err=> ddBaoLoiCoDinh(ddLoi(err)));
-}
-function ddNapHomNay(){
-  const hn = ddHomNay();
-  if(ddRefHomNay && ddNgayHomNayKey === hn) return;
-  if(ddRefHomNay) ddRefHomNay.off();
-  ddNgayHomNayKey = hn;
-  ddDuLieuHomNay = {};
-  ddRefHomNay = ddRef.child('ngay').child(hn);
-  ddRefHomNay.on('value', s=>{ ddDuLieuHomNay = s.val() || {}; ddCapNhatCamTrangThai(); }, ()=>{});
-}
-async function ddTaiThongKe(){
-  const ob = $('ddThang'); if(!ob) return;
-  const thang = ob.value || (ddNgayXem || ddHomNay()).slice(0, 7);
-  ddThongKe = null; ddRenderThongKe();
-  try{
-    const s = await ddRef.child('ngay').orderByKey().startAt(thang + '-01').endAt(thang + '-31').once('value');
-    ddThongKe = { thang, ngayObj: s.val() || {} };
-  }catch(e){ ddBaoLoiCoDinh(ddLoi(e)); ddThongKe = { thang, ngayObj: {} }; }
-  ddRenderThongKe();
-}
-
-/* ---------- Bảng điểm danh theo ngày ---------- */
-function ddRender(){
-  const bang = $('ddBang'); if(!bang) return;
-  const ds = ddDsHs();
-  $('ddThuNgay').textContent = ddNgayXem ? (ddThuCua(ddNgayXem) + ', ' + ddVN(ddNgayXem)) : '';
-  const dem = { cm:0, tre:0, vcp:0, vkp:0 };
-  ds.forEach(h=>{ const b = ddDuLieu[h.key]; if(b && dem[b.t] !== undefined) dem[b.t]++; });
-  const daGhi = dem.cm + dem.tre + dem.vcp + dem.vkp;
-  $('ddTomTat').innerHTML =
-    `<span class="dd-chip">👥 Sĩ số: ${ds.length}</span>` +
-    Object.keys(DD_TT).map(k=> `<span class="dd-chip" style="background:${DD_TT[k].nen};color:${DD_TT[k].mau};border-color:${DD_TT[k].mau}">${esc(DD_TT[k].ten)}: ${dem[k]}</span>`).join('') +
-    `<span class="dd-chip">⏳ Chưa điểm danh: ${ds.length - daGhi}</span>`;
-
-  let h = '<tr><th style="width:52px;">STT</th><th>Họ và tên</th><th>Trạng thái</th><th style="width:110px;">Giờ</th><th>Ghi chú</th></tr>';
-  if(!ds.length){
-    h += '<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);">Chưa có danh sách lớp — vào mục "Danh sách học sinh" để nhập.</td></tr>';
-  }
-  ds.forEach(hs=>{
-    const b = ddDuLieu[hs.key] || null;
-    const t = (b && DD_TT[b.t]) ? b.t : '';
-    const kieu = t ? ` style="background:${DD_TT[t].nen};color:${DD_TT[t].mau};border-color:${DD_TT[t].mau}"` : '';
-    const opts = '<option value="">— Chưa điểm danh —</option>' +
-      Object.keys(DD_TT).map(k=> `<option value="${k}"${k === t ? ' selected' : ''}>${esc(DD_TT[k].ten)}</option>`).join('');
-    const nguon = b ? (b.s === 'cam' ? ' 🤖' : ' ✋') : '';
-    h += `<tr>
-      <td style="text-align:center;">${hs.stt}</td>
-      <td>${esc(hs.name)}</td>
-      <td><select class="dd-chon" data-k="${esc(hs.key)}" data-n="${esc(hs.name)}"${kieu}>${opts}</select></td>
-      <td style="text-align:center;">${b && b.g ? esc(b.g) : ''}${nguon}</td>
-      <td><input type="text" class="dd-ghichu" data-k="${esc(hs.key)}" maxlength="120" value="${esc((b && b.c) || '')}"${t ? '' : ' disabled'} placeholder="${t ? 'Lý do, ghi chú...' : ''}"></td>
-    </tr>`;
-  });
-  bang.innerHTML = h;
-  ddCapNhatCamTrangThai();
-}
-
-async function ddDatTrangThai(key, name, t){
-  if(!isAdmin) return;
-  const ref = ddRef.child('ngay').child(ddNgayXem).child(key);
-  try{
-    if(!t){ await ref.remove(); return; }
-    const cu = ddDuLieu[key] || {};
-    const rec = { n: name, t, s: 'tay' };
-    if(cu.c) rec.c = cu.c;
-    if(cu.g && (t === 'cm' || t === 'tre')) rec.g = cu.g;
-    await ref.set(rec);
-  }catch(e){ showMsg($('ddMsg'), ddLoi(e), 'err'); }
-}
-async function ddLuuGhiChu(key, text){
-  if(!isAdmin || !ddDuLieu[key]) return;
-  const ref = ddRef.child('ngay').child(ddNgayXem).child(key).child('c');
-  try{
-    const v = String(text || '').trim().slice(0, 120);
-    if(v) await ref.set(v); else await ref.remove();
-  }catch(e){ showMsg($('ddMsg'), ddLoi(e), 'err'); }
-}
-async function ddDanhDauHangLoat(t, xacNhan){
-  if(!isAdmin) return;
-  const ds = ddDsHs().filter(h=> !ddDuLieu[h.key]);
-  if(!ds.length){ showMsg($('ddMsg'), 'Không còn học sinh nào chưa điểm danh.', 'info'); return; }
-  if(!confirm(xacNhan.replace('{n}', ds.length))) return;
-  const cap = {}; ds.forEach(h=> cap[h.key] = { n: h.name, t, s: 'tay' });
-  try{ await ddRef.child('ngay').child(ddNgayXem).update(cap); showMsg($('ddMsg'), `✅ Đã cập nhật ${ds.length} học sinh.`, 'ok'); }
-  catch(e){ showMsg($('ddMsg'), ddLoi(e), 'err'); }
-}
-async function ddXoaNgay(){
-  if(!isAdmin) return;
-  if(!Object.keys(ddDuLieu).length){ showMsg($('ddMsg'), 'Ngày này chưa có điểm danh nào.', 'info'); return; }
-  if(!confirm(`Xóa TOÀN BỘ điểm danh ngày ${ddVN(ddNgayXem)}? Không thể hoàn tác.`)) return;
-  try{ await ddRef.child('ngay').child(ddNgayXem).remove(); showMsg($('ddMsg'), 'Đã xóa điểm danh ngày này.', 'ok'); }
-  catch(e){ showMsg($('ddMsg'), ddLoi(e), 'err'); }
-}
-function ddSaoChepVang(){
-  const ds = ddDsHs();
-  const nhom = { vcp: [], vkp: [], tre: [] };
-  let coMat = 0, chuaGhi = 0;
-  ds.forEach(h=>{
-    const b = ddDuLieu[h.key];
-    if(!b || !DD_TT[b.t]){ chuaGhi++; return; }
-    if(b.t === 'cm' || b.t === 'tre') coMat++;
-    if(nhom[b.t]) nhom[b.t].push(h.name + (b.c ? ' (' + b.c + ')' : ''));
-  });
-  const dong = [`ĐIỂM DANH ${DD_TEN_LOP} — ${ddThuCua(ddNgayXem)}, ${ddVN(ddNgayXem)}`, `Sĩ số: ${ds.length} · Có mặt: ${coMat}`];
-  if(nhom.vcp.length) dong.push(`Vắng có phép (${nhom.vcp.length}): ${nhom.vcp.join(', ')}`);
-  if(nhom.vkp.length) dong.push(`Vắng không phép (${nhom.vkp.length}): ${nhom.vkp.join(', ')}`);
-  if(nhom.tre.length) dong.push(`Đi muộn (${nhom.tre.length}): ${nhom.tre.join(', ')}`);
-  if(!nhom.vcp.length && !nhom.vkp.length && !nhom.tre.length && !chuaGhi) dong.push('Cả lớp có mặt đầy đủ.');
-  if(chuaGhi) dong.push(`Chưa điểm danh: ${chuaGhi} học sinh`);
-  ddSaoChep(dong.join('\n'))
-    .then(()=> showMsg($('ddMsg'), '📋 Đã sao chép — thầy dán vào Zalo là được.', 'ok'))
-    .catch(()=> showMsg($('ddMsg'), 'Không sao chép được — thầy thử lại hoặc chép tay.', 'err'));
-}
-
-/* ---------- Thống kê theo tháng ---------- */
-function ddTongHop(ngayObj, ds){
-  const cacNgay = Object.keys(ngayObj || {}).filter(n=> ngayObj[n] && Object.keys(ngayObj[n]).length).sort();
-  const tk = {};
-  ds.forEach(h=> tk[h.key] = { cm:0, tre:0, vcp:0, vkp:0, ghi:0 });
-  cacNgay.forEach(n=> Object.entries(ngayObj[n]).forEach(([k, b])=>{
-    if(tk[k] && b && DD_TT[b.t]){ tk[k][b.t]++; tk[k].ghi++; }
-  }));
-  return { cacNgay, tk };
-}
-function ddTyLe(t, tongBuoi){ return tongBuoi ? Math.round(1000 * (t.cm + t.tre) / tongBuoi) / 10 : ''; }
-function ddRenderThongKe(){
-  const host = $('ddThongKe'); if(!host) return;
-  if(!ddThongKe){ host.innerHTML = '<tr><td style="text-align:center;color:var(--ink-soft);">Đang tải thống kê...</td></tr>'; return; }
-  const ds = ddDsHs();
-  const { cacNgay, tk } = ddTongHop(ddThongKe.ngayObj, ds);
-  const tong = cacNgay.length;
-  let h = '<tr><th>STT</th><th>Họ và tên</th><th>Có mặt</th><th>Đi muộn</th><th>Vắng có phép</th><th>Vắng không phép</th><th>Chưa ghi</th><th>Chuyên cần</th></tr>';
-  if(!tong){
-    h += `<tr><td colspan="8" style="text-align:center;color:var(--ink-soft);">Tháng ${esc(ddThongKe.thang.slice(5))}/${esc(ddThongKe.thang.slice(0, 4))} chưa có ngày nào được điểm danh.</td></tr>`;
-  } else {
-    ds.forEach(hs=>{
-      const t = tk[hs.key], ty = ddTyLe(t, tong);
-      h += `<tr>
-        <td style="text-align:center;">${hs.stt}</td>
-        <td class="${t.vkp >= 3 ? 'dd-vang-nhieu' : ''}">${esc(hs.name)}</td>
-        <td style="text-align:center;">${t.cm}</td><td style="text-align:center;">${t.tre}</td>
-        <td style="text-align:center;">${t.vcp}</td><td style="text-align:center;">${t.vkp}</td>
-        <td style="text-align:center;">${tong - t.ghi}</td>
-        <td style="text-align:center;font-weight:700;">${ty}%</td></tr>`;
-    });
-    h += `<tr><td colspan="8" style="text-align:right;color:var(--ink-soft);">Số buổi lớp đã điểm danh trong tháng: <b>${tong}</b></td></tr>`;
-  }
-  host.innerHTML = h;
-}
-
-/* ---------- Xuất Excel (Times New Roman, cỡ 13 đồng nhất) ---------- */
-function ddDinhDang(ws, rows, o){
-  const vien = { top:{style:'thin',color:{rgb:'000000'}}, bottom:{style:'thin',color:{rgb:'000000'}},
-                 left:{style:'thin',color:{rgb:'000000'}}, right:{style:'thin',color:{rgb:'000000'}} };
-  for(let r = 0; r < rows.length; r++){
-    for(let c = 0; c < o.nCot; c++){
-      const a = XLSX.utils.encode_cell({ r, c });
-      if(!ws[a]) ws[a] = { t:'s', v:'' };
-      const laTieuDe = r < o.soTieuDe, laDau = o.hangDau.includes(r), laThan = r >= o.thanTu && r < o.thanDen;
-      const s = {
-        font: { name:'Times New Roman', sz:13, bold: laDau || (laTieuDe && o.tieuDeDam.includes(r)) },
-        alignment: { vertical:'center', wrapText:true,
-                     horizontal: (laTieuDe || laDau || o.giua.includes(c)) && !(laThan && c === 1) ? 'center' : 'left' },
-      };
-      if(laDau || laThan) s.border = vien;
-      if(laDau) s.fill = { patternType:'solid', fgColor:{ rgb:'D9E2F3' } };
-      ws[a].s = s;
-    }
-  }
-  ws['!cols'] = o.doRong.map(w=> ({ wch: w }));
-  ws['!merges'] = o.gop;
-  ws['!rows'] = [];
-  o.hangDau.forEach(r=> ws['!rows'][r] = { hpt: 34 });
-}
-function ddXuatThang(){
-  if(!ddThongKe){ showMsg($('ddMsg'), 'Chưa có dữ liệu tháng — bấm Làm mới rồi thử lại.', 'err'); return; }
-  const thang = ddThongKe.thang, y = Number(thang.slice(0, 4)), m = Number(thang.slice(5, 7));
-  const ds = ddDsHs();
-  const { cacNgay, tk } = ddTongHop(ddThongKe.ngayObj, ds);
-  if(!cacNgay.length){ showMsg($('ddMsg'), 'Tháng này chưa có ngày nào được điểm danh để xuất.', 'err'); return; }
-  const tong = cacNgay.length;
-  const tieuDe = (ten)=> [[DD_TEN_TRUONG], [`${DD_TEN_LOP} · GVCN: ${DD_GVCN}`], [`${ten} THÁNG ${ddPad(m)}/${y}`], [`Năm học ${DD_NAM_HOC} · Số buổi đã điểm danh: ${tong}`], []];
-
-  // Sheet 1: tổng hợp
-  const dau1 = ['STT', 'Họ và tên', 'Có mặt', 'Đi muộn', 'Vắng có phép', 'Vắng không phép', 'Chưa ghi', 'Tỷ lệ chuyên cần (%)'];
-  const rows1 = tieuDe('TỔNG HỢP ĐIỂM DANH').concat([dau1], ds.map(h=>{
-    const t = tk[h.key];
-    return [h.stt, h.name, t.cm, t.tre, t.vcp, t.vkp, tong - t.ghi, ddTyLe(t, tong)];
-  }));
-  const ws1 = XLSX.utils.aoa_to_sheet(rows1);
-  ddDinhDang(ws1, rows1, { nCot: 8, soTieuDe: 4, tieuDeDam: [0, 2], hangDau: [5], thanTu: 6, thanDen: rows1.length,
-    giua: [0, 2, 3, 4, 5, 6, 7], doRong: [6, 30, 10, 10, 14, 17, 10, 17],
-    gop: [0, 1, 2, 3].map(r=> ({ s:{ r, c:0 }, e:{ r, c:7 } })) });
-
-  // Sheet 2: sổ điểm danh theo ngày trong tháng
-  const soNgay = new Date(y, m, 0).getDate();
-  const hang1 = ['STT', 'Họ và tên'], hang2 = ['', ''];
-  for(let d = 1; d <= soNgay; d++){ hang1.push(d); hang2.push(DD_THU_NGAN[new Date(y, m - 1, d).getDay()]); }
-  hang1.push('Có mặt', 'Đi muộn', 'P', 'K'); hang2.push('', '', '', '');
-  const nCot2 = hang1.length;
-  const thanSo = ds.map(h=>{
-    const r = [h.stt, h.name];
-    for(let d = 1; d <= soNgay; d++){
-      const b = (ddThongKe.ngayObj[thang + '-' + ddPad(d)] || {})[h.key];
-      r.push(b && DD_TT[b.t] ? DD_TT[b.t].ky : '');
-    }
-    const t = tk[h.key];
-    r.push(t.cm, t.tre, t.vcp, t.vkp);
-    return r;
-  });
-  const chuThich = ['Ký hiệu: x = Có mặt; M = Đi muộn; P = Vắng có phép; K = Vắng không phép; để trống = chưa điểm danh.'];
-  const rows2 = tieuDe('SỔ ĐIỂM DANH').concat([hang1, hang2], thanSo, [[], chuThich]);
-  const ws2 = XLSX.utils.aoa_to_sheet(rows2);
-  const batDauThan2 = 7;
-  const gop2 = [0, 1, 2, 3].map(r=> ({ s:{ r, c:0 }, e:{ r, c:nCot2 - 1 } }));
-  gop2.push({ s:{ r:5, c:0 }, e:{ r:6, c:0 } }, { s:{ r:5, c:1 }, e:{ r:6, c:1 } });
-  for(let c = nCot2 - 4; c < nCot2; c++) gop2.push({ s:{ r:5, c }, e:{ r:6, c } });
-  gop2.push({ s:{ r: rows2.length - 1, c:0 }, e:{ r: rows2.length - 1, c:nCot2 - 1 } });
-  ddDinhDang(ws2, rows2, { nCot: nCot2, soTieuDe: 4, tieuDeDam: [0, 2], hangDau: [5, 6], thanTu: batDauThan2, thanDen: batDauThan2 + ds.length,
-    giua: Array.from({ length: nCot2 }, (_, i)=> i).filter(i=> i !== 1),
-    doRong: [6, 28].concat(Array(soNgay).fill(4.5), [8, 8, 6, 6]), gop: gop2 });
-  // Tô xám cột Chủ nhật cho dễ nhìn
-  for(let d = 1; d <= soNgay; d++){
-    if(new Date(y, m - 1, d).getDay() !== 0) continue;
-    for(let r = 5; r < batDauThan2 + ds.length; r++){
-      const a = XLSX.utils.encode_cell({ r, c: 1 + d });
-      if(ws2[a] && ws2[a].s) ws2[a].s = Object.assign({}, ws2[a].s, { fill:{ patternType:'solid', fgColor:{ rgb:'E5E7EB' } } });
-    }
-  }
-  const ghiChuHang = ws2[XLSX.utils.encode_cell({ r: rows2.length - 1, c: 0 })];
-  if(ghiChuHang) ghiChuHang.s = { font:{ name:'Times New Roman', sz:13, italic:true }, alignment:{ vertical:'center', horizontal:'left', wrapText:true } };
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws1, 'Tổng hợp');
-  XLSX.utils.book_append_sheet(wb, ws2, 'Sổ điểm danh');
-  XLSX.writeFile(wb, `diem-danh-10A1-${thang}.xlsx`);
-  showMsg($('ddMsg'), `⬇️ Đã xuất file diem-danh-10A1-${thang}.xlsx`, 'ok');
-}
-function ddXuatNgay(){
-  const ds = ddDsHs();
-  if(!ds.length){ showMsg($('ddMsg'), 'Chưa có danh sách lớp để xuất.', 'err'); return; }
-  const dau = ['STT', 'Họ và tên', 'Trạng thái', 'Giờ', 'Ghi nhận bởi', 'Ghi chú'];
-  const rows = [[DD_TEN_TRUONG], [`${DD_TEN_LOP} · GVCN: ${DD_GVCN}`], [`ĐIỂM DANH ${ddThuCua(ddNgayXem).toUpperCase()}, NGÀY ${ddVN(ddNgayXem)}`], [`Năm học ${DD_NAM_HOC}`], [], dau]
-    .concat(ds.map(h=>{
-      const b = ddDuLieu[h.key];
-      const t = (b && DD_TT[b.t]) ? DD_TT[b.t].ten : 'Chưa điểm danh';
-      return [h.stt, h.name, t, (b && b.g) || '', b ? (b.s === 'cam' ? 'Camera' : 'Thầy ghi tay') : '', (b && b.c) || ''];
-    }));
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  ddDinhDang(ws, rows, { nCot: 6, soTieuDe: 4, tieuDeDam: [0, 2], hangDau: [5], thanTu: 6, thanDen: rows.length,
-    giua: [0, 2, 3, 4], doRong: [6, 30, 18, 9, 16, 34],
-    gop: [0, 1, 2, 3].map(r=> ({ s:{ r, c:0 }, e:{ r, c:5 } })) });
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Ngày ' + ddNgayXem);
-  XLSX.writeFile(wb, `diem-danh-10A1-${ddNgayXem}.xlsx`);
-  showMsg($('ddMsg'), `⬇️ Đã xuất file diem-danh-10A1-${ddNgayXem}.xlsx`, 'ok');
-}
-
-/* ---------- Điểm danh bằng camera ---------- */
-/* Mở sẵn âm thanh ngay khi thầy bấm "Bật camera" (trình duyệt chỉ cho phát tiếng sau một thao tác bấm). */
-window.ddMoAmThanh = function(){
-  try{
-    const C = window.AudioContext || window.webkitAudioContext; if(!C) return;
-    ddAudio = ddAudio || new C();
-    if(ddAudio.state === 'suspended') ddAudio.resume();
-  }catch(e){}
-};
-function ddBip(){
-  try{
-    const C = window.AudioContext || window.webkitAudioContext; if(!C) return;
-    ddAudio = ddAudio || new C();
-    if(ddAudio.state === 'suspended') ddAudio.resume();
-    const o = ddAudio.createOscillator(), g = ddAudio.createGain();
-    o.frequency.value = 880; g.gain.value = 0.08;
-    o.connect(g); g.connect(ddAudio.destination);
-    o.start(); o.stop(ddAudio.currentTime + 0.12);
-  }catch(e){}
-}
-function ddCapNhatCamTrangThai(){
-  const el = $('ddCamTrangThai'); if(!el) return;
-  const ds = ddDsHs();
-  let cm = 0, tre = 0, vang = 0;
-  ds.forEach(h=>{ const b = ddDuLieuHomNay[h.key]; if(!b) return; if(b.t === 'cm') cm++; else if(b.t === 'tre') tre++; else vang++; });
-  const gan = ddCamGanDay.map(x=> `${esc(x.gio)} · ${esc(x.ten)}${x.tre ? ' (muộn)' : ''}`).join('<br>');
-  el.innerHTML = `Hôm nay (${ddVN(ddHomNay())}): đã ghi <b>${cm + tre + vang}/${ds.length}</b> — Có mặt ${cm}, Đi muộn ${tre}, Vắng ${vang}.`
-    + (gan ? `<br><b>Vừa ghi bằng camera:</b><br>${gan}` : '');
-}
-function ddGhiTuCamera(hs){
-  const ngay = ddHomNay(), gio = ddGioHienTai();
-  const tre = gio > ddCaiDat.gioVao;   // "HH:MM" có đệm số 0 nên so sánh chuỗi đúng thứ tự thời gian
-  const rec = { n: hs.name, t: tre ? 'tre' : 'cm', g: gio, s: 'cam' };
-  // transaction: chỉ ghi nếu em này CHƯA có trạng thái hôm nay → không bao giờ đè lên chỗ thầy vừa sửa tay
-  ddRef.child('ngay').child(ngay).child(hs.key).transaction(cu=> cu ? undefined : rec, (err, daGhi)=>{
-    if(err){ showSaaSToast('Không ghi được điểm danh: ' + ddLoi(err), 'err'); return; }
-    if(!daGhi) return;
-    ddBip();
-    ddCamGanDay.unshift({ ten: hs.name, gio, tre });
-    if(ddCamGanDay.length > 5) ddCamGanDay.pop();
-    ddCapNhatCamTrangThai();
-    showSaaSToast(`✅ ${hs.name} — ${gio}${tre ? ' (đi muộn)' : ''}`, 'ok');
-  }, false);
-}
-/* Gọi từ vòng lặp camera cho MỖI học sinh nhận ra. Trả 'da' nếu em đã có điểm danh hôm nay. */
-window.ddXuLyNhanDien = function(label, hoTen, khoangCach){
-  const cb = $('ddTuGhiCam');
-  if(!cb || !cb.checked || !isAdmin) return null;
-  ddNapHomNay();
-  const hs = ddTimHs(hoTen);
-  if(!hs){
-    if(!ddCamDaBao[label]){ ddCamDaBao[label] = 1; showSaaSToast(`Không thấy "${hoTen}" trong danh sách lớp nên không ghi điểm danh được.`, 'err'); }
-    return null;
-  }
-  if(ddDuLieuHomNay[hs.key]) return 'da';
-  if(typeof khoangCach === 'number' && khoangCach > DD_NGUONG_CAMERA) return null;
-  const bay = Date.now(), th = ddCamTheoDoi[label];
-  if(!th || bay - th.t > DD_CUA_SO_MS) ddCamTheoDoi[label] = { c: 1, t: bay };
-  else { th.c++; th.t = bay; }
-  if(ddCamTheoDoi[label].c >= DD_SO_LAN_XAC_NHAN){
-    delete ddCamTheoDoi[label];
-    ddGhiTuCamera(hs);
-  }
-  return null;
-};
-
-/* ---------- Khởi tạo & phân quyền ---------- */
-function ddDatNgay(iso){
-  if(!iso) return;
-  ddNgayXem = iso; $('ddNgay').value = iso; ddNapNgayXem();
-}
-function ddKhoiTao(){
-  ddNgayXem = ddHomNay();
-  $('ddNgay').value = ddNgayXem;
-  $('ddThang').value = ddNgayXem.slice(0, 7);
-  ddRosterCb = s=>{
-    const v = s.val();
-    ddRoster = !v ? [] : (Array.isArray(v) ? v.filter(Boolean) : Object.values(v));
-    ddRender(); ddRenderThongKe();
-  };
-  rosterRef.on('value', ddRosterCb, ()=>{});
-  ddCaiDatRef = ddRef.child('caiDat');
-  ddCaiDatCb = s=>{
-    const v = s.val();
-    if(v && /^\d{2}:\d{2}$/.test(v.gioVao || '')) ddCaiDat.gioVao = v.gioVao;
-    $('ddGioVao').value = ddCaiDat.gioVao;
-  };
-  ddCaiDatRef.on('value', ddCaiDatCb, err=> ddBaoLoiCoDinh(ddLoi(err)));
-  ddNapNgayXem();
-  ddNapHomNay();
-  ddTaiThongKe();
-}
-function ddGoListener(){
-  if(ddRefXem){ ddRefXem.off(); ddRefXem = null; }
-  if(ddRefHomNay){ ddRefHomNay.off(); ddRefHomNay = null; ddNgayHomNayKey = ''; }
-  if(ddCaiDatRef && ddCaiDatCb){ ddCaiDatRef.off('value', ddCaiDatCb); }
-  if(ddRosterCb){ rosterRef.off('value', ddRosterCb); ddRosterCb = null; }
-  ddDuLieu = {}; ddDuLieuHomNay = {}; ddThongKe = null; ddCamTheoDoi = {}; ddCamGanDay = [];
-  const cb = $('ddTuGhiCam'); if(cb) cb.checked = true;   // mặc định bật; vẫn chỉ ghi được khi đã đăng nhập admin
-}
-window.ddCapNhatQuyen = function(){
-  const ok = !!isAdmin;
-  if($('ddChuaDangNhap')) $('ddChuaDangNhap').style.display = ok ? 'none' : 'block';
-  if($('ddCard')) $('ddCard').style.display = ok ? 'block' : 'none';
-  if(ok && !ddDaKhoiTao){ ddDaKhoiTao = true; ddKhoiTao(); }
-  if(!ok && ddDaKhoiTao){ ddDaKhoiTao = false; ddGoListener(); }
-};
-
-/* ---------- Gắn sự kiện ---------- */
-$('ddBang').addEventListener('change', e=>{
-  const t = e.target;
-  if(t.classList.contains('dd-chon')) ddDatTrangThai(t.dataset.k, t.dataset.n, t.value);
-  else if(t.classList.contains('dd-ghichu')) ddLuuGhiChu(t.dataset.k, t.value);
-});
-$('ddNgay').onchange = ()=> ddDatNgay($('ddNgay').value);
-$('ddNgayTruoc').onclick = ()=> ddDatNgay(ddCongNgay(ddNgayXem || ddHomNay(), -1));
-$('ddNgaySau').onclick = ()=> ddDatNgay(ddCongNgay(ddNgayXem || ddHomNay(), 1));
-$('ddHomNay').onclick = ()=> ddDatNgay(ddHomNay());
-$('ddLuuGioVao').onclick = async ()=>{
-  const v = $('ddGioVao').value;
-  if(!/^\d{2}:\d{2}$/.test(v)){ showMsg($('ddMsg'), 'Giờ vào lớp chưa hợp lệ.', 'err'); return; }
-  try{ await ddRef.child('caiDat').child('gioVao').set(v); showMsg($('ddMsg'), `✅ Đã lưu giờ vào lớp: ${v}`, 'ok'); }
-  catch(e){ showMsg($('ddMsg'), ddLoi(e), 'err'); }
-};
-$('ddTatCaCoMat').onclick = ()=> ddDanhDauHangLoat('cm', 'Đánh dấu {n} học sinh chưa điểm danh là "Có mặt"?');
-$('ddTatCaVang').onclick = ()=> ddDanhDauHangLoat('vkp', 'Đánh dấu {n} học sinh chưa điểm danh là "Vắng không phép"?');
-$('ddSaoChepVang').onclick = ddSaoChepVang;
-$('ddXuatNgay').onclick = ddXuatNgay;
-$('ddXoaNgay').onclick = ddXoaNgay;
-$('ddThang').onchange = ddTaiThongKe;
-$('ddLamMoiThongKe').onclick = ddTaiThongKe;
-$('ddXuatThang').onclick = ddXuatThang;
-$('ddMoCamera').onclick = ()=>{ if(typeof moTab === 'function') moTab('games', 'ndkm'); };
-$('ddTuGhiCam').onchange = ()=>{
-  if(!isAdmin){ $('ddTuGhiCam').checked = false; return; }
-  if($('ddTuGhiCam').checked){ ddNapHomNay(); ddBip(); }   // bấm vào ô là thao tác của người dùng → trình duyệt cho phép phát tiếng bíp
-};
-
-if(typeof isAdmin !== 'undefined') window.ddCapNhatQuyen();
-})();
 </script>
 </body>
 </html>
