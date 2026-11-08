@@ -2875,9 +2875,18 @@
 
     <div class="card">
       <h2>Ảnh thẻ</h2>
+      <div class="field" style="max-width:420px;">
+        <label for="chsChonTenRoster">Em là ai trong danh sách lớp? <span class="req">*</span></label>
+        <select id="chsChonTenRoster">
+          <option value="">-- Chọn đúng tên của em --</option>
+        </select>
+      </div>
+      <p class="section-note">Chọn đúng tên của em trong danh sách lớp để mở khoá tải ảnh thẻ — mỗi tên chỉ
+        1 bạn được chọn (chọn nhầm hoặc tên bị bạn khác chọn mất thì báo thầy chủ nhiệm xử lý).</p>
+      <div id="chsChonTenMsg" class="msg"></div>
       <div id="chsAnhXemTruoc" class="chs-anh-xemtruoc">Chưa có ảnh thẻ.</div>
       <input type="file" id="chsAnhInput" accept="image/*" style="display:none;">
-      <button type="button" class="btn btn-blue btn-sm" id="chsChonAnhBtn">📷 Chọn / Đổi ảnh thẻ</button>
+      <button type="button" class="btn btn-blue btn-sm" id="chsChonAnhBtn" disabled>📷 Chọn / Đổi ảnh thẻ</button>
       <div id="chsAnhMsg" class="msg"></div>
     </div>
 
@@ -2897,11 +2906,6 @@
       <input type="file" id="ndkmTuThemAnhInput" accept="image/*" multiple style="display:none;">
       <div id="ndkmTuThemMsg" class="msg"></div>
     </div>
-    <div class="card" id="ndkmTuThemChuaCoAnhTheCard" style="display:none;">
-      <h2>🧠 Ảnh bổ sung nhận diện khuôn mặt</h2>
-      <p class="section-note">Em cần chọn <b>Ảnh thẻ</b> ở mục ngay phía trên trước, sau đó quay lại đây để thêm ảnh bổ sung nhận diện khuôn mặt nhé.</p>
-    </div>
-
     <div class="card">
       <h2>Hình CCCD (VNEID)</h2>
       <div class="rieng-tu">
@@ -4136,6 +4140,13 @@ const seatsRef  = db.ref('lop10a1/seats');
 const swapsRef  = db.ref('lop10a1/swaps');
 const banXoaRef = db.ref('lop10a1/banXoa'); // các bàn giáo viên đã xoá khỏi sơ đồ — công khai đọc, chỉ giáo viên ghi
 const rosterRef = db.ref('lop10a1/roster');
+// "Khoá nhận tên" — mỗi tên trong danh sách lớp (lop10a1/roster) chỉ 1 tài khoản được xác nhận là
+// mình, dùng để chặn tải "Ảnh thẻ" khi chưa chọn đúng tên, và tránh 2 em cùng nhận 1 tên (xem
+// renderChonTenRoster). Key là tenThanhKhoa(tên), value là uid đã nhận; công khai đọc, giáo viên
+// luôn ghi đè được để xử lý khi có em chọn nhầm.
+const tenDaNhanRef = db.ref('lop10a1/tenDaNhan');
+let tenDaNhanState = {};   // { tenKhoa: uid }
+let chsTenDaXacNhan = '';  // tên GỐC (có dấu, đúng như trong roster) mà TÀI KHOẢN NÀY đã xác nhận — rỗng = chưa chọn
 const regsRef   = db.ref('laodong2026/registrations');
 const ldCaiDatRef = db.ref('laodong2026/caiDat'); // ẩn/hiện danh sách + khóa theo đợt đăng ký — công khai đọc, chỉ giáo viên (admin) ghi
 const tvRef     = db.ref('khaigiang2026/tivi');
@@ -4872,6 +4883,14 @@ function showMsg(el, text, type){
   setTimeout(()=> el.classList.remove('show'), 4200);
 }
 function chuanTen(s){ return (s||'').trim().toLowerCase().replace(/\s+/g,' '); }
+// Bỏ dấu tiếng Việt + chỉ giữ chữ/số/khoảng trắng rồi đổi khoảng trắng thành "_" — dùng làm KHOÁ
+// (key) hợp lệ cho Firebase Realtime Database (key không được chứa '.', '#', '$', '/', '[', ']').
+function boDauTV(s){
+  return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[đĐ]/g, m=> m==='Đ'?'D':'d');
+}
+function tenThanhKhoa(s){
+  return boDauTV(chuanTen(s)).replace(/[^a-z0-9 ]/gi,'').trim().replace(/\s+/g,'_');
+}
 function baoLoi(e){
   const m = String(e && e.message || e);
   if(/permission_denied/i.test(m))
@@ -5347,6 +5366,7 @@ auth.onAuthStateChanged(async user=>{
   } else { htTatCa = []; hosoTatCa = []; confessionChoDuyet = []; }
 
   await loadRoster(); // công khai cho mọi người, vì "Danh sách học sinh" giờ hiển thị công khai
+  await loadTenDaNhan(); // "khoá nhận tên" cho mục Ảnh thẻ — cần nạp trước napDuLieuCaNhanCuaToi() để tự khớp tên cũ (nếu có)
   await napHoTroCuaToi();
   await napHoSoCuaToi();
   await napDuLieuCaNhanCuaToi();
@@ -5394,8 +5414,25 @@ async function loadRoster(){
       renderVitriBang();
       if(typeof saasCapNhatKpiVaBreadcrumb === 'function') saasCapNhatKpiVaBreadcrumb(); // cập nhật ngay sĩ số/dân tộc/hoàn cảnh trên thẻ KPI, không cần chuyển tab
       if($('dsHoTenLop10A1')) $('dsHoTenLop10A1').innerHTML = roster.map(hs=> `<option value="${esc(hs.name||'')}">`).join('');
+      if(typeof renderChonTenRoster === 'function') renderChonTenRoster();
       if(laLanDau){ laLanDau = false; resolve(); }
       else { if(isAdmin){ renderAdmin(); renderCapTkChonHS(); } renderDanhSachKhoanThu(); renderQuyLop(); } // các lần sau (có người vừa thêm/sửa danh sách lớp) tự vẽ lại ngay
+    });
+  });
+}
+
+let daDangKyTenDaNhanListener = false;
+// "Khoá nhận tên" — xem khai báo tenDaNhanRef phía trên. Nạp live giống loadRoster(): mỗi lần có
+// ai chọn/đổi tên, mọi người đang mở mục "Ảnh thẻ" đều thấy ngay tên nào còn chọn được.
+async function loadTenDaNhan(){
+  if(daDangKyTenDaNhanListener) return;
+  daDangKyTenDaNhanListener = true;
+  return new Promise(resolve=>{
+    let laLanDau = true;
+    tenDaNhanRef.on('value', s=>{
+      tenDaNhanState = s.val() || {};
+      if(typeof renderChonTenRoster === 'function') renderChonTenRoster();
+      if(laLanDau){ laLanDau = false; resolve(); }
     });
   });
 }
@@ -8206,6 +8243,84 @@ function dienDuLieuCaNhanHS(data){
   $('chsThanhTich').value = (data && data.thanhTich) || '';
   hienThiAnhThe($('chsAnhXemTruoc'), data && data.anhTheId);
   hienThiAnhCccd($('cccdAnhXemTruoc'), data && data.cccdAnhId);
+  chsThuTuDongXacNhanTenCu(data && data.hoTen);
+}
+
+/* ================================================================
+   "Ảnh thẻ" giờ bắt buộc xác nhận đúng TÊN trong danh sách lớp (lop10a1/roster) trước khi tải ảnh
+   lên — mỗi tên chỉ 1 tài khoản được nhận (lop10a1/tenDaNhan, xem khai báo tenDaNhanRef), để tránh
+   nhận nhầm/giả danh bạn khác. chsTenDaXacNhan = tên GỐC (có dấu) mà TÀI KHOẢN NÀY đã xác nhận.
+   ================================================================ */
+function renderChonTenRoster(){
+  const sel = $('chsChonTenRoster');
+  if(!sel) return;
+  chsTenDaXacNhan = '';
+  const otp = ['<option value="">-- Chọn đúng tên của em --</option>'];
+  (roster||[]).forEach(hs=>{
+    const ten = ((hs && hs.name) || '').trim();
+    if(!ten) return;
+    const khoa = tenThanhKhoa(ten);
+    if(!khoa) return;
+    const uidDaNhan = tenDaNhanState[khoa];
+    const laCuaMinh = !!(uidDaNhan && myUid && uidDaNhan === myUid);
+    const biChiemMat = !!(uidDaNhan && !laCuaMinh);
+    otp.push(`<option value="${esc(khoa)}" data-ten="${esc(ten)}" ${biChiemMat ? 'disabled' : ''}>${esc(ten)}${biChiemMat ? ' (đã có bạn khác chọn)' : ''}</option>`);
+    if(laCuaMinh) chsTenDaXacNhan = ten;
+  });
+  const giaTriCu = sel.value;
+  sel.innerHTML = otp.join('');
+  // Ưu tiên khôi phục đúng tên đã xác nhận (nếu có) thay vì giữ lựa chọn cũ trên màn hình, vì dữ
+  // liệu tenDaNhanState mới đọc được mới là nguồn sự thật (đổi máy khác vẫn khôi phục đúng).
+  const khoaCuaMinh = chsTenDaXacNhan ? tenThanhKhoa(chsTenDaXacNhan) : '';
+  sel.value = khoaCuaMinh || (sel.querySelector(`option[value="${giaTriCu}"]`) ? giaTriCu : '');
+  capNhatKhoaChonAnhThe();
+}
+
+function capNhatKhoaChonAnhThe(){
+  const btn = $('chsChonAnhBtn');
+  if(btn) btn.disabled = !chsTenDaXacNhan;
+  const hoTenEl = $('hs_hoten');
+  if(hoTenEl){
+    if(chsTenDaXacNhan){
+      hoTenEl.value = chsTenDaXacNhan;
+      hoTenEl.readOnly = true;
+      hoTenEl.title = 'Đã khoá theo tên đã xác nhận ở mục "Ảnh thẻ" phía trên.';
+    } else {
+      hoTenEl.readOnly = false;
+      hoTenEl.title = '';
+    }
+  }
+}
+
+$('chsChonTenRoster') && ($('chsChonTenRoster').onchange = async ()=>{
+  const sel = $('chsChonTenRoster');
+  const khoa = sel.value;
+  if(!khoa){ chsTenDaXacNhan=''; capNhatKhoaChonAnhThe(); return; }
+  if(!myUid){ showMsg($('chsChonTenMsg'), 'Đang kết nối, thử lại sau vài giây.', 'info'); sel.value=''; return; }
+  const tenGoc = sel.selectedOptions[0] ? sel.selectedOptions[0].getAttribute('data-ten') : '';
+  sel.disabled = true;
+  try{
+    await tenDaNhanRef.child(khoa).set(myUid); // Rules Firebase chặn nếu tên đã bị bạn KHÁC nhận trước (giữ nguyên bản ghi cũ)
+    chsTenDaXacNhan = tenGoc;
+    capNhatKhoaChonAnhThe();
+    showMsg($('chsChonTenMsg'), `✅ Đã xác nhận "${tenGoc}" — giờ có thể tải ảnh thẻ.`, 'ok');
+  }catch(e){
+    showMsg($('chsChonTenMsg'), 'Tên này vừa có bạn khác chọn mất rồi — em chọn tên khác hoặc báo thầy chủ nhiệm kiểm tra lại nhé.', 'err');
+    sel.value = '';
+  }
+  sel.disabled = false;
+});
+
+// Di trú êm cho học sinh ĐÃ có hồ sơ/ảnh thẻ từ TRƯỚC khi có bước "chọn tên trong danh sách lớp":
+// nếu tên cũ khớp đúng 1 bạn trong danh sách lớp và tên đó CHƯA ai nhận, tự nhận giùm luôn (không
+// cần bạn đó tự chọn lại thủ công). Không tự nhận nếu tên đã có người khác nhận trước (an toàn).
+async function chsThuTuDongXacNhanTenCu(hoTenCu){
+  if(!myUid || !hoTenCu || chsTenDaXacNhan) return;
+  const khoaCu = tenThanhKhoa(hoTenCu);
+  if(!khoaCu || tenDaNhanState[khoaCu]) return;
+  const khop = (roster||[]).some(hs=> hs && tenThanhKhoa(hs.name) === khoaCu);
+  if(!khop) return;
+  try{ await tenDaNhanRef.child(khoaCu).set(myUid); }catch(e){ /* thua 1 bạn khác vừa nhận cùng lúc -> bỏ qua êm */ }
 }
 function hienThiAnhThe(host, anhId){
   host.innerHTML = anhId
@@ -8440,6 +8555,7 @@ $('chsAnhInput').onchange = async e=>{
   const file = e.target.files[0];
   e.target.value = '';
   if(!file) return;
+  if(!chsTenDaXacNhan){ showMsg($('chsAnhMsg'), 'Vui lòng chọn đúng tên của em trong danh sách lớp ở trên trước khi tải ảnh thẻ.', 'err'); return; }
   if(!/^image\//.test(file.type)){ showMsg($('chsAnhMsg'), 'Vui lòng chọn đúng tệp ảnh.', 'err'); return; }
   if(!myUid){ showMsg($('chsAnhMsg'), 'Đang kết nối, thử lại sau vài giây.', 'info'); return; }
   if(!dungDrive()){ showMsg($('chsAnhMsg'), 'Chưa cấu hình nơi lưu ảnh (Drive), báo thầy kiểm tra.', 'err'); return; }
@@ -8447,11 +8563,11 @@ $('chsAnhInput').onchange = async e=>{
   showMsg($('chsAnhMsg'), 'Đang xử lý và tải ảnh lên...', 'info');
   try{
     const anhNen = await nenAnh(file, 900, 0.85); // ảnh thẻ chân dung, không cần quá lớn
-    const ten = $('hs_hoten').value.trim() || 'HocSinh';
+    const ten = chsTenDaXacNhan; // tên đã xác nhận đúng trong danh sách lớp — không đọc tự do từ ô nhập nữa
     const kq = await guiAnhLenDrive(anhNen, ten, TEN_THU_MUC_ANH_THE);
     const cu = (await chsRef.child(myUid).once('value')).val() || {};
     const moi = Object.assign({}, cu, {
-      hoTen: cu.hoTen || ten,
+      hoTen: ten,
       anhTheId: kq.id,
       savedAt: new Date().toISOString()
     });
@@ -13118,12 +13234,12 @@ async function napNdkmCuaToi(){
   renderNdkmTuThemChoXemTruoc();
 }
 
-// Chỉ hiện mục này khi em đã có hồ sơ "Thành viên lớp" (tức đã từng tải Ảnh thẻ) — để ảnh bổ
-// sung luôn gắn được với một danh tính ổn định, tránh ảnh "mồ côi" không biết của ai.
+// Mục "Ảnh bổ sung" ĐỘC LẬP với "Ảnh thẻ" — chỉ cần đã đăng nhập (có myUid) là dùng được ngay,
+// không cần chờ tải Ảnh thẻ trước. Ảnh vẫn gắn đúng theo myUid (xem napNdkmCuaToi/ndkmAnhRef),
+// nên không sợ ảnh "mồ côi" không biết của ai dù chưa có hồ sơ/ảnh thẻ.
 function capNhatHienThiNdkmTuThem(){
-  const coHoSo = !!(myUid && thanhVienState[myUid] && thanhVienState[myUid].hoTen);
+  const coHoSo = !!myUid;
   if($('ndkmTuThemCard')) $('ndkmTuThemCard').style.display = coHoSo ? 'block' : 'none';
-  if($('ndkmTuThemChuaCoAnhTheCard')) $('ndkmTuThemChuaCoAnhTheCard').style.display = coHoSo ? 'none' : 'block';
 }
 
 function ndkmTuThemConLai(){
