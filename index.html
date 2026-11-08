@@ -3251,11 +3251,12 @@
 
       <div id="ndkmChuaDangNhap">
         <p class="msg info show">
-          🔒 Tính năng này xử lý dữ liệu khuôn mặt học sinh. Hai bước "🧠 Nạp dữ liệu" và "🎥 Bật
-          camera" dùng được cho bất kỳ ai ĐÃ CÓ hồ sơ "👤 Thành viên lớp" (mục phía trên) — hãy tạo hồ
-          sơ đó trước (cần có ảnh thẻ). Riêng việc thêm/sửa/xóa ảnh khuôn mặt dùng để nhận diện (Bước 1,
-          1b) thì chỉ giáo viên chủ nhiệm đã đăng nhập ở mục "🔒 Khu vực giáo viên / quản trị" phía dưới
-          mới làm được.
+          🔒 Tính năng này xử lý dữ liệu khuôn mặt học sinh. Đang kết nối, vui lòng đợi vài giây...
+          Sau khi kết nối xong, hai bước "🧠 Nạp dữ liệu" và "🎥 Bật camera" dùng được cho <b>bất kỳ
+          ai</b> mở trang này (không cần nộp hồ sơ trước) — dùng khi đặt 1 máy ở cửa lớp, một bạn cầm
+          máy quét lần lượt cả lớp đi vào. Riêng việc thêm/sửa/xóa ảnh khuôn mặt dùng để nhận diện
+          (Bước 1, 1b) thì chỉ giáo viên chủ nhiệm đã đăng nhập ở mục "🔒 Khu vực giáo viên / quản trị"
+          phía dưới mới làm được.
         </p>
       </div>
 
@@ -13047,11 +13048,15 @@ let ndkmAnhState = {}; // { uid: { anhId: {anhLink, thuMucId, luc, dacTrung?:[12
 let ndkmAnhChoXuLy = []; // [File,...] — ảnh đã chọn cho học sinh đang chọn, CHƯA bấm Lưu nên chưa tải lên đâu cả
 let ndkmTheDacTrungState = {}; // { uid: {anhId, dacTrung:[128 số]} } — cache mã đặc trưng tính sẵn từ ẢNH THẺ (xem ndkmTheDacTrungRef)
 
-// "Đủ điều kiện" để đọc dữ liệu NDKM dùng chung (Bước 2/3) — admin, HOẶC bất kỳ ai đã có hồ sơ
-// "Thành viên lớp" hợp lệ (có hoTen). Bước 1/1b (thêm/sửa ảnh) thì luôn phải isAdmin riêng, không
-// dùng hàm này.
+// "Đủ điều kiện" để đọc dữ liệu NDKM dùng chung (Bước 2/3) — MỞ CHO BẤT KỲ AI đã vào trang (kể cả
+// chưa nộp hồ sơ "Thành viên lớp"), theo yêu cầu của thầy: ai cũng quét camera điểm danh được cho
+// cả lớp, không cần đợi có hồ sơ trước. Rules Firebase (nhanDienAnhBoSung2026/nhanDienNguoiKhac2026/
+// nhanDienTheDacTrung2026) đã nới tương ứng (auth != null) để Bước 2 "Nạp dữ liệu" đọc được.
+// LƯU Ý: điều này đồng nghĩa dữ liệu khuôn mặt (sinh trắc học) của CẢ LỚP có thể đọc được bởi bất
+// kỳ ai mở trang này — thầy đã xác nhận đánh đổi này. Bước 1/1b (thêm/sửa ảnh) thì luôn phải
+// isAdmin riêng, không dùng hàm này.
 function ndkmDuocDungBuoc23(){
-  return isAdmin || !!(myUid && thanhVienState[myUid] && thanhVienState[myUid].hoTen);
+  return !!myUid;
 }
 
 async function napNdkmAnhTatCa(){
