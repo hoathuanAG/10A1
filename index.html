@@ -3349,9 +3349,11 @@
         <p class="section-note">
           🙋 <b>Tự động điểm danh:</b> khi camera nhận ra MỘT học sinh đủ chắc và liên tục trong vài
           khung hình, hệ thống sẽ <b>tự ghi điểm danh</b> cho em đó ở mục "🙋 Điểm danh" — không cần
-          bấm gì thêm. Mỗi em vẫn chỉ được ghi 1 lần/ngày như cũ. Giáo viên quét thì ghi được cho bất
-          kỳ em nào camera nhận ra (dùng khi đặt 1 camera ở cửa lớp); học sinh tự quét trên máy mình
-          thì chỉ tự ghi được cho chính mình, không ghi giùm bạn khác dù camera lỡ nhận ra.
+          bấm gì thêm. Ai mở Bước 3 cũng quét và ghi được cho <b>bất kỳ em nào</b> camera nhận ra
+          (dùng khi đặt 1 máy ở cửa lớp, một bạn cầm quét lần lượt cả lớp đi vào), không chỉ riêng
+          giáo viên. Mỗi em vẫn chỉ được ghi 1 lần/ngày: bản ghi đã có rồi thì không ai (trừ giáo
+          viên) ghi đè/sửa lại được — chỉ là <b>ghi giùm lần đầu</b>, không sửa được điểm danh của
+          người khác.
         </p>
         <div class="field" style="max-width:420px;">
           <label>Chế độ quét</label>
@@ -12837,12 +12839,15 @@ const NDKM_NGUONG_KHOP = 0.5; // càng nhỏ càng khắt khe khi so khớp khu�
    xem NDKM_DD_NGUONG_GHI) và liên tục trong vài khung hình (NDKM_DD_SO_KHUNG_CAN) — không phải chỉ
    1 khung lỡ — thì tự ghi điểm danh vào đúng mục "🙋 Điểm danh" (diemDanh2026/ds), KHÔNG cần bấm gì
    thêm. Phạm vi ai được ghi cho ai:
-     - Giáo viên (isAdmin) đang quét: ghi được cho BẤT KỲ học sinh nào camera nhận ra (dùng khi đặt
-       1 camera ở cửa lớp, lần lượt quét cả lớp đi vào).
-     - Học sinh tự quét trên máy mình (không phải admin): CHỈ ghi được cho CHÍNH mình (dù camera lỡ
-       nhận ra bạn khác đứng cạnh cũng không ghi giùm) — đúng tinh thần "mỗi em tự điểm danh".
-   Mỗi em vẫn chỉ được ghi 1 lần/ngày như cũ (Rules Firebase chặn ghi đè nếu không phải admin); nếu
-   em đã tự bấm tay ở mục Điểm danh từ trước thì camera thấy đã có bản ghi, bỏ qua, không ghi lại. */
+     - BẤT KỲ người dùng nào đã đăng nhập và đang mở Bước 3 (không riêng giáo viên/isAdmin) đều ghi
+       được cho BẤT KỲ học sinh nào camera nhận ra — dùng khi đặt 1 máy ở cửa lớp, một bạn cầm máy
+       quét lần lượt cả lớp đi vào, không cần đợi giáo viên tự quét.
+     - Vẫn chỉ được GHI MỚI (lần đầu trong ngày), KHÔNG được ghi đè lên bản ghi đã có của người khác
+       (Rules Firebase chặn ghi đè nếu không phải admin) — nên không ai dùng cách này để SỬA điểm
+       danh người khác, chỉ "ghi giùm lần đầu" khi em đó chưa tự điểm danh. Giáo viên (isAdmin) là
+       người duy nhất ghi đè/sửa được bản ghi đã tồn tại (dùng ở mục "➕ Điểm danh thay / sửa cho 1
+       em" khi cần chỉnh lại).
+   Nếu em đã tự bấm tay ở mục Điểm danh từ trước thì camera thấy đã có bản ghi, bỏ qua, không ghi lại. */
 const NDKM_DD_NGUONG_GHI = 0.42;  // khắt khe hơn mức khớp hiển thị (0.5) — tránh ghi nhầm điểm danh vì nhận diện sai
 const NDKM_DD_SO_KHUNG_CAN = 3;   // số khung hình liên tiếp phải khớp mới ghi (mỗi khung ~350ms) — tránh ghi vì 1 khung lỡ
 let ndkmDiemDanhHomNayState = {}; // { uid: banGhi } — bản ghi điểm danh HÔM NAY của cả lớp, nạp khi mở camera, để biết ai đã điểm danh rồi mà bỏ qua
@@ -12856,7 +12861,9 @@ async function ndkmNapDiemDanhHomNay(){
 
 async function ndkmTuDongDiemDanh(uid, hoTen){
   if(ndkmDiemDanhHomNayState[uid] || ndkmDiemDanhDangGhi.has(uid)) return; // đã điểm danh hôm nay, hoặc đang ghi dở — bỏ qua
-  if(!isAdmin && uid !== myUid) return; // học sinh tự quét thì chỉ được ghi cho chính mình
+  // Bất kỳ ai đã đăng nhập (không riêng isAdmin) đều ghi được cho bất kỳ học sinh nào camera nhận ra
+  // — xem khối chú thích phía trên. Rules Firebase vẫn chặn ghi ĐÈ nếu không phải admin, nên chỉ ghi
+  // được lần đầu, không sửa được bản ghi đã có của người khác.
   ndkmDiemDanhDangGhi.add(uid);
   try{
     const gio = (typeof ddHienTaiHHMM === 'function') ? ddHienTaiHHMM() : null;
