@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>">
+<title>ensete time – Quản trị lớp học</title>
+<style>
+:root{--bg:#f4f5f9;--card:#fff;--text:#1b1f2a;--muted:#6b7280;--line:#e6e8ef;--accent:#4f46e5;--soft:#eef0ff;--ok:#15803d;--okbg:#dcfce7;--lostbg:#fee2e2;--idle:#b45309;--idlebg:#fef3c7;--off:#6b7280;--offbg:#eceef3;--bar:#6366f1;--err:#dc2626}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1015;--card:#171a21;--text:#e8eaf0;--muted:#9aa3b2;--line:#262a35;--accent:#8b93ff;--soft:#222549;--ok:#4ade80;--okbg:#143324;--lostbg:#3b1a1a;--idle:#fbbf24;--idlebg:#3a2e10;--off:#9aa3b2;--offbg:#242833;--bar:#818cf8;--err:#f87171}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit;color:inherit}
+.hidden{display:none!important}
+.btn{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+input,select{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+/* login */
+#login{min-height:100vh;display:grid;place-items:center;padding:24px}
+.login-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:32px}
+.login-card h1{margin:0 0 4px;font-size:30px}
+.login-card p{margin:0 0 20px;color:var(--muted)}
+.login-card label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+.login-card input{width:100%}
+.login-card .btn{width:100%;margin-top:20px;padding:11px}
+.error{color:var(--err);margin-top:12px;font-size:14px}
+/* app */
+header{display:flex;align-items:center;gap:16px;padding:14px 28px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:22px}
+.chip{background:var(--soft);color:var(--accent);border-radius:999px;padding:4px 12px;font-weight:600;font-size:13px;letter-spacing:.08em}
+.spacer{flex:1}
+.muted{color:var(--muted)}
+main{max-width:1280px;margin:0 auto;padding:24px 28px 48px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.stat .label{color:var(--muted);font-size:13px}
+.stat .value{font-size:28px;font-weight:700;margin-top:2px}
+.stat .sub{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.card h2{margin:0 0 12px;font-size:16px}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.04em}
+td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.row{cursor:pointer}
+tr.row:hover td{background:var(--soft)}
+.name{font-weight:600}
+.timecell{min-width:200px}
+.timecell b{display:inline-block;min-width:78px}
+.track{display:inline-block;vertical-align:middle;width:110px;height:8px;background:var(--offbg);border-radius:99px;overflow:hidden;margin-left:6px}
+.track i{display:block;height:100%;background:var(--bar);border-radius:99px}
+.badge{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600}
+.badge.on{background:var(--okbg);color:var(--ok)}
+.badge.lost{background:var(--lostbg);color:var(--err)}
+.badge.idle{background:var(--idlebg);color:var(--idle)}
+.badge.off{background:var(--offbg);color:var(--off)}
+.empty{padding:36px 10px;text-align:center;color:var(--muted)}
+.week{display:flex;align-items:flex-end;gap:8px;height:170px;padding-top:8px}
+.week .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.week .bar{width:100%;max-width:38px;background:var(--bar);border-radius:6px 6px 2px 2px;min-height:2px}
+.week .bar.sel{background:var(--accent);outline:2px solid var(--soft)}
+.week small{font-size:11px;color:var(--muted)}
+.week .v{font-size:11px;font-weight:600}
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--text);padding:24px;width:min(460px,92vw)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0 0 4px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex:none;border-radius:50%;background:var(--soft);font-size:18px}
+.req{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.req .grow{flex:1;min-width:0}
+.note{font-size:13px;color:var(--muted);margin-top:14px}
+</style>
+</head>
+<body>
+
+<!-- ĐĂNG NHẬP -->
+<section id="login">
+  <div class="login-card">
+    <h1 class="brand"><span class="logo" aria-hidden="true">⏱️</span>ensete time</h1>
+    <p>Trang quản trị dành cho giáo viên</p>
+    <label for="em">Email giáo viên</label>
+    <input id="em" type="email" autocomplete="username">
+    <label for="pw">Mật khẩu</label>
+    <input id="pw" type="password" autocomplete="current-password">
+    <button class="btn primary" id="loginBtn">Đăng nhập</button>
+    <div class="error" id="loginErr"></div>
+  </div>
+</section>
+
+<!-- GIAO DIỆN CHÍNH -->
+<section id="app" class="hidden">
+  <header>
+    <h1 class="brand"><span class="logo" aria-hidden="true">⏱️</span>ensete time</h1>
+    <span class="chip" id="classChip"></span>
+    <span class="muted" id="className"></span>
+    <span class="spacer"></span>
+    <span class="muted" id="who"></span>
+    <button class="btn" id="logoutBtn">Đăng xuất</button>
+  </header>
+  <main>
+    <div class="toolbar">
+      <button class="btn" id="prev">‹ Hôm trước</button>
+      <input type="date" id="date">
+      <button class="btn" id="next">Hôm sau ›</button>
+      <button class="btn" id="today">Hôm nay</button>
+      <span class="spacer"></span>
+      <input type="search" id="search" placeholder="Tìm học sinh…">
+      <select id="sort">
+        <option value="time">Sắp xếp: nhiều giờ nhất</option>
+        <option value="timeAsc">Sắp xếp: ít giờ nhất</option>
+        <option value="name">Sắp xếp: theo tên</option>
+      </select>
+      <button class="btn" id="csv">Xuất CSV</button>
+    </div>
+
+    <div class="card hidden" id="pending" style="margin-bottom:20px;border-color:var(--accent)">
+      <h2>Yêu cầu vào lại lớp (<span id="pendingCount">0</span>)</h2>
+      <div id="pendingList"></div>
+    </div>
+
+    <div class="stats">
+      <div class="card stat"><div class="label">Tổng số học sinh</div><div class="value" id="sTotal">–</div><div class="sub">tất cả em đã vào lớp</div></div>
+      <div class="card stat"><div class="label">Báo cáo trong ngày</div><div class="value" id="sToday">–</div><div class="sub" id="sTodaySub">&nbsp;</div></div>
+      <div class="card stat"><div class="label">Trung bình / học sinh</div><div class="value" id="sAvg">–</div><div class="sub" id="sSum">&nbsp;</div></div>
+      <div class="card stat"><div class="label">Dùng nhiều nhất</div><div class="value" id="sMax">–</div><div class="sub" id="sMaxName">&nbsp;</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Thời gian sáng màn hình – <span id="dayLabel"></span></h2>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>#</th><th>Học sinh</th><th>Thời gian</th><th>Cập nhật</th><th>Trạng thái</th><th>Chạy nền</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="error" id="appErr"></div>
+      </div>
+      <div class="card">
+        <h2>7 ngày gần nhất (trung bình / học sinh)</h2>
+        <div class="week" id="week"></div>
+        <div class="note"><b>Đang hoạt động:</b> màn hình đang sáng. <b>Không hoạt động:</b> màn hình đang tắt. <b>Ngoại tuyến:</b> quá 15 phút (3 lần gửi liên tiếp, mỗi lần 5 phút) không nhận được dữ liệu từ máy (mất internet hoặc app bị dừng). <b>Đã đăng xuất:</b> em đã thoát lớp. <b>Chờ duyệt:</b> em đang xin vào lại lớp. <b>Dòng nhỏ "App không chạy":</b> tổng thời gian app bị tắt giữa chừng (không đếm được giờ) trong ngày đó. <b>Chạy nền:</b> "Đã cho phép" nghĩa là em đã bật quyền chạy nền cho app; "Chưa cho phép" thì số liệu có thể bị thiếu. Cột này cập nhật ngay khi em bật hoặc tắt quyền.</div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<dialog id="dlg">
+  <h2 id="dName"></h2>
+  <div class="muted" id="dSub"></div>
+  <div class="week" id="dWeek" style="margin-top:16px"></div>
+  <div style="text-align:right;margin-top:18px"><button class="btn" id="dClose">Đóng</button></div>
+</dialog>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ====== DÁN CẤU HÌNH FIREBASE WEB CỦA BẠN VÀO ĐÂY ======
+   Firebase console → Project settings → Your apps → Add app (</>) → copy firebaseConfig */
+const firebaseConfig = {
+  apiKey: "AIzaSyB3He0kZ28azIYLu5pFWNIOCQRswzNh04w",
+  authDomain: "timeuse-5ff59.firebaseapp.com",
+  projectId: "timeuse-5ff59",
+  messagingSenderId: "382917663056",
+  appId: "1:382917663056:web:cbf2257847ee864fc67455"
+};
+/* ======================================================== */
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const z = n => String(n).padStart(2, "0");
+const ymd = d => `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate()+n); return ymd(d); };
+const hm = ms => { const m = Math.round((ms||0)/60000); return `${Math.floor(m/60)}h ${z(m%60)}p`; };
+const ago = ts => { if(!ts) return "—"; const m = Math.round((Date.now()-ts)/60000); if(m<1) return "vừa xong"; if(m<60) return m+" phút trước"; const h=Math.floor(m/60); return h<24 ? h+" giờ trước" : Math.floor(h/24)+" ngày trước"; };
+const dow = s => ["CN","T2","T3","T4","T5","T6","T7"][parse(s).getDay()];
+const dm = s => { const d = parse(s); return `${d.getDate()}/${d.getMonth()+1}`; };
+
+if (firebaseConfig.apiKey.startsWith("DÁN")) {
+  $("#loginErr").textContent = "Chưa cấu hình Firebase: hãy mở file index.html và dán apiKey, appId vào phần firebaseConfig.";
+}
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let classCode = "", day = ymd(new Date()), rows = [], unsub = null, unsubGate = null, gates = new Map();
+let weekMap = {};                // { "yyyy-mm-dd": Map(uid -> doc) }
+
+/* ---------- Đăng nhập ---------- */
+$("#loginBtn").onclick = async () => {
+  $("#loginErr").textContent = "";
+  try { await signInWithEmailAndPassword(auth, $("#em").value.trim(), $("#pw").value); }
+  catch (e) { $("#loginErr").textContent = "Đăng nhập thất bại: " + (e.code || e.message); }
+};
+$("#pw").addEventListener("keydown", e => { if (e.key === "Enter") $("#loginBtn").click(); });
+$("#logoutBtn").onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, async user => {
+  if (unsub) { unsub(); unsub = null; }
+  if (unsubGate) { unsubGate(); unsubGate = null; }
+  if (!user) { $("#app").classList.add("hidden"); $("#login").classList.remove("hidden"); return; }
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    const p = snap.exists() ? snap.data() : null;
+    if (!p || p.role !== "teacher") throw new Error("Tài khoản này không phải giáo viên.");
+    if (!p.classCode) throw new Error("Bạn chưa tạo lớp. Hãy mở app trên điện thoại và tạo lớp trước.");
+    classCode = p.classCode;
+    $("#classChip").textContent = classCode;
+    $("#className").textContent = "";
+    getDoc(doc(db, "classes", classCode)).then(c => { if (c.exists()) $("#className").textContent = c.data().name || ""; });
+    $("#who").textContent = p.name || user.email;
+    $("#login").classList.add("hidden");
+    $("#app").classList.remove("hidden");
+    go(ymd(new Date()));
+    watchGates();
+  } catch (e) {
+    await signOut(auth);
+    $("#loginErr").textContent = e.message;
+  }
+});
+
+/* ---------- Dữ liệu ---------- */
+function go(d) {
+  day = d;
+  $("#date").value = day;
+  $("#dayLabel").textContent = day;
+  $("#appErr").textContent = "";
+  if (unsub) unsub();
+  unsub = onSnapshot(
+    query(collection(db, "usage"), where("classCode","==",classCode), where("date","==",day)),
+    snap => {
+      rows = snap.docs.map(x => x.data());
+      weekMap[day] = new Map(rows.map(r => [r.uid, r]));
+      render();
+    },
+    err => { $("#appErr").textContent = err.code === "permission-denied"
+      ? "Không có quyền đọc dữ liệu. Hãy kiểm tra Rules của Firestore đã Publish chưa."
+      : "Lỗi: " + err.message; }
+  );
+  loadWeek();
+}
+
+function watchGates() {
+  if (unsubGate) unsubGate();
+  unsubGate = onSnapshot(
+    query(collection(db, "gate"), where("classCode","==",classCode)),
+    snap => { gates = new Map(snap.docs.map(x => [x.id, x.data()])); renderPending(); render(); },
+    err => { $("#appErr").textContent = err.code === "permission-denied"
+      ? "Chưa có quyền đọc danh sách lớp. Hãy dán Rules mới của Firestore rồi bấm Publish."
+      : "Lỗi: " + err.message; }
+  );
+}
+
+function renderPending() {
+  const list = [...gates.entries()].filter(([, g]) => g.state === "pending");
+  $("#pending").classList.toggle("hidden", !list.length);
+  $("#pendingCount").textContent = list.length;
+  $("#pendingList").innerHTML = list.map(([uid, g]) => `<div class="req">
+    <div class="grow"><b>${esc(g.name || "Học sinh")}</b>
+      <div class="muted">${g.reason ? "Lý do: " + esc(g.reason) : "Không ghi lý do"} • ${ago(g.updatedAt)}</div></div>
+    <button class="btn primary" data-act="approve" data-uid="${esc(uid)}">Duyệt</button>
+    <button class="btn" data-act="reject" data-uid="${esc(uid)}">Từ chối</button></div>`).join("");
+}
+
+$("#pendingList").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-act]");
+  if (!b) return;
+  b.disabled = true;
+  try {
+    await updateDoc(doc(db, "gate", b.dataset.uid), {
+      state: b.dataset.act === "approve" ? "approved" : "rejected",
+      decidedAt: Date.now()
+    });
+  } catch (err) {
+    b.disabled = false;
+    alert("Không thực hiện được: " + (err.code || err.message));
+  }
+});
+
+async function loadWeek() {
+  const days = Array.from({length:7}, (_,i) => addDays(day, i-6));
+  const res = await Promise.all(days.map(d =>
+    getDocs(query(collection(db,"usage"), where("classCode","==",classCode), where("date","==",d)))
+      .then(s => [d, new Map(s.docs.map(x => [x.data().uid, x.data()]))])
+      .catch(() => [d, new Map()])));
+  res.forEach(([d, m]) => { if (d !== day) weekMap[d] = m; });
+  render();
+}
+
+/* ---------- Hiển thị ---------- */
+const seen = new Map(), shown = new Map();
+function render() {
+  const q = $("#search").value.trim().toLowerCase();
+  const sort = $("#sort").value;
+  const isToday = day === ymd(new Date());
+  // Thời gian chạy theo thực tế: máy gửi mỗi 5 phút, ở giữa web tự cộng thêm phần vừa trôi qua
+  // (cộng tối đa 5 phút để không hiển thị quá nhiều khi máy mất tín hiệu)
+  const L = r => {
+    const k = day + "|" + r.uid;
+    const raw = r.updatedAt || 0;
+    let s = seen.get(k);
+    if (!s || s.u !== raw) {   // vừa nhận số liệu mới: lấy giờ của MÁY TÍNH này làm mốc (không phụ thuộc đồng hồ điện thoại)
+      const first = !s;
+      const age = Math.min(Math.max(Date.now() - raw, 0), 300000);
+      s = { u: raw, at: first ? Date.now() - age : Date.now() };
+      seen.set(k, s);
+    }
+    const g = raw ? Date.now() - s.at : Infinity;
+    const counting = r.counting === undefined ? r.screenOn === true : r.counting === true;
+    let v = (r.ms||0) + (isToday && counting && g >= 0 && g < 6*60000 ? g : 0);
+    // không cho số giờ tụt xuống trong lúc xem (chỉ giữ nguyên tới khi số thật bắt kịp)
+    const prev = shown.get(k);
+    if (prev !== undefined && v < prev && prev - v < 5*60000) v = prev;
+    shown.set(k, v);
+    return v; };
+  const merged = rows.slice();
+  gates.forEach((g, uid) => { if (!rows.some(r => r.uid === uid)) merged.push({ uid, name: g.name, ms: 0, updatedAt: 0 }); });
+  let list = merged.filter(r => !q || (r.name||"").toLowerCase().includes(q));
+  list.sort((a,b) => sort==="name" ? (a.name||"").localeCompare(b.name||"","vi")
+    : sort==="timeAsc" ? L(a)-L(b) : L(b)-L(a));
+
+  const max = Math.max(1, ...rows.map(L));
+  $("#rows").innerHTML = list.length ? list.map((r,i) => {
+    const gap = r.updatedAt ? Date.now() - r.updatedAt : Infinity;
+    // Quá 15 phút (3 lần gửi × 5 phút) không nhận được dữ liệu -> Ngoại tuyến; còn lại theo trạng thái màn hình lần báo gần nhất
+    const st = gap >= 900000 ? ["off","Ngoại tuyến"]
+      : r.screenOn === true ? ["on","Đang hoạt động"]
+      : r.screenOn === false ? ["idle","Không hoạt động"]
+      : (gap < 7*60000 ? ["on","Đang hoạt động"] : ["idle","Không hoạt động"]);
+    const gs = gates.get(r.uid)?.state;
+    const gb = gs === "pending" ? ["idle","Chờ duyệt"] : ["lost","Đã đăng xuất"];
+    return `<tr class="row" data-uid="${esc(r.uid)}">
+      <td class="muted">${i+1}</td>
+      <td class="name">${esc(r.name || "Không tên")}</td>
+      <td class="timecell"><b>${hm(L(r))}</b><span class="track"><i style="width:${Math.round(L(r)/max*100)}%"></i></span>${r.untrackedMs > 0 ? `<div class="muted" style="font-size:12px;margin-top:2px">App không chạy ${hm(r.untrackedMs)} · khởi động lại ${r.restarts||0} lần</div>` : ""}${r.offCount != null ? `<div class="muted" style="font-size:12px;margin-top:2px">Tắt màn hình ${r.offCount} lần${r.lastOffAt ? ` · gần nhất ${new Date(r.lastOffAt).toLocaleTimeString("vi-VN")}` : ""}</div>` : ""}</td>
+      <td class="muted">${ago(r.updatedAt)}</td>
+      <td>${(gs && gs !== "approved") ? `<span class="badge ${gb[0]}">${gb[1]}</span>` : isToday ? `<span class="badge ${st[0]}">${st[1]}</span>` : "—"}</td>
+      <td>${isToday ? (r.backgroundOk === true ? '<span class="badge on">Đã cho phép</span>' : r.backgroundOk === false ? '<span class="badge lost">Chưa cho phép chạy nền</span>' : '<span class="muted">—</span>') : "—"}</td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="empty">Chưa có dữ liệu ngày này.</td></tr>`;
+
+  document.querySelectorAll("tr.row").forEach(tr => tr.onclick = () => openDetail(tr.dataset.uid));
+
+  // thống kê
+  const all = new Set();
+  Object.values(weekMap).forEach(m => m.forEach((_,uid) => all.add(uid)));
+  rows.forEach(r => all.add(r.uid));
+  gates.forEach((_, uid) => all.add(uid));
+  const sum = rows.reduce((s,r) => s + L(r), 0);
+  const top = rows.reduce((b,r) => (!b || L(r) > L(b)) ? r : b, null);
+  $("#sTotal").textContent = all.size;
+  $("#sToday").textContent = `${rows.length}/${all.size}`;
+  $("#sTodaySub").textContent = rows.length ? `${rows.filter(r=>(r.ms||0)>0).length} em đã dùng máy` : "chưa có báo cáo";
+  $("#sAvg").textContent = rows.length ? hm(sum/rows.length) : "–";
+  $("#sSum").textContent = rows.length ? `Tổng cả lớp: ${hm(sum)}` : " ";
+  $("#sMax").textContent = top ? hm(L(top)) : "–";
+  $("#sMaxName").textContent = top ? top.name : " ";
+
+  // biểu đồ tuần
+  const days = Array.from({length:7}, (_,i) => addDays(day, i-6));
+  const avgs = days.map(d => { const m = weekMap[d]; if (!m || !m.size) return 0; let s=0; m.forEach(r => s += r.ms||0); return s/m.size; });
+  const wmax = Math.max(1, ...avgs);
+  $("#week").innerHTML = days.map((d,i) => `<div class="col">
+    <span class="v">${avgs[i] ? hm(avgs[i]) : ""}</span>
+    <div class="bar ${d===day?"sel":""}" style="height:${Math.round(avgs[i]/wmax*110)}px"></div>
+    <small>${dow(d)}<br>${dm(d)}</small></div>`).join("");
+}
+
+function openDetail(uid) {
+  const days = Array.from({length:7}, (_,i) => addDays(day, i-6));
+  const vals = days.map(d => weekMap[d]?.get(uid)?.ms || 0);
+  const name = rows.find(r => r.uid === uid)?.name || gates.get(uid)?.name || "Học sinh";
+  const mx = Math.max(1, ...vals);
+  $("#dName").textContent = name;
+  $("#dSub").textContent = `Tổng 7 ngày: ${hm(vals.reduce((a,b)=>a+b,0))} • Trung bình: ${hm(vals.reduce((a,b)=>a+b,0)/7)}/ngày`;
+  $("#dWeek").innerHTML = days.map((d,i) => `<div class="col">
+    <span class="v">${vals[i] ? hm(vals[i]) : ""}</span>
+    <div class="bar ${d===day?"sel":""}" style="height:${Math.round(vals[i]/mx*110)}px"></div>
+    <small>${dow(d)}<br>${dm(d)}</small></div>`).join("");
+  $("#dlg").showModal();
+}
+$("#dClose").onclick = () => $("#dlg").close();
+
+/* ---------- Điều khiển ---------- */
+$("#prev").onclick = () => go(addDays(day,-1));
+$("#next").onclick = () => go(addDays(day,1));
+$("#today").onclick = () => go(ymd(new Date()));
+$("#date").onchange = e => e.target.value && go(e.target.value);
+$("#search").oninput = render;
+$("#sort").onchange = render;
+$("#csv").onclick = () => {
+  const lines = ["Học sinh,Ngày,Phút sáng màn hình"].concat(
+    [...rows].sort((a,b)=>(b.ms||0)-(a.ms||0)).map(r => `"${(r.name||"").replace(/"/g,'""')}",${day},${Math.round((r.ms||0)/60000)}`));
+  const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = `ensete-time-${classCode}-${day}.csv`; a.click();
+  URL.revokeObjectURL(a.href);
+};
+setInterval(() => { if (classCode) render(); }, 2000);   // cập nhật "x phút trước"
+setInterval(() => { if (classCode) loadWeek(); }, 30*60000);   // biểu đồ 7 ngày: 30 phút tải lại 1 lần để tiết kiệm lượt đọc
+</script>
+</body>
+</html>
