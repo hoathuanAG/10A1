@@ -1,0 +1,2885 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Đua Xe Đạp Meme: Học Giỏi Quẹo Phải - Học Dở Quẹo Trái (40 Tư Thế Hình Phạt)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Inter', sans-serif;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #070913;
+      color: #f8fafc;
+    }
+    @keyframes floatMeme {
+      0%, 100% { transform: translateY(0px) rotate(-2deg); }
+      50% { transform: translateY(-6px) rotate(2deg); }
+    }
+    .meme-badge {
+      animation: floatMeme 2.2s ease-in-out infinite;
+    }
+    @keyframes pulseMic {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+    }
+    .mic-active {
+      animation: pulseMic 1.5s infinite;
+    }
+    .touch-btn:active {
+      transform: scale(0.95);
+    }
+    @keyframes winnerGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7), 0 0 25px rgba(250, 204, 21, 0.45); }
+      50% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0), 0 0 40px rgba(250, 204, 21, 0.8); }
+    }
+    .pose-winner-glow {
+      animation: winnerGlow 1.3s infinite;
+    }
+    /* Custom scrollbar for 40 poses grid */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0f172a;
+      border-radius: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen w-screen overflow-hidden bg-slate-950">
+
+  <!-- Top HUD Bar -->
+  <header class="w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-20 shrink-0">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl" role="img" aria-label="bike">🚴‍♂️</span>
+      <div>
+        <h1 class="text-xs sm:text-sm font-black tracking-tight text-amber-400 uppercase leading-none">
+          Học Sinh Đạp Xe Qua Cầu Vực Thẳm
+        </h1>
+        <p class="text-[11px] text-slate-400 font-medium mt-0.5">
+          Cầu rộng gấp đôi xe (2.0x) • Nói <span class="text-rose-400 font-bold">"Học dở"</span> ⬅️ Trái | <span class="text-emerald-400 font-bold">"Học giỏi"</span> ➡️ Phải
+        </p>
+      </div>
+    </div>
+
+    <!-- Live Stats & Controls -->
+    <div class="flex items-center gap-1.5 sm:gap-2.5">
+      <div class="bg-slate-800/90 border border-slate-700 rounded-lg px-2.5 py-1 text-center">
+        <div class="text-[10px] text-slate-400 uppercase font-bold">Quãng đường</div>
+        <div id="scoreDisplay" class="text-sm sm:text-base font-black text-white">0 m</div>
+      </div>
+      <div class="bg-slate-800/90 border border-slate-700 rounded-lg px-2.5 py-1 text-center">
+        <div class="text-[10px] text-slate-400 uppercase font-bold">Kỷ lục</div>
+        <div id="highScoreDisplay" class="text-sm sm:text-base font-black text-amber-400">0 m</div>
+      </div>
+      <div class="hidden lg:flex bg-slate-800/90 border border-slate-700 rounded-lg px-2.5 py-1 items-center gap-1.5">
+        <span class="text-[10px] text-slate-400 uppercase font-bold">Tốc độ:</span>
+        <select id="speedSelect" class="bg-slate-900 text-xs font-bold text-amber-300 rounded px-1.5 py-0.5 border border-slate-700 focus:outline-none">
+          <option value="0.75">Chậm (Tập lái)</option>
+          <option value="1" selected>Vừa (Chuẩn Meme)</option>
+          <option value="1.35">Nhanh (Trễ học!)</option>
+        </select>
+      </div>
+      <button id="openPunishHeaderBtn" type="button" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-extrabold bg-purple-600 hover:bg-purple-500 text-white transition shadow border border-purple-400/40" title="Mở Vòng Quay 40 Hình Phạt Tạo Dáng">
+        <span>🎭</span>
+        <span class="hidden sm:inline">40 Hình Phạt Tạo Dáng</span>
+      </button>
+      <button id="micToggleBtn" type="button" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-rose-600 hover:bg-rose-500 text-white transition shadow">
+        <span id="micIcon">🎙️</span>
+        <span id="micBtnText">Bật Mic Giọng Nói</span>
+      </button>
+      <button id="soundToggleBtn" type="button" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm" title="Bật/Tắt âm thanh">
+        🔊
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Game Viewport -->
+  <main class="relative flex-1 w-full h-full overflow-hidden flex items-center justify-center bg-slate-950">
+    <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+    <!-- Voice Status & Live Transcript Pill -->
+    <div class="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center pointer-events-none w-11/12 max-w-md">
+      <div id="voiceBanner" class="w-full bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl px-3.5 py-2 shadow-xl flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="micStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0"></span>
+          <div class="truncate">
+            <div id="voiceStatusLabel" class="text-[11px] font-bold text-slate-300 truncate">
+              Mic đang tắt • Bấm "Bật Mic" hoặc dùng nút hô bên dưới
+            </div>
+            <div id="transcriptText" class="text-xs font-extrabold text-amber-300 truncate">
+              Hãy hô to: "HỌC GIỎI" (Phải) hoặc "HỌC DỞ" (Trái)!
+            </div>
+          </div>
+        </div>
+        <!-- Audio Volume Visualizer Bars -->
+        <div class="flex items-end gap-0.5 h-5 shrink-0 px-1" id="audioMeter">
+          <span class="w-1 bg-emerald-400 rounded-t h-1.5 transition-all duration-75" id="bar1"></span>
+          <span class="w-1 bg-emerald-400 rounded-t h-2.5 transition-all duration-75" id="bar2"></span>
+          <span class="w-1 bg-amber-400 rounded-t h-1.5 transition-all duration-75" id="bar3"></span>
+          <span class="w-1 bg-rose-400 rounded-t h-1 transition-all duration-75" id="bar4"></span>
+        </div>
+      </div>
+
+      <!-- Giant Meme Speech Shout Bubble -->
+      <div id="memeShoutBubble" class="mt-2 hidden transform transition-all duration-150 px-4 py-1.5 rounded-full font-black text-sm sm:text-base shadow-2xl border-2">
+        HỌC GIỎI! QUẸO PHẢI ➡️
+      </div>
+    </div>
+
+    <!-- Bridge Ratio Mini Indicator (Top Left) -->
+    <div class="absolute top-3 left-3 z-10 hidden sm:flex flex-col gap-1 bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-2.5 text-xs pointer-events-none">
+      <div class="font-bold text-slate-300 flex items-center gap-1.5">
+        <span>📏 Tỷ lệ cầu:</span>
+        <span class="text-amber-400 font-black">2.0x chiều ngang xe</span>
+      </div>
+      <div class="w-36 h-3 bg-slate-950 rounded overflow-hidden border border-slate-700 relative flex items-center justify-center">
+        <div id="hudBridgeBar" class="w-full h-full bg-amber-700/50 relative">
+          <div id="hudBikeMarker" class="absolute top-0 bottom-0 w-1/2 bg-cyan-400 rounded transition-all duration-75" style="left: 25%;"></div>
+        </div>
+      </div>
+      <div id="safetyStatusText" class="text-[11px] font-bold text-emerald-400">An toàn giữa cầu</div>
+    </div>
+
+    <!-- Start / Game Over Modal Overlay -->
+    <div id="overlayModal" class="absolute inset-0 z-30 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div class="bg-slate-900 border-2 border-amber-500/70 rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl text-center relative overflow-hidden my-auto">
+        <!-- Meme Header Badge -->
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-extrabold mb-2.5">
+          <span>🎒 ĐẠI CHIẾN QUA CẦU VỰC THẲM</span>
+        </div>
+
+        <h2 id="modalTitle" class="text-xl sm:text-3xl font-black text-white tracking-tight mb-1.5">
+          XE ĐẠP HỌC SINH MEME
+        </h2>
+        <p id="modalSubtitle" class="text-xs sm:text-sm text-slate-300 mb-3.5 leading-relaxed">
+          Cây cầu gỗ uốn lượn liên tục với <strong>chiều ngang chỉ gấp đôi chiếc xe đạp</strong>, hai bên là vực sâu thăm thẳm! Nếu rơi xuống vực sẽ phải quay <strong>40 Hình Phạt Tạo Dáng Độc Lạ</strong>!
+        </p>
+
+        <!-- Instructions Cards -->
+        <div class="grid grid-cols-2 gap-2.5 mb-3.5 text-left">
+          <div class="bg-rose-950/50 border border-rose-500/50 rounded-2xl p-2.5">
+            <div class="text-[11px] font-bold text-rose-300 uppercase">Muốn Quẹo Trái ⬅️</div>
+            <div class="text-sm sm:text-base font-black text-white mt-0.5">"HỌC DỞ" / "HỌC DỠ"</div>
+            <div class="text-[10px] text-rose-200/80 mt-0.5">Hoặc nói "Dở", "Trái", bấm nút Trái / phím A, ⬅️</div>
+          </div>
+          <div class="bg-emerald-950/50 border border-emerald-500/50 rounded-2xl p-2.5">
+            <div class="text-[11px] font-bold text-emerald-300 uppercase">Muốn Quẹo Phải ➡️</div>
+            <div class="text-sm sm:text-base font-black text-white mt-0.5">"HỌC GIỎI"</div>
+            <div class="text-[10px] text-emerald-200/80 mt-0.5">Hoặc nói "Giỏi", "Phải", bấm nút Phải / phím D, ➡️</div>
+          </div>
+        </div>
+
+        <!-- Crash Report Box & Punishment Trigger (Hidden on initial screen) -->
+        <div id="crashReportBox" class="hidden bg-slate-950/90 border border-rose-500/50 rounded-2xl p-3 mb-3.5">
+          <div id="memeQuoteText" class="text-xs sm:text-sm font-extrabold text-amber-400 mb-1">
+            "Học tài thi phận, đạp xe lọt cầu!"
+          </div>
+          <div class="flex justify-center gap-6 text-xs text-slate-300 mt-1.5 mb-2.5">
+            <div>Quãng đường: <strong id="finalScoreText" class="text-white text-sm">0 m</strong></div>
+            <div>Số lần hô: <strong id="finalShoutsText" class="text-cyan-400 text-sm">0 lần</strong></div>
+          </div>
+          <button id="openPunishmentFromLoseBtn" type="button" class="w-full py-2.5 px-4 rounded-xl font-black text-sm sm:text-base bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-xl border border-pink-300/50 transition transform active:scale-95 flex items-center justify-center gap-2 animate-bounce">
+            <span>🎰</span>
+            <span>QUAY NGẪU NHIÊN 40 HÌNH PHẠT TẠO DÁNG!</span>
+          </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-2 justify-center">
+          <button id="startWithMicBtn" type="button" class="flex-1 py-2.5 px-4 rounded-xl font-black text-xs sm:text-sm bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-lg transition transform active:scale-95 flex items-center justify-center gap-1.5">
+            <span>🎙️ BẮT ĐẦU + BẬT MIC</span>
+          </button>
+          <button id="startNoMicBtn" type="button" class="py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+            🎮 Chơi Bằng Nút Hô / Phím
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUNISHMENT POSE ROULETTE MODAL (40 TƯ THẾ ĐỘC LẠ & HÌNH ẢNH MÔ PHỎNG THỰC TẾ) -->
+    <div id="punishmentModal" class="hidden absolute inset-0 z-40 bg-slate-950/95 backdrop-blur-lg flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+      <div class="bg-slate-900 border-2 border-fuchsia-500/80 rounded-3xl max-w-4xl w-full p-3.5 sm:p-5 shadow-2xl relative my-auto">
+        <!-- Top Header -->
+        <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-2.5 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">🎭</span>
+            <div>
+              <h2 class="text-base sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-fuchsia-400 to-cyan-300 uppercase tracking-tight">
+                Vòng Quay 40 Tư Thế Hình Phạt Độc Lạ
+              </h2>
+              <p class="text-[11px] sm:text-xs text-slate-400">
+                Quay ngẫu nhiên chậm dần qua 50 kiểu đứng (20 kiểu Bám Tường + 30 kiểu Đứng Tự Do) với mô hình cơ thể trực quan!
+              </p>
+            </div>
+          </div>
+          <button id="closePunishmentBtn" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 shrink-0">
+            ✖ Đóng
+          </button>
+        </div>
+
+        <!-- Filter Category Pills -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] font-bold text-slate-400 mr-1">Bộ lọc tư thế:</span>
+            <button type="button" data-filter="all" class="pose-filter-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-fuchsia-600 text-white border border-fuchsia-400">
+              🌟 Tất cả (40 kiểu)
+            </button>
+            <button type="button" data-filter="wall" class="pose-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700">
+              🧱 Đứng Bám Tường (20 kiểu)
+            </button>
+            <button type="button" data-filter="free" class="pose-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700">
+              🕺 Đứng Tự Do Độc Lạ (20 kiểu)
+            </button>
+          </div>
+          <div id="rouletteStatusBadge" class="text-xs font-extrabold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40">
+            🎲 Sẵn sàng quay 40 kiểu!
+          </div>
+        </div>
+
+        <!-- Main Showcase Grid: Left = Realistic Anatomical Pose Canvas, Right = Pose Details & 40-Pose Roulette Matrix -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-stretch">
+          <!-- Left: Realistic Pose Illustration Stage (5 cols) -->
+          <div id="poseStageCard" class="md:col-span-5 bg-slate-950 border-2 border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-between relative overflow-hidden">
+            <div class="w-full flex items-center justify-between px-1 mb-1">
+              <span id="poseTagBadge" class="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                🧱 TƯ THẾ BÁM TƯỜNG
+              </span>
+              <span id="poseDifficultyText" class="text-[10px] font-bold text-emerald-400">
+                Mẫu người tỉ lệ thực 3D
+              </span>
+            </div>
+
+            <div class="w-full h-60 sm:h-64 flex items-center justify-center bg-slate-900/50 rounded-xl border border-slate-800/80 overflow-hidden">
+              <canvas id="poseCanvas" width="320" height="270" class="max-w-full max-h-full"></canvas>
+            </div>
+
+            <!-- Hold Pose Timer Bar -->
+            <div class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 mt-1.5 flex items-center justify-between gap-2">
+              <div class="text-left">
+                <div class="text-[10px] text-slate-400 font-bold uppercase">Thử thách giữ dáng</div>
+                <div id="poseTimerText" class="text-xs sm:text-sm font-black text-cyan-400">Giữ 10 giây không cười!</div>
+              </div>
+              <button id="startHoldTimerBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-black bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition shadow shrink-0">
+                ⏱️ Đếm 10s
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Pose Instructions + 40 Mini Pose Slots + Spin Action (7 cols) -->
+          <div class="md:col-span-7 flex flex-col justify-between gap-2.5">
+            <!-- Current Pose Card -->
+            <div id="poseDetailCard" class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 text-left transition-all">
+              <div class="flex items-center gap-2 mb-1">
+                <span id="poseEmojiIcon" class="text-2xl">🦎</span>
+                <h3 id="poseTitleText" class="text-base sm:text-lg font-black text-amber-300 leading-tight">
+                  1. Thằn Lằn Bám Tường
+                </h3>
+              </div>
+              <p id="poseInstructionText" class="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium mt-1">
+                Đứng cạnh tường: Hai bàn tay áp sát lên tường ngang đầu, một chân co cao chạm vào tường như chú thằn lằn, đầu ngoái lại nhìn cả lớp cười thật tươi!
+              </p>
+              <div id="poseMemeTipText" class="mt-2 text-[11px] font-bold text-fuchsia-300 bg-fuchsia-950/50 border border-fuchsia-500/30 rounded-lg px-2.5 py-1.5">
+                💡 Mẹo hài hước: Kêu thêm tiếng "Chắc! Chắc! Chắc!" của thằn lằn để đạt 10 điểm thần thái!
+              </div>
+            </div>
+
+            <!-- 40 Mini Pose Slots (Scrollable Visual Roulette Matrix) -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-2.5">
+              <div class="text-[10px] font-bold text-slate-400 uppercase mb-1.5 flex items-center justify-between">
+                <span>Danh sách 50 Tư Thế (20 Bám Tường + 30 Đứng Tự Do Độc Lạ):</span>
+                <span id="spinStepCounter" class="text-amber-400 font-black"></span>
+              </div>
+              <div id="poseSlotsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 max-h-40 overflow-y-auto pr-1 custom-scroll">
+                <!-- Populated dynamically by JS -->
+              </div>
+            </div>
+
+            <!-- Spin & Replay Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-2">
+              <button id="spinPunishmentBtn" type="button" class="flex-1 py-3 px-4 rounded-2xl font-black text-sm sm:text-base bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:from-amber-300 hover:to-rose-400 text-slate-950 shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2">
+                <span>🎰</span>
+                <span id="spinBtnLabel">QUAY NGẪU NHIÊN CHẬM DẦN (40 KIỂU)!</span>
+              </button>
+              <button id="playAgainFromPunishBtn" type="button" class="py-3 px-4 rounded-2xl font-extrabold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition flex items-center justify-center gap-1.5 shrink-0">
+                <span>🚴‍♂️</span>
+                <span>Đạp Xe Phục Thù</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Interactive Voice / Meme Shout Controls -->
+    <div class="absolute bottom-3 inset-x-0 px-3 z-20 flex items-center justify-between gap-2 max-w-3xl mx-auto pointer-events-none">
+      <!-- Shout HOC DO (Turn Left) -->
+      <button id="btnShoutLeft" type="button" class="pointer-events-auto touch-btn flex-1 bg-rose-600/95 hover:bg-rose-500 active:bg-rose-700 border-2 border-rose-300/70 text-white rounded-2xl py-2.5 px-3 shadow-2xl flex items-center justify-center gap-2 transition">
+        <span class="text-2xl">⬅️</span>
+        <div class="text-left leading-tight">
+          <div class="text-[10px] uppercase font-bold text-rose-100">Hô to / Bấm giữ</div>
+          <div class="text-sm sm:text-base font-black tracking-tight">"HỌC DỞ!" (Quẹo Trái)</div>
+        </div>
+      </button>
+
+      <!-- Center Straighten Button -->
+      <button id="btnStraighten" type="button" class="pointer-events-auto touch-btn bg-slate-800/95 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded-2xl py-2.5 px-3 shadow-xl flex flex-col items-center justify-center shrink-0 transition" title="Giữ thẳng tay lái (Phím Space / S)">
+        <span class="text-lg">⬆️</span>
+        <span class="text-[10px] font-bold">Thẳng lái</span>
+      </button>
+
+      <!-- Shout HOC GIOI (Turn Right) -->
+      <button id="btnShoutRight" type="button" class="pointer-events-auto touch-btn flex-1 bg-emerald-600/95 hover:bg-emerald-500 active:bg-emerald-700 border-2 border-emerald-300/70 text-white rounded-2xl py-2.5 px-3 shadow-2xl flex items-center justify-center gap-2 transition">
+        <div class="text-right leading-tight">
+          <div class="text-[10px] uppercase font-bold text-emerald-100">Hô to / Bấm giữ</div>
+          <div class="text-sm sm:text-base font-black tracking-tight">"HỌC GIỎI!" (Quẹo Phải)</div>
+        </div>
+        <span class="text-2xl">➡️</span>
+      </button>
+    </div>
+  </main>
+
+  <script>
+    // ==========================================
+    // 1. AUDIO SYNTHESIZER (Web Audio API)
+    // ==========================================
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playMemeSound(type, pitchFactor = 1.0) {
+      if (!soundEnabled) return;
+      initAudioContext();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'right_gioi') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.14);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      } else if (type === 'left_do') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(330, now);
+        osc.frequency.linearRampToValueAtTime(220, now + 0.18);
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else if (type === 'bell') {
+        for (let i = 0; i < 2; i++) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1350 + i * 250, now + i * 0.08);
+          gain.gain.setValueAtTime(0.12, now + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.12);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + i * 0.08);
+          osc.stop(now + i * 0.08 + 0.12);
+        }
+      } else if (type === 'fall_abyss') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(95, now + 1.15);
+        gain.gain.setValueAtTime(0.28, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 1.2);
+      } else if (type === 'roulette_tick') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(420 * pitchFactor, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.045);
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else if (type === 'roulette_win') {
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          const startT = now + idx * 0.07;
+          osc.frequency.setValueAtTime(freq, startT);
+          gain.gain.setValueAtTime(0.18, startT);
+          gain.gain.exponentialRampToValueAtTime(0.001, startT + 0.45);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startT);
+          osc.stop(startT + 0.45);
+        });
+      }
+    }
+
+    // ==========================================
+    // 2. SPEECH RECOGNITION & MIC METER
+    // ==========================================
+    let recognition = null;
+    let isListening = false;
+    let micStream = null;
+    let analyser = null;
+    let micDataArray = null;
+    let lastProcessedTranscript = '';
+    let lastTriggerTime = 0;
+
+    const micToggleBtn = document.getElementById('micToggleBtn');
+    const micBtnText = document.getElementById('micBtnText');
+    const micStatusDot = document.getElementById('micStatusDot');
+    const voiceStatusLabel = document.getElementById('voiceStatusLabel');
+    const transcriptText = document.getElementById('transcriptText');
+    const memeShoutBubble = document.getElementById('memeShoutBubble');
+
+    function removeVietnameseTones(str) {
+      return str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D')
+        .toLowerCase();
+    }
+
+    function parseVoiceCommand(rawText) {
+      if (!rawText) return;
+      const clean = removeVietnameseTones(rawText);
+      const now = performance.now();
+
+      const rightKeywords = ['hoc gioi', 'gioi', 'queo phai', 're phai', 'phai', 'muoi diem', '10 diem'];
+      const leftKeywords = ['hoc do', 'do', 'queo trai', 're trai', 'trai', 'khong diem', '0 diem'];
+      const straightKeywords = ['di thang', 'thang', 'giua'];
+
+      let lastRightIdx = -1;
+      for (const kw of rightKeywords) {
+        const idx = clean.lastIndexOf(kw);
+        if (idx > lastRightIdx) lastRightIdx = idx;
+      }
+
+      let lastLeftIdx = -1;
+      for (const kw of leftKeywords) {
+        const idx = clean.lastIndexOf(kw);
+        if (idx > lastLeftIdx) lastLeftIdx = idx;
+      }
+
+      let lastStraightIdx = -1;
+      for (const kw of straightKeywords) {
+        const idx = clean.lastIndexOf(kw);
+        if (idx > lastStraightIdx) lastStraightIdx = idx;
+      }
+
+      if (lastRightIdx === -1 && lastLeftIdx === -1 && lastStraightIdx === -1) return;
+
+      const signature = `${clean.slice(-18)}_${Math.max(lastRightIdx, lastLeftIdx, lastStraightIdx)}`;
+      if (signature === lastProcessedTranscript && now - lastTriggerTime < 300) {
+        return;
+      }
+      lastProcessedTranscript = signature;
+      lastTriggerTime = now;
+
+      if (lastStraightIdx > lastRightIdx && lastStraightIdx > lastLeftIdx) {
+        triggerSteerCommand('straight', rawText);
+      } else if (lastRightIdx > lastLeftIdx) {
+        triggerSteerCommand('right', rawText);
+      } else if (lastLeftIdx > lastRightIdx) {
+        triggerSteerCommand('left', rawText);
+      }
+    }
+
+    async function setupMicVisualizer() {
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        initAudioContext();
+        if (audioCtx) {
+          const source = audioCtx.createMediaStreamSource(micStream);
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 64;
+          source.connect(analyser);
+          micDataArray = new Uint8Array(analyser.frequencyBinCount);
+        }
+      } catch (e) {}
+    }
+
+    function startVoiceControl() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        voiceStatusLabel.textContent = 'Trình duyệt không hỗ trợ Web Speech API • Hãy dùng Nút Hô dưới màn hình!';
+        micStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0';
+        return;
+      }
+
+      if (recognition && isListening) return;
+
+      try {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'vi-VN';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 3;
+
+        recognition.onstart = () => {
+          isListening = true;
+          micToggleBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-emerald-600 hover:bg-emerald-500 text-white transition shadow mic-active';
+          micBtnText.textContent = 'Đang Nghe Giọng Nói';
+          micStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 animate-ping';
+          voiceStatusLabel.textContent = 'Mic đang BẬT (Tiếng Việt) • Hô "Học giỏi" (Phải) / "Học dở" (Trái)';
+        };
+
+        recognition.onresult = (event) => {
+          let latestTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const phrase = event.results[i][0].transcript;
+            latestTranscript += phrase + ' ';
+            parseVoiceCommand(phrase);
+          }
+          if (latestTranscript.trim()) {
+            transcriptText.textContent = `🗣️ Bạn vừa nói: "${latestTranscript.trim()}"`;
+          }
+        };
+
+        recognition.onerror = (event) => {
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            isListening = false;
+            voiceStatusLabel.textContent = 'Không có quyền Mic trong khung này • Hãy bấm nút "HỌC DỞ / HỌC GIỎI" bên dưới!';
+            micStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0';
+            micBtnText.textContent = 'Bật Lại Mic';
+            micToggleBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-rose-600 hover:bg-rose-500 text-white transition shadow';
+          }
+        };
+
+        recognition.onend = () => {
+          if (isListening) {
+            try {
+              recognition.start();
+            } catch (e) {}
+          }
+        };
+
+        recognition.start();
+        setupMicVisualizer();
+      } catch (err) {
+        voiceStatusLabel.textContent = 'Không thể khởi động Mic • Hãy dùng nút "HỌC DỞ / HỌC GIỎI" bên dưới!';
+      }
+    }
+
+    function stopVoiceControl() {
+      isListening = false;
+      if (recognition) {
+        try {
+          recognition.stop();
+        } catch (e) {}
+      }
+      micToggleBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-rose-600 hover:bg-rose-500 text-white transition shadow';
+      micBtnText.textContent = 'Bật Mic Giọng Nói';
+      micStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0';
+      voiceStatusLabel.textContent = 'Mic đã tắt • Bấm "Bật Mic" hoặc dùng nút hô bên dưới';
+    }
+
+    micToggleBtn.addEventListener('click', () => {
+      if (isListening) {
+        stopVoiceControl();
+      } else {
+        startVoiceControl();
+      }
+    });
+
+    // ==========================================
+    // 3. 40 PUNISHMENT POSES DATABASE & REALISTIC ANATOMICAL RENDERER
+    // ==========================================
+    // Helper to build full joint structures cleanly
+    function makePose(num, id, shortName, emoji, category, instruction, memeTip, cfg) {
+      const isWall = category === 'wall';
+      return {
+        id,
+        shortName: `${num}. ${shortName}`,
+        title: `Kiểu #${num}: ${shortName}`,
+        emoji,
+        category,
+        tagLabel: isWall ? '🧱 TƯ THẾ BÁM TƯỜNG' : '🕺 ĐỨNG TỰ DO ĐỘC LẠ',
+        guideNote: cfg.guideNote || (isWall ? 'Tựa/Bám sát tường lớp học' : 'Giữ thăng bằng tại chỗ'),
+        instruction,
+        memeTip: `💡 Thần thái: ${memeTip}`,
+        joints: {
+          hasWall: isWall ? 'left' : null,
+          head: cfg.head || { x: 0, y: -56, tilt: 0, expr: 'laugh' },
+          neck: cfg.neck || { x: 0, y: -36 },
+          hip: cfg.hip || { x: 0, y: 14 },
+          lShoulder: cfg.lShoulder || { x: -15, y: -33 },
+          lElbow: cfg.lElbow || { x: -35, y: -15 },
+          lHand: cfg.lHand || { x: -20, y: 5 },
+          rShoulder: cfg.rShoulder || { x: 15, y: -33 },
+          rElbow: cfg.rElbow || { x: 35, y: -15 },
+          rHand: cfg.rHand || { x: 20, y: 5 },
+          lKnee: cfg.lKnee || { x: -14, y: 46 },
+          lFoot: cfg.lFoot || { x: -16, y: 78 },
+          rKnee: cfg.rKnee || { x: 14, y: 46 },
+          rFoot: cfg.rFoot || { x: 16, y: 78 }
+        }
+      };
+    }
+
+    const PUNISHMENT_POSES = [
+      // --- 20 TƯ THẾ BÁM TƯỜNG (WALL POSES 1..20) ---
+      makePose(1, 'wall_gecko', 'Thằn Lằn Bám Tường', '🦎', 'wall',
+        'Đứng sát cạnh tường: Hai bàn tay áp phẳng lên tường cao ngang đầu, chân trái co cao chạm đầu gối vào tường, đầu ngoái lại nhìn cả lớp cười thật tươi!',
+        'Kêu thêm tiếng "Chắc! Chắc! Chắc!" giống chú thằn lằn săn muỗi!', {
+          guideNote: '2 tay + 1 gối áp sát tường',
+          head: { x: -16, y: -58, tilt: 0.22, expr: 'laugh' },
+          neck: { x: -22, y: -38 }, hip: { x: -22, y: 12 },
+          lShoulder: { x: -32, y: -34 }, lElbow: { x: -54, y: -52 }, lHand: { x: -68, y: -72 },
+          rShoulder: { x: -14, y: -34 }, rElbow: { x: -46, y: -26 }, rHand: { x: -68, y: -42 },
+          lKnee: { x: -56, y: -4 }, lFoot: { x: -68, y: 20 },
+          rKnee: { x: -18, y: 46 }, rFoot: { x: -18, y: 78 }
+        }),
+      makePose(2, 'wall_pusher', 'Siêu Nhân Đẩy Tường', '🧱', 'wall',
+        'Đứng đối diện tường: Hai bàn tay chống thẳng vào tường như đang cố đẩy lùi tòa nhà, chân trước khuỵu 90 độ, chân sau duỗi căng, mặt gồng hết cỡ!',
+        'Hô to "Cố lên! Tường sắp dịch chuyển 1 milimet rồi!"', {
+          guideNote: '2 tay duỗi thẳng đẩy tường',
+          head: { x: -10, y: -46, tilt: -0.32, expr: 'strain' },
+          neck: { x: -6, y: -26 }, hip: { x: 18, y: 16 },
+          lShoulder: { x: -12, y: -24 }, lElbow: { x: -40, y: -28 }, lHand: { x: -68, y: -32 },
+          rShoulder: { x: -2, y: -20 }, rElbow: { x: -38, y: -14 }, rHand: { x: -68, y: -16 },
+          lKnee: { x: -24, y: 40 }, lFoot: { x: -34, y: 78 },
+          rKnee: { x: 42, y: 48 }, rFoot: { x: 64, y: 78 }
+        }),
+      makePose(3, 'wall_chair', 'Ghế Tàng Hình Dựa Tường', '🪑', 'wall',
+        'Lưng áp phẳng vào tường, hạ thấp hông xuống sao cho đùi song song mặt đất (góc 90 độ) như đang ngồi ghế vô hình, hai tay khoanh trước ngực!',
+        'Giả vờ vắt vẻo đọc báo hoặc nhâm nhi ly trà sữa vô hình!', {
+          guideNote: 'Lưng áp tường, gối vuông 90°',
+          head: { x: -48, y: -48, tilt: 0.05, expr: 'cool' },
+          neck: { x: -52, y: -28 }, hip: { x: -54, y: 24 },
+          lShoulder: { x: -52, y: -24 }, lElbow: { x: -28, y: -6 }, lHand: { x: -16, y: -12 },
+          rShoulder: { x: -44, y: -24 }, rElbow: { x: -22, y: 0 }, rHand: { x: -36, y: -4 },
+          lKnee: { x: -12, y: 24 }, lFoot: { x: -12, y: 78 },
+          rKnee: { x: -4, y: 28 }, rFoot: { x: -4, y: 78 }
+        }),
+      makePose(4, 'wall_spy', 'Điệp Viên 007 Ngó Tường', '🕵️‍♂️', 'wall',
+        'Nép sát hông vào tường, một tay bám tường, chân nhón, nghiêng đầu và nửa người ra ngoài ngó nghiêng như điệp viên đang rình giám thị!',
+        'Tay phải che ngang trán làm ống nhòm quan sát khắp lớp!', {
+          guideNote: 'Một tay bám tường, người nghiêng ra',
+          head: { x: 18, y: -52, tilt: 0.4, expr: 'shock' },
+          neck: { x: 2, y: -34 }, hip: { x: -34, y: 14 },
+          lShoulder: { x: -8, y: -32 }, lElbow: { x: -42, y: -28 }, lHand: { x: -68, y: -35 },
+          rShoulder: { x: 8, y: -30 }, rElbow: { x: 36, y: -44 }, rHand: { x: 24, y: -58 },
+          lKnee: { x: -42, y: 46 }, lFoot: { x: -52, y: 78 },
+          rKnee: { x: 4, y: 38 }, rFoot: { x: 22, y: 62 }
+        }),
+      makePose(5, 'wall_ballet', 'Thiên Nga Ballet Vịn Tường', '🩰', 'wall',
+        'Tay trái vịn nhẹ vào tường lấy thăng bằng, người hơi đổ về trước, chân trái trụ thẳng, chân phải duỗi nâng cao ra phía sau, tay phải uốn cong trên đỉnh đầu!',
+        'Mỉm cười quý tộc và vẫy nhẹ bàn tay như vũ công Hồ Thiên Nga!', {
+          guideNote: 'Tay trái vịn tường, chân phải nâng sau',
+          head: { x: -6, y: -54, tilt: -0.15, expr: 'laugh' },
+          neck: { x: -6, y: -34 }, hip: { x: 4, y: 12 },
+          lShoulder: { x: -16, y: -32 }, lElbow: { x: -44, y: -26 }, lHand: { x: -68, y: -28 },
+          rShoulder: { x: 4, y: -32 }, rElbow: { x: 26, y: -62 }, rHand: { x: 4, y: -82 },
+          lKnee: { x: 2, y: 46 }, lFoot: { x: 2, y: 78 },
+          rKnee: { x: 42, y: 6 }, rFoot: { x: 76, y: -4 }
+        }),
+      makePose(6, 'wall_spiderman', 'Người Nhện Phóng Tơ Bên Tường', '🕷️', 'wall',
+        'Một tay và một bàn chân đặt lên tường làm điểm tựa, chân trụ khuỵu thấp kiểu siêu anh hùng, tay còn lại vươn thẳng ra trước bắn tơ nhện!',
+        'Hô to "Chíu! Chíu! Bắn tơ bắt lấy con điểm 10!"', {
+          guideNote: 'Tay trái + chân trái đạp tường',
+          head: { x: 4, y: -42, tilt: 0.2, expr: 'cool' },
+          neck: { x: -6, y: -24 }, hip: { x: -12, y: 22 },
+          lShoulder: { x: -16, y: -22 }, lElbow: { x: -44, y: -38 }, lHand: { x: -68, y: -52 },
+          rShoulder: { x: 4, y: -22 }, rElbow: { x: 38, y: -28 }, rHand: { x: 72, y: -34 },
+          lKnee: { x: -46, y: 8 }, lFoot: { x: -68, y: 26 },
+          rKnee: { x: 18, y: 48 }, rFoot: { x: 32, y: 78 }
+        }),
+      makePose(7, 'w7', 'Tổng Tài Chống Tay Lên Tường', '😎', 'wall',
+        'Đứng cách tường một cánh tay, tay trái chống thẳng lên tường cao ngang vai (kiểu Kabedon phim ngôn tình), tay phải đút túi quần, chân bắt chéo cực ngầu!',
+        'Nhìn bức tường đắm đuối và hỏi: "Tường ơi, sao hôm nay cậu cứng thế?"', {
+          guideNote: 'Tay trái chống tường ngang vai, chân vắt chéo',
+          head: { x: -12, y: -56, tilt: -0.18, expr: 'cool' },
+          neck: { x: -8, y: -36 }, hip: { x: 2, y: 12 },
+          lShoulder: { x: -18, y: -34 }, lElbow: { x: -44, y: -36 }, lHand: { x: -68, y: -38 },
+          rShoulder: { x: 8, y: -32 }, rElbow: { x: 22, y: -8 }, rHand: { x: 8, y: 14 },
+          lKnee: { x: -4, y: 46 }, lFoot: { x: 10, y: 78 },
+          rKnee: { x: 6, y: 46 }, rFoot: { x: -10, y: 78 }
+        }),
+      makePose(8, 'w8', 'Ngôi Sao Thời Trang Tựa Vai Tường', '📸', 'wall',
+        'Vai trái tựa hờ vào tường, một chân trụ thẳng, chân trái co nhẹ gót chạm tường, một tay chống hông, một tay vuốt tóc tạo dáng chụp bìa tạp chí!',
+        'Hất cằm 45 độ và nháy mắt liên tục như đèn xi-nhan!', {
+          guideNote: 'Vai + gót chân trái chạm tường',
+          head: { x: -24, y: -58, tilt: 0.25, expr: 'cool' },
+          neck: { x: -32, y: -38 }, hip: { x: -22, y: 14 },
+          lShoulder: { x: -48, y: -34 }, lElbow: { x: -56, y: -56 }, lHand: { x: -30, y: -74 },
+          rShoulder: { x: -16, y: -32 }, rElbow: { x: 12, y: -14 }, rHand: { x: -12, y: 8 },
+          lKnee: { x: -42, y: 44 }, lFoot: { x: -66, y: 56 },
+          rKnee: { x: -14, y: 46 }, rFoot: { x: -12, y: 78 }
+        }),
+      makePose(9, 'w9', 'Lười Biếng Áp Má Ngủ Đứng Trên Tường', '😴', 'wall',
+        'Đứng nghiêng sát tường, hai bàn tay chắp lại đặt lên tường rồi áp má tựa vào bàn tay như đang nằm ngủ ngon lành ngay trong tư thế đứng!',
+        'Kêu thêm tiếng ngáy "Khò... khò... cho em xin thêm 5 phút nữa!"', {
+          guideNote: 'Hai tay chắp trên tường, áp má vào tay',
+          head: { x: -50, y: -50, tilt: -0.45, expr: 'laugh' },
+          neck: { x: -40, y: -32 }, hip: { x: -24, y: 16 },
+          lShoulder: { x: -48, y: -30 }, lElbow: { x: -60, y: -36 }, lHand: { x: -66, y: -48 },
+          rShoulder: { x: -30, y: -28 }, rElbow: { x: -52, y: -34 }, rHand: { x: -64, y: -46 },
+          lKnee: { x: -30, y: 48 }, lFoot: { x: -34, y: 78 },
+          rKnee: { x: -16, y: 48 }, rFoot: { x: -18, y: 78 }
+        }),
+      makePose(10, 'w10', 'Cầu Thủ Bóng Đá Làm Hàng Rào Tường', '⚽', 'wall',
+        'Lưng dựa sát vào tường, hai tay đan chéo che chắn phía trước bụng, hai đầu gối khép chặt, mặt nhăn nhó hồi hộp như đang chắn cú sút phạt đền!',
+        'Nhón gót chân lên và hô "Đừng sút trúng mặt em nha!"', {
+          guideNote: 'Lưng áp tường, 2 tay che trước bụng',
+          head: { x: -44, y: -56, tilt: 0.1, expr: 'shock' },
+          neck: { x: -48, y: -36 }, hip: { x: -50, y: 14 },
+          lShoulder: { x: -54, y: -32 }, lElbow: { x: -48, y: -6 }, lHand: { x: -42, y: 16 },
+          rShoulder: { x: -38, y: -32 }, rElbow: { x: -34, y: -6 }, rHand: { x: -44, y: 16 },
+          lKnee: { x: -46, y: 46 }, lFoot: { x: -48, y: 76 },
+          rKnee: { x: -38, y: 46 }, rFoot: { x: -38, y: 76 }
+        }),
+      makePose(11, 'w11', 'Cung Thủ Tựa Tường Giương Cung', '🏹', 'wall',
+        'Lưng và vai trái tỳ chắc vào tường làm trụ, tay phải duỗi thẳng hết cỡ ra trước nhắm mục tiêu, tay trái kéo dây cung vô hình sát ngang má!',
+        'Nheo một mắt ngắm chuẩn xác về phía bảng đen và hô "Trúng tâm điểm 10!"', {
+          guideNote: 'Lưng tựa tường, tay phải duỗi ngắm bắn',
+          head: { x: -36, y: -56, tilt: 0.05, expr: 'cool' },
+          neck: { x: -42, y: -36 }, hip: { x: -44, y: 14 },
+          lShoulder: { x: -52, y: -34 }, lElbow: { x: -64, y: -44 }, lHand: { x: -40, y: -48 },
+          rShoulder: { x: -30, y: -34 }, rElbow: { x: 8, y: -36 }, rHand: { x: 46, y: -38 },
+          lKnee: { x: -50, y: 46 }, lFoot: { x: -54, y: 78 },
+          rKnee: { x: -24, y: 46 }, rFoot: { x: -16, y: 78 }
+        }),
+      makePose(12, 'w12', 'Tượng Nữ Thần Tự Do Dựa Tường', '🗽', 'wall',
+        'Vai trái tựa vào tường, tay phải cầm cuốn vở hoặc giơ cao nắm tay lên trời như ngọn đuốc Nữ Thần Tự Do, tay trái ôm trước ngực, mặt trang nghiêm!',
+        'Đứng im như tượng đồng không được nhúc nhích dù các bạn chọc cười!', {
+          guideNote: 'Vai tựa tường, tay phải giơ cao ngọn đuốc',
+          head: { x: -32, y: -56, tilt: 0, expr: 'cool' },
+          neck: { x: -36, y: -36 }, hip: { x: -38, y: 14 },
+          lShoulder: { x: -50, y: -32 }, lElbow: { x: -58, y: -10 }, lHand: { x: -32, y: -8 },
+          rShoulder: { x: -22, y: -34 }, rElbow: { x: -12, y: -62 }, rHand: { x: -8, y: -90 },
+          lKnee: { x: -44, y: 46 }, lFoot: { x: -46, y: 78 },
+          rKnee: { x: -28, y: 46 }, rFoot: { x: -28, y: 78 }
+        }),
+      makePose(13, 'w13', 'Bác Thợ Sơn Lăn Tường Nghệ Thuật', '🖌️', 'wall',
+        'Chân đứng tấn thấp, tay trái chống hông, tay phải vươn cao áp sát mặt tường làm động tác lăn sơn từ trên xuống dưới cực kỳ điệu nghệ!',
+        'Miệng phát tiếng "Xoẹt... xoẹt... sơn màu hồng cánh sen nha!"', {
+          guideNote: 'Tay phải vươn cao chạm tường như lăn sơn',
+          head: { x: -18, y: -50, tilt: -0.2, expr: 'laugh' },
+          neck: { x: -14, y: -30 }, hip: { x: -6, y: 18 },
+          lShoulder: { x: -2, y: -28 }, lElbow: { x: 22, y: -10 }, lHand: { x: 4, y: 10 },
+          rShoulder: { x: -24, y: -30 }, rElbow: { x: -48, y: -54 }, rHand: { x: -68, y: -74 },
+          lKnee: { x: -26, y: 48 }, lFoot: { x: -36, y: 78 },
+          rKnee: { x: 14, y: 48 }, rFoot: { x: 26, y: 78 }
+        }),
+      makePose(14, 'w14', 'Võ Sư Thiếu Lâm Đạp Chân Lên Tường', '🥋', 'wall',
+        'Đứng trụ vững bằng chân phải, chân trái đá cao đặt bàn chân áp vào tường ngang thắt lưng, hai tay chắp thế võ sư Thiếu Lâm trước ngực!',
+        'Hô "Hây da! Cước pháp Thiếu Lâm Tự trấn giữ bức tường!"', {
+          guideNote: 'Chân trái đặt lên tường, 2 tay thế võ',
+          head: { x: 4, y: -54, tilt: 0.1, expr: 'cool' },
+          neck: { x: 2, y: -34 }, hip: { x: 0, y: 14 },
+          lShoulder: { x: -12, y: -32 }, lElbow: { x: -24, y: -12 }, lHand: { x: -6, y: -18 },
+          rShoulder: { x: 14, y: -32 }, rElbow: { x: 34, y: -16 }, rHand: { x: 20, y: -28 },
+          lKnee: { x: -36, y: 4 }, lFoot: { x: -68, y: 8 },
+          rKnee: { x: 8, y: 46 }, rFoot: { x: 10, y: 78 }
+        }),
+      makePose(15, 'w15', 'Chú Cua Ngang Bò Dọc Tường', '🦀', 'wall',
+        'Lưng áp sát tường, hai đầu gối khuỵu rộng sang hai bên kiểu dáng con cua, hai tay giơ cao bấm ngón tay làm càng cua kẹp kẹp liên tục!',
+        'Đi nhích ngang 2 bước sát tường vừa kẹp càng cua vừa cười!', {
+          guideNote: 'Lưng áp tường, gối mở rộng, 2 tay làm càng cua',
+          head: { x: -40, y: -44, tilt: 0, expr: 'laugh' },
+          neck: { x: -42, y: -24 }, hip: { x: -44, y: 24 },
+          lShoulder: { x: -56, y: -22 }, lElbow: { x: -64, y: -48 }, lHand: { x: -52, y: -68 },
+          rShoulder: { x: -26, y: -22 }, rElbow: { x: -4, y: -48 }, rHand: { x: -16, y: -68 },
+          lKnee: { x: -62, y: 48 }, lFoot: { x: -54, y: 78 },
+          rKnee: { x: -12, y: 48 }, rFoot: { x: -22, y: 78 }
+        }),
+      makePose(16, 'w16', ' Bác Sĩ Nghe Tim Cho Bức Tường', '🩺', 'wall',
+        'Áp một bên tai sát vào bức tường như đang nghe nhịp đập của tường, một tay đặt lên tường vỗ về, tay kia giơ ngón trỏ ra hiệu "Suỵt! Im lặng!" với cả lớp!',
+        'Phán câu xanh rờn: "Bức tường này nhịp đập hoàn toàn khỏe mạnh!"', {
+          guideNote: 'Áp tai vào tường, tay phải ra hiệu im lặng',
+          head: { x: -52, y: -48, tilt: -0.35, expr: 'shock' },
+          neck: { x: -40, y: -30 }, hip: { x: -24, y: 16 },
+          lShoulder: { x: -48, y: -28 }, lElbow: { x: -60, y: -12 }, lHand: { x: -68, y: -24 },
+          rShoulder: { x: -28, y: -28 }, rElbow: { x: -8, y: -22 }, rHand: { x: -16, y: -42 },
+          lKnee: { x: -34, y: 48 }, lFoot: { x: -38, y: 78 },
+          rKnee: { x: -14, y: 48 }, rFoot: { x: -12, y: 78 }
+        }),
+      makePose(17, 'w17', 'Vận Động Viên Chống Đẩy Nghiêng Tường', '💪', 'wall',
+        'Đứng cách tường 2 bước chân, người đổ nghiêng 45 độ về phía tường, hai tay chống lên tường giữ thân người và chân thẳng tắp như tấm ván!',
+        'Giữ người thẳng căng và đếm to "Một... Hai... Ba... khỏe quá!"', {
+          guideNote: 'Thân người nghiêng 45° chống tay vào tường',
+          head: { x: -34, y: -50, tilt: -0.3, expr: 'strain' },
+          neck: { x: -26, y: -32 }, hip: { x: 4, y: 18 },
+          lShoulder: { x: -32, y: -28 }, lElbow: { x: -50, y: -22 }, lHand: { x: -68, y: -26 },
+          rShoulder: { x: -20, y: -26 }, rElbow: { x: -46, y: -14 }, rHand: { x: -68, y: -16 },
+          lKnee: { x: 22, y: 48 }, lFoot: { x: 40, y: 78 },
+          rKnee: { x: 28, y: 48 }, rFoot: { x: 48, y: 78 }
+        }),
+      makePose(18, 'w18', 'Ca Sĩ Opera Vịn Tường Luyện Thanh', '🎤', 'wall',
+        'Tay trái vịn lên tường lấy điểm tựa, ngực ưỡn cao, tay phải mở rộng vươn ra xa trước lớp học như ca sĩ Opera đang hát nốt cao chót vót!',
+        'Há miệng tròn chữ O và ngân một hơi "Ố ô ồ ô..." thật vang!', {
+          guideNote: 'Tay trái vịn tường, tay phải vươn rộng hát Opera',
+          head: { x: -12, y: -58, tilt: 0.2, expr: 'shock' },
+          neck: { x: -16, y: -38 }, hip: { x: -20, y: 12 },
+          lShoulder: { x: -28, y: -34 }, lElbow: { x: -50, y: -32 }, lHand: { x: -68, y: -38 },
+          rShoulder: { x: -4, y: -34 }, rElbow: { x: 28, y: -42 }, rHand: { x: 58, y: -56 },
+          lKnee: { x: -28, y: 46 }, lFoot: { x: -32, y: 78 },
+          rKnee: { x: -10, y: 46 }, rFoot: { x: -6, y: 78 }
+        }),
+      makePose(19, 'w19', 'Cây Nấm Mọc Nghiêng Bên Tường', '🍄', 'wall',
+        'Lưng dựa nhẹ vào tường, hai bàn tay chắp lại trên đỉnh đầu tạo thành hình mái vòm cây nấm, một chân co nhẹ áp lòng bàn chân vào đầu gối chân kia!',
+        'Phồng hai má thật tròn giống cây nấm Mario dễ thương!', {
+          guideNote: 'Lưng tựa tường, 2 tay làm mái nấm trên đầu',
+          head: { x: -42, y: -52, tilt: 0, expr: 'laugh' },
+          neck: { x: -44, y: -34 }, hip: { x: -46, y: 14 },
+          lShoulder: { x: -56, y: -32 }, lElbow: { x: -66, y: -60 }, lHand: { x: -42, y: -78 },
+          rShoulder: { x: -32, y: -32 }, rElbow: { x: -18, y: -60 }, rHand: { x: -42, y: -78 },
+          lKnee: { x: -48, y: 46 }, lFoot: { x: -48, y: 78 },
+          rKnee: { x: -20, y: 32 }, rFoot: { x: -44, y: 44 }
+        }),
+      makePose(20, 'w20', 'Vệ Sĩ Chắn Cửa Ngân Hàng', '🕶️', 'wall',
+        'Lưng và một lòng bàn chân sau đặt áp lên tường (tư thế đứng dựa tường 1 chân kinh điển), hai tay khoanh chặt trước ngực, mặt lạnh lùng nghiêm nghị!',
+        'Nói giọng trầm: "Ai muốn qua tường này phải nộp 10 điểm!"', {
+          guideNote: 'Lưng + 1 bàn chân áp lên tường, khoanh tay',
+          head: { x: -38, y: -56, tilt: 0.08, expr: 'cool' },
+          neck: { x: -44, y: -36 }, hip: { x: -46, y: 14 },
+          lShoulder: { x: -52, y: -32 }, lElbow: { x: -30, y: -14 }, lHand: { x: -24, y: -20 },
+          rShoulder: { x: -34, y: -32 }, rElbow: { x: -22, y: -10 }, rHand: { x: -40, y: -14 },
+          lKnee: { x: -26, y: 36 }, lFoot: { x: -66, y: 48 },
+          rKnee: { x: -36, y: 46 }, rFoot: { x: -34, y: 78 }
+        }),
+
+      // --- 20 TƯ THẾ ĐỨNG TỰ DO ĐỘC LẠ (FREE POSES 21..40) ---
+      makePose(21, 'free_flamingo', 'Hạc Độc Cước Suy Tư', '🦩', 'free',
+        'Đứng thăng bằng trên 1 chân, bàn chân kia co lên đặt cạnh đầu gối chân trụ. Một tay chống hông, một tay chống cằm mặt đăm chiêu suy nghĩ!',
+        'Nhíu mày gật gù "À thì ra 1 cộng 1 bằng 2!"', {
+          guideNote: 'Đứng 1 chân, tay phải chống cằm',
+          head: { x: 0, y: -58, tilt: 0.12, expr: 'cool' },
+          neck: { x: 0, y: -38 }, hip: { x: 0, y: 12 },
+          lShoulder: { x: -14, y: -34 }, lElbow: { x: -36, y: -12 }, lHand: { x: -14, y: 8 },
+          rShoulder: { x: 14, y: -34 }, rElbow: { x: 26, y: -18 }, rHand: { x: 6, y: -44 },
+          lKnee: { x: -4, y: 46 }, lFoot: { x: -4, y: 78 },
+          rKnee: { x: 34, y: 26 }, rFoot: { x: 2, y: 38 }
+        }),
+      makePose(22, 'free_trex', 'Khủng Long T-Rex Đói Bụng', '🦖', 'free',
+        'Hai khuỷu tay ép chặt vào hai bên sườn, hai cổ tay gập cụp xuống trước ngực như đôi tay ngắn ngủn của khủng long T-Rex, hai gối hơi khuỵu!',
+        'Vừa giữ dáng vừa gầm nhẹ "Gruuu... thèm bánh tráng trộn quá!"', {
+          guideNote: '2 khuỷu tay ép sườn, bàn tay cụp xuống',
+          head: { x: 20, y: -52, tilt: 0.28, expr: 'shock' },
+          neck: { x: 8, y: -32 }, hip: { x: -12, y: 16 },
+          lShoulder: { x: 2, y: -28 }, lElbow: { x: -4, y: -6 }, lHand: { x: 22, y: -12 },
+          rShoulder: { x: 12, y: -26 }, rElbow: { x: 8, y: -2 }, rHand: { x: 32, y: -4 },
+          lKnee: { x: 6, y: 46 }, lFoot: { x: -8, y: 78 },
+          rKnee: { x: 22, y: 46 }, rFoot: { x: 12, y: 78 }
+        }),
+      makePose(23, 'free_teapot', 'Ấm Trà Quý Tộc Rót Nước', '🫖', 'free',
+        'Tay trái chống hông làm quai ấm trà, tay phải cong lên cao làm vòi ấm trà, nghiêng hẳn thân trên sang bên phải như đang rót trà mời thầy cô!',
+        'Miệng kêu "Rót... rót... đầy ly trà đào cam sả rồi!"', {
+          guideNote: 'Tay trái làm quai, tay phải làm vòi ấm',
+          head: { x: 18, y: -50, tilt: 0.38, expr: 'laugh' },
+          neck: { x: 8, y: -32 }, hip: { x: -4, y: 14 },
+          lShoulder: { x: -8, y: -30 }, lElbow: { x: -36, y: -12 }, lHand: { x: -16, y: 10 },
+          rShoulder: { x: 18, y: -26 }, rElbow: { x: 44, y: -36 }, rHand: { x: 62, y: -58 },
+          lKnee: { x: -14, y: 46 }, lFoot: { x: -18, y: 78 },
+          rKnee: { x: 12, y: 46 }, rFoot: { x: 18, y: 78 }
+        }),
+      makePose(24, 'free_superhero', 'Siêu Nhân Gao Biến Hình', '🦸‍♂️', 'free',
+        'Hai chân đứng tấn rộng vững chãi, tay trái vươn thẳng chéo lên bầu trời, tay phải gập ngang trước trán như siêu nhân đang biến hình tỏa hào quang!',
+        'Hô to khẩu hiệu "Siêu nhân Học Giỏi biến hình!!"', {
+          guideNote: 'Chân đứng tấn, 1 tay chỉ trời, 1 tay ngang trán',
+          head: { x: 0, y: -50, tilt: -0.15, expr: 'cool' },
+          neck: { x: 0, y: -30 }, hip: { x: 0, y: 18 },
+          lShoulder: { x: -16, y: -28 }, lElbow: { x: -42, y: -52 }, lHand: { x: -64, y: -78 },
+          rShoulder: { x: 16, y: -28 }, rElbow: { x: 38, y: -42 }, rHand: { x: 2, y: -58 },
+          lKnee: { x: -32, y: 46 }, lFoot: { x: -42, y: 78 },
+          rKnee: { x: 32, y: 46 }, rFoot: { x: 42, y: 78 }
+        }),
+      makePose(25, 'free_robot', 'Robot Học Bài Quá Tải Hết Pin', '🤖', 'free',
+        'Hai cánh tay đưa ngang rồi gập vuông góc 90 độ cứng đờ như robot (một tay hướng lên, một tay hướng xuống), đầu nghiêng hẳn sang bên!',
+        'Phát âm giọng máy móc "Bíp... bíp... hết pin... cần nạp trà sữa!"', {
+          guideNote: 'Tay gập vuông góc 90°, đầu nghiêng cứng đờ',
+          head: { x: -10, y: -54, tilt: -0.42, expr: 'shock' },
+          neck: { x: 0, y: -36 }, hip: { x: 0, y: 14 },
+          lShoulder: { x: -18, y: -34 }, lElbow: { x: -48, y: -34 }, lHand: { x: -48, y: -66 },
+          rShoulder: { x: 18, y: -34 }, rElbow: { x: 48, y: -34 }, rHand: { x: 48, y: -2 },
+          lKnee: { x: -18, y: 46 }, lFoot: { x: -18, y: 78 },
+          rKnee: { x: 18, y: 46 }, rFoot: { x: 18, y: 78 }
+        }),
+      makePose(26, 'free_disco', 'Ông Hoàng Vũ Trường Disco', '🕺', 'free',
+        'Chân đứng chữ V sành điệu, tay trái chống hông đánh nhẹ sang bên, tay phải chỉ thẳng 45 độ lên góc trần nhà như ngôi sao nhạc Disco!',
+        'Nháy mắt một cái thật nghệ thuật về phía các bạn dưới lớp!', {
+          guideNote: 'Tay trái chống hông, tay phải chỉ thẳng lên trời',
+          head: { x: 4, y: -56, tilt: 0.18, expr: 'cool' },
+          neck: { x: 2, y: -36 }, hip: { x: -8, y: 14 },
+          lShoulder: { x: -12, y: -34 }, lElbow: { x: -36, y: -14 }, lHand: { x: -16, y: 10 },
+          rShoulder: { x: 14, y: -34 }, rElbow: { x: 38, y: -58 }, rHand: { x: 60, y: -82 },
+          lKnee: { x: -22, y: 46 }, lFoot: { x: -34, y: 78 },
+          rKnee: { x: 14, y: 46 }, rFoot: { x: 28, y: 78 }
+        }),
+      makePose(27, 'f7', 'Xác Ướp Ai Cập Thức Tỉnh', '🤕', 'free',
+        'Hai tay duỗi thẳng tắp song song về phía trước ngang vai, một chân bước lên trước, đầu ngửa nhẹ, đi chậm rãi cứng đờ như xác ướp Ai Cập!',
+        'Rên nhẹ "U u... trả bài kiểm tra 10 điểm cho ta..."', {
+          guideNote: '2 tay duỗi thẳng song song phía trước',
+          head: { x: -6, y: -56, tilt: -0.25, expr: 'shock' },
+          neck: { x: -2, y: -36 }, hip: { x: -4, y: 14 },
+          lShoulder: { x: -10, y: -34 }, lElbow: { x: 22, y: -32 }, lHand: { x: 56, y: -30 },
+          rShoulder: { x: 6, y: -30 }, rElbow: { x: 34, y: -26 }, rHand: { x: 66, y: -24 },
+          lKnee: { x: -18, y: 46 }, lFoot: { x: -28, y: 78 },
+          rKnee: { x: 16, y: 46 }, rFoot: { x: 28, y: 78 }
+        }),
+      makePose(28, 'f8', 'Lực Sĩ Thể Hình Khoe Cơ Bắp Đôi', '🏋️‍♂️', 'free',
+        'Chân đứng tấn thấp, hai cánh tay giơ ngang vai rồi gập lên gồng chuột (cơ bắp tay) hết cỡ ở cả hai bên, mặt cười tự hào như nhà vô địch Olympic!',
+        'Hỏi cả lớp: "Các bạn thấy chuột của mình to bằng quả nho chưa?"', {
+          guideNote: 'Khuỵu gối tấn, 2 tay gồng cơ bắp đôi',
+          head: { x: 0, y: -52, tilt: 0, expr: 'strain' },
+          neck: { x: 0, y: -32 }, hip: { x: 0, y: 18 },
+          lShoulder: { x: -18, y: -30 }, lElbow: { x: -48, y: -28 }, lHand: { x: -38, y: -58 },
+          rShoulder: { x: 18, y: -30 }, rElbow: { x: 48, y: -28 }, rHand: { x: 38, y: -58 },
+          lKnee: { x: -28, y: 48 }, lFoot: { x: -34, y: 78 },
+          rKnee: { x: 28, y: 48 }, rFoot: { x: 34, y: 78 }
+        }),
+      makePose(29, 'f9', 'Thuyền Trưởng Ngắm Ống Nhòm Ra Khơi', '🏴‍☠️', 'free',
+        'Một chân bước cao như đang đạp lên mũi tàu, người rướn về trước, một tay chống hông, tay kia khum tròn đưa lên mắt làm ống nhòm nhìn ra xa!',
+        'Hô to: "Phía trước 500 mét phát hiện giờ ra chơi!!"', {
+          guideNote: 'Tay phải làm ống nhòm đặt lên mắt, rướn người',
+          head: { x: 14, y: -54, tilt: 0.1, expr: 'cool' },
+          neck: { x: 6, y: -34 }, hip: { x: -4, y: 14 },
+          lShoulder: { x: -10, y: -32 }, lElbow: { x: -34, y: -12 }, lHand: { x: -14, y: 8 },
+          rShoulder: { x: 16, y: -32 }, rElbow: { x: 42, y: -42 }, rHand: { x: 22, y: -54 },
+          lKnee: { x: -20, y: 48 }, lFoot: { x: -30, y: 78 },
+          rKnee: { x: 26, y: 36 }, rFoot: { x: 36, y: 68 }
+        }),
+      makePose(30, 'f10', 'Võ Sĩ Sumo Dậm Chân Vào Trận', '相', 'free',
+        'Hai chân mở thật rộng, hạ thấp trọng tâm hết mức có thể, hai bàn tay đặt lên hai đầu gối, ngực mở rộng, mắt nhìn thẳng đầy uy lực!',
+        'Hậm hừ giọng trầm "Hừm... ai dám đấu vật kiến thức với ta?"', {
+          guideNote: 'Hạ tấn rộng kiểu Sumo, 2 tay chống lên gối',
+          head: { x: 0, y: -42, tilt: 0, expr: 'strain' },
+          neck: { x: 0, y: -22 }, hip: { x: 0, y: 26 },
+          lShoulder: { x: -20, y: -20 }, lElbow: { x: -42, y: 6 }, lHand: { x: -34, y: 38 },
+          rShoulder: { x: 20, y: -20 }, rElbow: { x: 42, y: 6 }, rHand: { x: 34, y: 38 },
+          lKnee: { x: -38, y: 44 }, lFoot: { x: -44, y: 78 },
+          rKnee: { x: 38, y: 44 }, rFoot: { x: 44, y: 78 }
+        }),
+      makePose(31, 'f11', 'Cây Xương Rồng Sa Mạc Đón Nắng', '🌵', 'free',
+        'Đứng thẳng người, tay trái giơ ngang gập lên cao, tay phải đưa thấp hơn rồi cũng gập vuông góc lên trời, một chân co nhẹ tạo hình cây xương rồng 3 nhánh!',
+        'Đứng im phăng phắc như cây xương rồng giữa sa mạc Sahara!', {
+          guideNote: '2 tay gập vuông góc lệch cao thấp như xương rồng',
+          head: { x: 0, y: -58, tilt: 0.05, expr: 'laugh' },
+          neck: { x: 0, y: -38 }, hip: { x: 0, y: 14 },
+          lShoulder: { x: -16, y: -36 }, lElbow: { x: -46, y: -36 }, lHand: { x: -46, y: -72 },
+          rShoulder: { x: 16, y: -26 }, rElbow: { x: 46, y: -26 }, rHand: { x: 46, y: -58 },
+          lKnee: { x: -6, y: 46 }, lFoot: { x: -6, y: 78 },
+          rKnee: { x: 24, y: 34 }, rFoot: { x: 4, y: 48 }
+        }),
+      makePose(32, 'f12', 'Ninja Làng Lá Kết Ấn Ẩn Thân', '🥷', 'free',
+        'Một chân khuỵu thấp, một chân duỗi dài sang ngang, hai bàn tay chắp bắt ấn Ninja ngay trước mũi, ánh mắt sắc bén như Naruto!',
+        'Hô to: "Nhẫn thuật: Phân thân giải hết bài tập về nhà!"', {
+          guideNote: 'Chân tấn ngang, 2 tay kết ấn trước mặt',
+          head: { x: 0, y: -46, tilt: 0.12, expr: 'cool' },
+          neck: { x: 0, y: -26 }, hip: { x: 0, y: 22 },
+          lShoulder: { x: -16, y: -24 }, lElbow: { x: -28, y: -12 }, lHand: { x: -2, y: -32 },
+          rShoulder: { x: 16, y: -24 }, rElbow: { x: 28, y: -12 }, rHand: { x: 2, y: -32 },
+          lKnee: { x: -20, y: 48 }, lFoot: { x: -24, y: 78 },
+          rKnee: { x: 36, y: 52 }, rFoot: { x: 64, y: 78 }
+        }),
+      makePose(33, 'f13', 'Chim Cánh Cụt Nam Cực Lạch Bạch', '🐧', 'free',
+        'Hai gót chân chụm sát vào nhau, mũi chân hướng sang hai bên chữ V, hai cánh tay duỗi thẳng ép sát thân người nhưng hai bàn tay xòe ngang ra ngoài!',
+        'Lắc lư nhẹ qua trái qua phải và kêu "Quạc! Quạc! Lạnh quá!"', {
+          guideNote: 'Gót chân chụm chữ V, 2 bàn tay xòe ngang hông',
+          head: { x: 0, y: -58, tilt: 0.15, expr: 'laugh' },
+          neck: { x: 0, y: -38 }, hip: { x: 0, y: 14 },
+          lShoulder: { x: -14, y: -34 }, lElbow: { x: -18, y: -8 }, lHand: { x: -38, y: 4 },
+          rShoulder: { x: 14, y: -34 }, rElbow: { x: 18, y: -8 }, rHand: { x: 38, y: 4 },
+          lKnee: { x: -6, y: 46 }, lFoot: { x: -18, y: 78 },
+          rKnee: { x: 6, y: 46 }, rFoot: { x: 18, y: 78 }
+        }),
+      makePose(34, 'f14', 'VĐV Lướt Sóng Siêu Đẳng', '🏄‍♂️', 'free',
+        'Hai chân bước rộng trước sau, đầu gối khuỵu thấp, hai cánh tay dang rộng sang hai bên để giữ thăng bằng như đang cưỡi ngọn sóng thần khổng lồ!',
+        'Nghiêng người lượn sóng và hô "Sóng thần bài kiểm tra tới rồi!"', {
+          guideNote: 'Khuỵu gối, 2 tay dang rộng giữ thăng bằng lướt sóng',
+          head: { x: 4, y: -48, tilt: -0.15, expr: 'laugh' },
+          neck: { x: 2, y: -28 }, hip: { x: 0, y: 20 },
+          lShoulder: { x: -14, y: -26 }, lElbow: { x: -42, y: -34 }, lHand: { x: -68, y: -42 },
+          rShoulder: { x: 16, y: -26 }, rElbow: { x: 44, y: -18 }, rHand: { x: 70, y: -12 },
+          lKnee: { x: -26, y: 48 }, lFoot: { x: -38, y: 78 },
+          rKnee: { x: 26, y: 48 }, rFoot: { x: 40, y: 78 }
+        }),
+      makePose(35, 'f15', 'Nghệ Sĩ Đàn Guitar Điện Cuồng Nhiệt', '🎸', 'free',
+        'Chân đứng rộng, lưng hơi ngả ra sau cực phiêu, tay trái đưa cao giữ cần đàn guitar vô hình, tay phải đặt ngay hông gảy đàn cực sung!',
+        'Phiêu theo nhạc và kêu "Tưng tưng tưng... Rầm!!"', {
+          guideNote: 'Ngả người, 2 tay ôm đàn Guitar vô hình',
+          head: { x: -10, y: -54, tilt: -0.3, expr: 'laugh' },
+          neck: { x: -4, y: -34 }, hip: { x: 6, y: 14 },
+          lShoulder: { x: -16, y: -32 }, lElbow: { x: -38, y: -18 }, lHand: { x: -54, y: -36 },
+          rShoulder: { x: 10, y: -30 }, rElbow: { x: 24, y: -6 }, rHand: { x: 4, y: 8 },
+          lKnee: { x: -18, y: 46 }, lFoot: { x: -32, y: 78 },
+          rKnee: { x: 26, y: 46 }, rFoot: { x: 42, y: 78 }
+        }),
+      makePose(36, 'f16', 'Trọng Tài Bóng Đá Rút Thẻ Đỏ', '🟥', 'free',
+        'Đứng nghiêm trang, tay phải giơ thẳng tắp lên cao nhất có thể như đang rút thẻ đỏ phạt lỗi, tay trái chỉ thẳng về phía trước đầy quyền lực!',
+        'Thổi còi bằng miệng "Tuýt!! Phạt thẻ đỏ vì tội quá đẹp trai/xinh gái!"', {
+          guideNote: 'Tay phải giơ thẳng thẻ đỏ lên trời, tay trái chỉ trước',
+          head: { x: 2, y: -58, tilt: 0.05, expr: 'cool' },
+          neck: { x: 0, y: -38 }, hip: { x: 0, y: 14 },
+          lShoulder: { x: -14, y: -34 }, lElbow: { x: -38, y: -32 }, lHand: { x: -64, y: -32 },
+          rShoulder: { x: 14, y: -36 }, rElbow: { x: 20, y: -66 }, rHand: { x: 22, y: -94 },
+          lKnee: { x: -14, y: 46 }, lFoot: { x: -18, y: 78 },
+          rKnee: { x: 14, y: 46 }, rFoot: { x: 18, y: 78 }
+        }),
+      makePose(37, 'f17', 'Tượng Ai Cập Cổ Đại 2 Chiều', '🏺', 'free',
+        'Đứng nghiêng mặt sang một bên giống tranh vẽ tường Ai Cập cổ đại: hai tay đưa ngang rồi một bàn tay bẻ gập lên, một bàn tay bẻ gập xuống vuông góc!',
+        'Giữ mặt nhìn nghiêng và đi bước nhỏ kiểu tranh cổ Ai Cập!', {
+          guideNote: 'Mặt nhìn nghiêng, 2 bàn tay bẻ vuông góc ngược chiều',
+          head: { x: 6, y: -58, tilt: 0.15, expr: 'cool' },
+          neck: { x: 0, y: -38 }, hip: { x: 0, y: 14 },
+          lShoulder: { x: -16, y: -34 }, lElbow: { x: -44, y: -34 }, lHand: { x: -58, y: -52 },
+          rShoulder: { x: 16, y: -34 }, rElbow: { x: 44, y: -34 }, rHand: { x: 58, y: -16 },
+          lKnee: { x: -12, y: 46 }, lFoot: { x: -22, y: 78 },
+          rKnee: { x: 16, y: 46 }, rFoot: { x: 28, y: 78 }
+        }),
+      makePose(38, 'f18', 'Thần Đèn Chui Ra Từ Cây Đèn Dầu', '🧞‍♂️', 'free',
+        'Hai chân khép sát khuỵu nhẹ, hai tay khoanh cao ngang ngực, vai nhún lên, đầu nghiêng tươi cười hỏi chủ nhân muốn ước điều ước gì!',
+        'Hô to: "Chủ nhân muốn ước 10 điểm môn Toán hay môn Văn?"', {
+          guideNote: '2 chân khép sát, 2 tay khoanh cao ngang ngực',
+          head: { x: 6, y: -56, tilt: 0.25, expr: 'laugh' },
+          neck: { x: 0, y: -36 }, hip: { x: 0, y: 16 },
+          lShoulder: { x: -18, y: -34 }, lElbow: { x: -28, y: -16 }, lHand: { x: 12, y: -22 },
+          rShoulder: { x: 18, y: -34 }, rElbow: { x: 28, y: -16 }, rHand: { x: -12, y: -22 },
+          lKnee: { x: -4, y: 48 }, lFoot: { x: -2, y: 78 },
+          rKnee: { x: 4, y: 48 }, rFoot: { x: 2, y: 78 }
+        }),
+      makePose(39, 'f19', 'Bù Nhìn Rơm Giữ Ruộng Dưa', '🌾', 'free',
+        'Đứng trên 1 chân (hoặc nhón 1 chân), hai cánh tay dang ngang thẳng tắp sang hai bên, cổ tay thả lỏng rũ xuống, đầu nghiêng hẳn sang vai!',
+        'Lắc nhẹ hai bàn tay như gió thổi qua cánh đồng lúa!', {
+          guideNote: '2 tay dang ngang thả lỏng cổ tay, đứng 1 chân',
+          head: { x: -10, y: -56, tilt: -0.38, expr: 'laugh' },
+          neck: { x: 0, y: -36 }, hip: { x: 0, y: 14 },
+          lShoulder: { x: -16, y: -34 }, lElbow: { x: -48, y: -34 }, lHand: { x: -64, y: -16 },
+          rShoulder: { x: 16, y: -34 }, rElbow: { x: 48, y: -34 }, rHand: { x: 64, y: -16 },
+          lKnee: { x: -2, y: 46 }, lFoot: { x: -2, y: 78 },
+          rKnee: { x: 26, y: 36 }, rFoot: { x: 26, y: 58 }
+        }),
+      makePose(40, 'f20', 'Thủ Môn Bay Người Bắt Bóng Vàng', '🧤', 'free',
+        'Chân phải khuỵu trụ vững, thân người và cả hai tay vươn chéo hết cỡ sang phía trên bên phải như thủ môn đang bay người ôm gọn trái bóng ở góc chữ A!',
+        'Hai bàn tay khum tròn giữ quả bóng vô hình và hô "Bắt dính rồi!!"', {
+          guideNote: 'Nghiêng vươn người & 2 tay chéo lên cao bắt bóng',
+          head: { x: 18, y: -54, tilt: 0.35, expr: 'shock' },
+          neck: { x: 10, y: -34 }, hip: { x: -8, y: 16 },
+          lShoulder: { x: 0, y: -32 }, lElbow: { x: 28, y: -56 }, lHand: { x: 54, y: -78 },
+          rShoulder: { x: 20, y: -30 }, rElbow: { x: 44, y: -52 }, rHand: { x: 66, y: -72 },
+          lKnee: { x: -28, y: 42 }, lFoot: { x: -48, y: 64 },
+          rKnee: { x: 12, y: 48 }, rFoot: { x: 18, y: 78 }
+        }),
+      makePose(41, 'f21', 'Đại Sư Yoga Cây Cổ Thụ Gặp Bão', '🌳', 'free',
+        'Đứng một chân, bàn chân kia gác lên đầu gối chân trụ, hai bàn tay chắp lại trên cao nhưng nghiêng vẹo hẳn 45 độ sang một bên như cây cổ thụ trước gió bão!',
+        'Miệng thổi "Vù... vù... gió cấp 12 nhưng cây vẫn không đổ!"', {
+          guideNote: 'Đứng 1 chân, 2 tay chắp trên đầu nghiêng 45°',
+          head: { x: 16, y: -54, tilt: 0.36, expr: 'laugh' },
+          neck: { x: 8, y: -36 }, hip: { x: -4, y: 14 },
+          lShoulder: { x: -6, y: -34 }, lElbow: { x: 10, y: -62 }, lHand: { x: 34, y: -84 },
+          rShoulder: { x: 18, y: -32 }, rElbow: { x: 38, y: -56 }, rHand: { x: 34, y: -84 },
+          lKnee: { x: -6, y: 46 }, lFoot: { x: -6, y: 78 },
+          rKnee: { x: 28, y: 28 }, rFoot: { x: -2, y: 40 }
+        }),
+      makePose(42, 'f22', 'Nghệ Sĩ Kéo Đàn Violin Nhập Tâm', '🎻', 'free',
+        'Chân đứng chéo nghệ sĩ, đầu nghiêng sang trái như đang kẹp đàn violin vào vai, tay trái vươn ra bấm dây đàn, tay phải kéo vĩ đàn ngang ngực đầy cảm xúc!',
+        'Nhắm hờ mắt phiêu theo giai điệu "Đồ Rê Mi... bài kiểm tra khó quá!"', {
+          guideNote: 'Đầu nghiêng kẹp đàn vào vai trái, 2 tay kéo đàn',
+          head: { x: -12, y: -54, tilt: -0.38, expr: 'shock' },
+          neck: { x: -2, y: -36 }, hip: { x: 2, y: 14 },
+          lShoulder: { x: -18, y: -34 }, lElbow: { x: -46, y: -28 }, lHand: { x: -66, y: -42 },
+          rShoulder: { x: 14, y: -34 }, rElbow: { x: 34, y: -12 }, rHand: { x: -18, y: -24 },
+          lKnee: { x: -6, y: 46 }, lFoot: { x: 8, y: 78 },
+          rKnee: { x: 8, y: 46 }, rFoot: { x: -8, y: 78 }
+        }),
+      makePose(43, 'f23', 'Chuột Túi Kangaroo Đấm Bốc', '🦘', 'free',
+        'Hai chân chụm lại và khuỵu gối sâu như chuột túi chuẩn bị bật nhảy, hai nắm tay giơ cao ngang cằm thủ thế đấm bốc, cổ rướn về phía trước!',
+        'Nhún nhẹ hai đầu gối và hô "Boing! Boing! Kangaroo tới đây!"', {
+          guideNote: '2 chân chụm khuỵu gối, 2 nắm tay thủ thế trước cằm',
+          head: { x: 14, y: -50, tilt: 0.2, expr: 'cool' },
+          neck: { x: 6, y: -30 }, hip: { x: -10, y: 18 },
+          lShoulder: { x: 0, y: -28 }, lElbow: { x: 14, y: -10 }, lHand: { x: 28, y: -36 },
+          rShoulder: { x: 12, y: -26 }, rElbow: { x: 26, y: -8 }, rHand: { x: 40, y: -32 },
+          lKnee: { x: 12, y: 46 }, lFoot: { x: -4, y: 78 },
+          rKnee: { x: 20, y: 48 }, rFoot: { x: 6, y: 78 }
+        }),
+      makePose(44, 'f24', 'Vũ Công Flamenco Tây Ban Nha', '💃', 'free',
+        'Chân trái bước chéo lên trước, tay trái chống hông, tay phải uốn cong vòng qua đỉnh đầu, mặt quay ngang hất cằm đầy kiêu hãnh như vũ công Flamenco!',
+        'Búng ngón tay "Tách! Tách!" và hô "Olé! Mười điểm về tay!"', {
+          guideNote: 'Chân bước chéo, 1 tay chống hông, 1 tay vòng trên đầu',
+          head: { x: -8, y: -58, tilt: -0.22, expr: 'cool' },
+          neck: { x: 0, y: -38 }, hip: { x: 4, y: 12 },
+          lShoulder: { x: -14, y: -34 }, lElbow: { x: -36, y: -14 }, lHand: { x: -14, y: 8 },
+          rShoulder: { x: 16, y: -34 }, rElbow: { x: 36, y: -64 }, rHand: { x: 2, y: -86 },
+          lKnee: { x: 12, y: 46 }, lFoot: { x: 24, y: 78 },
+          rKnee: { x: -10, y: 46 }, rFoot: { x: -20, y: 78 }
+        }),
+      makePose(45, 'f25', 'Đô Cử Nâng Tạ Đòn 500 Kg', '🏋️‍♀️', 'free',
+        'Hai chân đứng tấn rộng, đầu gối khuỵu sâu, cả hai cánh tay đẩy thẳng lên trời rộng bằng vai như đang đỡ thanh tạ đòn nặng 500kg, mặt gồng đỏ bừng!',
+        'Giữ hai tay thẳng tắp trên đầu và thở phì phò "Nặng... quá... thầy cô ơi!"', {
+          guideNote: 'Chân tấn rộng, 2 tay đẩy thẳng tạ đòn vô hình trên cao',
+          head: { x: 0, y: -48, tilt: 0, expr: 'strain' },
+          neck: { x: 0, y: -28 }, hip: { x: 0, y: 20 },
+          lShoulder: { x: -18, y: -26 }, lElbow: { x: -34, y: -56 }, lHand: { x: -42, y: -86 },
+          rShoulder: { x: 18, y: -26 }, rElbow: { x: 34, y: -56 }, rHand: { x: 42, y: -86 },
+          lKnee: { x: -30, y: 48 }, lFoot: { x: -36, y: 78 },
+          rKnee: { x: 30, y: 48 }, rFoot: { x: 36, y: 78 }
+        }),
+      makePose(46, 'f26', 'Zombie Ngủ Gật Săn Điểm Mười', '🧟‍♂️', 'free',
+        'Đầu ngoẹo hẳn 45 độ sang vai phải, một chân thẳng một chân khuỵu khập khiễng, hai tay giơ lệch cao thấp phía trước với cổ tay rũ xuống!',
+        'Mắt mở to nhìn chằm chằm và rên "Điểm 10... cho tôi xin điểm 10..."', {
+          guideNote: 'Đầu ngoẹo sang vai, 2 tay giơ lệch cổ tay rũ xuống',
+          head: { x: 16, y: -50, tilt: 0.48, expr: 'shock' },
+          neck: { x: 4, y: -34 }, hip: { x: -6, y: 16 },
+          lShoulder: { x: -12, y: -32 }, lElbow: { x: -36, y: -42 }, lHand: { x: -56, y: -26 },
+          rShoulder: { x: 16, y: -28 }, rElbow: { x: 42, y: -20 }, rHand: { x: 58, y: -4 },
+          lKnee: { x: -24, y: 46 }, lFoot: { x: -34, y: 78 },
+          rKnee: { x: 14, y: 50 }, rFoot: { x: 24, y: 78 }
+        }),
+      makePose(47, 'f27', 'Kiếm Sĩ Đấu Kiếm Olympic', '🤺', 'free',
+        'Chân phải bước dài tấn sâu về phía trước, chân trái duỗi thẳng phía sau, tay phải đâm thẳng thanh kiếm vô hình ra trước, tay trái uốn cong giơ cao phía sau!',
+        'Hô to "En Garde! Đâm thủng mọi câu hỏi khó!"', {
+          guideNote: 'Tấn dài trước-sau, tay phải đâm kiếm, tay trái giơ sau',
+          head: { x: 14, y: -48, tilt: 0.12, expr: 'cool' },
+          neck: { x: 8, y: -28 }, hip: { x: 0, y: 18 },
+          lShoulder: { x: -8, y: -26 }, lElbow: { x: -38, y: -42 }, lHand: { x: -54, y: -68 },
+          rShoulder: { x: 18, y: -26 }, rElbow: { x: 46, y: -28 }, rHand: { x: 76, y: -30 },
+          lKnee: { x: -32, y: 48 }, lFoot: { x: -60, y: 78 },
+          rKnee: { x: 34, y: 44 }, rFoot: { x: 44, y: 78 }
+        }),
+      makePose(48, 'f28', 'Tôn Ngộ Không Ngóng Trông Sư Phụ', '🐒', 'free',
+        'Đứng trụ trên chân phải, chân trái co cao lên khỏi sàn, tay trái chống hông gãi nhẹ, tay phải đặt ngang trán che nắng ngóng nhìn xa xăm!',
+        'Chớp mắt liên tục và gọi "Sư phụ ơi! Yêu quái bài tập tới kìa!"', {
+          guideNote: 'Co 1 chân cao, 1 tay đặt lên trán ngóng nhìn xa',
+          head: { x: 8, y: -56, tilt: 0.15, expr: 'shock' },
+          neck: { x: 2, y: -36 }, hip: { x: -2, y: 14 },
+          lShoulder: { x: -14, y: -32 }, lElbow: { x: -34, y: -12 }, lHand: { x: -16, y: 6 },
+          rShoulder: { x: 16, y: -34 }, rElbow: { x: 42, y: -52 }, rHand: { x: 18, y: -66 },
+          lKnee: { x: -32, y: 20 }, lFoot: { x: -12, y: 38 },
+          rKnee: { x: 6, y: 46 }, rFoot: { x: 8, y: 78 }
+        }),
+      makePose(49, 'f29', 'Máy Bay Phản Lực Nghiêng Cánh Lượn Vòng', '✈️', 'free',
+        'Đứng một chân trụ, người hơi đổ về trước, hai cánh tay dang thẳng hết cỡ sang hai bên nhưng nghiêng lệch một bên cao một bên thấp như máy bay đang ôm cua!',
+        'Miệng phát tiếng động cơ phản lực "Vèoooo... chuẩn bị hạ cánh!"', {
+          guideNote: '2 tay dang thẳng lệch góc nghiêng như cánh máy bay',
+          head: { x: 10, y: -52, tilt: 0.35, expr: 'laugh' },
+          neck: { x: 4, y: -34 }, hip: { x: -4, y: 14 },
+          lShoulder: { x: -12, y: -38 }, lElbow: { x: -40, y: -54 }, lHand: { x: -68, y: -70 },
+          rShoulder: { x: 16, y: -28 }, rElbow: { x: 44, y: -12 }, rHand: { x: 70, y: 4 },
+          lKnee: { x: -28, y: 36 }, lFoot: { x: -48, y: 54 },
+          rKnee: { x: 4, y: 46 }, rFoot: { x: 6, y: 78 }
+        }),
+      makePose(50, 'f30', 'Hoàng Đế Tự Đội Vương Miện Đăng Quang', '👑', 'free',
+        'Chân đứng oai phong, ngực ưỡn thẳng, cả hai bàn tay nâng lên ngay phía trên đỉnh đầu như đang tự đội chiếc vương miện kim cương lấp lánh!',
+        'Cười ha hả đắc thắng: "Ta chính là Vua Đạp Xe Lọt Cầu hôm nay!"', {
+          guideNote: '2 tay khum trên đỉnh đầu như đang đội vương miện',
+          head: { x: 0, y: -56, tilt: -0.1, expr: 'laugh' },
+          neck: { x: 0, y: -36 }, hip: { x: 0, y: 14 },
+          lShoulder: { x: -16, y: -34 }, lElbow: { x: -38, y: -60 }, lHand: { x: -12, y: -82 },
+          rShoulder: { x: 16, y: -34 }, rElbow: { x: 38, y: -60 }, rHand: { x: 12, y: -82 },
+          lKnee: { x: -16, y: 46 }, lFoot: { x: -22, y: 78 },
+          rKnee: { x: 16, y: 46 }, rFoot: { x: 22, y: 78 }
+        })
+    ];
+
+    let activePoseFilter = 'all';
+    let selectedPoseIndex = 0;
+    let isSpinningRoulette = false;
+    let rouletteTimeoutId = null;
+    let holdTimerInterval = null;
+    let holdSecondsRemaining = 10;
+
+    const punishmentModal = document.getElementById('punishmentModal');
+    const poseCanvas = document.getElementById('poseCanvas');
+    const poseCtx = poseCanvas.getContext('2d');
+    const poseSlotsGrid = document.getElementById('poseSlotsGrid');
+    const poseTagBadge = document.getElementById('poseTagBadge');
+    const poseEmojiIcon = document.getElementById('poseEmojiIcon');
+    const poseTitleText = document.getElementById('poseTitleText');
+    const poseInstructionText = document.getElementById('poseInstructionText');
+    const poseMemeTipText = document.getElementById('poseMemeTipText');
+    const rouletteStatusBadge = document.getElementById('rouletteStatusBadge');
+    const spinStepCounter = document.getElementById('spinStepCounter');
+    const spinPunishmentBtn = document.getElementById('spinPunishmentBtn');
+    const spinBtnLabel = document.getElementById('spinBtnLabel');
+    const poseStageCard = document.getElementById('poseStageCard');
+    const startHoldTimerBtn = document.getElementById('startHoldTimerBtn');
+    const poseTimerText = document.getElementById('poseTimerText');
+
+    function getFilteredPoseIndices() {
+      const indices = [];
+      PUNISHMENT_POSES.forEach((p, idx) => {
+        if (activePoseFilter === 'all' || p.category === activePoseFilter) {
+          indices.push(idx);
+        }
+      });
+      return indices;
+    }
+
+    function renderPoseSlotsGrid() {
+      poseSlotsGrid.innerHTML = '';
+      let selectedBtnEl = null;
+
+      PUNISHMENT_POSES.forEach((pose, idx) => {
+        const isFilteredOut = activePoseFilter !== 'all' && pose.category !== activePoseFilter;
+        const isSelected = idx === selectedPoseIndex;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.disabled = isSpinningRoulette || isFilteredOut;
+        btn.className = `px-2 py-1.5 rounded-xl text-left border transition flex items-center gap-1.5 ${
+          isSelected
+            ? 'bg-amber-400 text-slate-950 border-white font-black shadow-lg scale-[1.02]'
+            : isFilteredOut
+            ? 'bg-slate-900/40 text-slate-600 border-slate-800/50 opacity-35 cursor-not-allowed'
+            : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-700 font-semibold'
+        }`;
+        btn.innerHTML = `
+          <span class="text-base shrink-0">${pose.emoji}</span>
+          <div class="truncate leading-tight">
+            <div class="text-[10px] truncate">${pose.shortName}</div>
+            <div class="text-[8px] opacity-75">${pose.category === 'wall' ? '🧱 Bám tường' : '🕺 Tự do'}</div>
+          </div>
+        `;
+        btn.addEventListener('click', () => {
+          if (!isSpinningRoulette) {
+            selectPose(idx, false);
+            playMemeSound('roulette_tick', 1.2);
+          }
+        });
+        if (isSelected) selectedBtnEl = btn;
+        poseSlotsGrid.appendChild(btn);
+      });
+
+      if (selectedBtnEl) {
+        selectedBtnEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+
+    function selectPose(idx, isFinalWinner = false) {
+      selectedPoseIndex = idx;
+      const pose = PUNISHMENT_POSES[idx];
+
+      poseTagBadge.textContent = pose.tagLabel;
+      poseTagBadge.className = pose.category === 'wall'
+        ? 'text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40'
+        : 'text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-400/40';
+
+      poseEmojiIcon.textContent = pose.emoji;
+      poseTitleText.textContent = pose.title;
+      poseInstructionText.textContent = pose.instruction;
+      poseMemeTipText.textContent = pose.memeTip;
+
+      if (isFinalWinner) {
+        poseStageCard.className = 'md:col-span-5 bg-slate-950 border-2 border-amber-400 rounded-2xl p-2.5 flex flex-col items-center justify-between relative overflow-hidden pose-winner-glow';
+      } else {
+        poseStageCard.className = 'md:col-span-5 bg-slate-950 border-2 border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-between relative overflow-hidden';
+      }
+
+      renderPoseSlotsGrid();
+    }
+
+    function startSlowDownRouletteSpin() {
+      if (isSpinningRoulette) return;
+      const pool = getFilteredPoseIndices();
+      if (pool.length === 0) return;
+
+      stopHoldCountdown();
+      isSpinningRoulette = true;
+      spinPunishmentBtn.disabled = true;
+      spinBtnLabel.textContent = 'ĐANG QUAY CHẬM DẦN QUA 40 KIỂU...';
+      rouletteStatusBadge.textContent = '🎰 Đang nhảy ngẫu nhiên...';
+      rouletteStatusBadge.className = 'text-xs font-extrabold px-2.5 py-1 rounded-full bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-400/40 animate-pulse';
+
+      // Đã lược bỏ 3 bước nhảy chậm cuối cùng để vòng quay chốt kết quả dứt khoát hơn
+      const fullCurveSteps = 32 + Math.floor(Math.random() * 8);
+      const totalSteps = fullCurveSteps - 3; // Bỏ đi 3 hình cuối ở giai đoạn chậm
+      let currentStep = 0;
+      let delayMs = 40;
+      let lastPicked = selectedPoseIndex;
+
+      function stepRoulette() {
+        currentStep++;
+
+        let nextIdx = pool[Math.floor(Math.random() * pool.length)];
+        if (pool.length > 1 && nextIdx === lastPicked) {
+          nextIdx = pool[(pool.indexOf(nextIdx) + 1) % pool.length];
+        }
+        lastPicked = nextIdx;
+
+        const isLastStep = currentStep >= totalSteps;
+        selectPose(nextIdx, isLastStep);
+
+        const progressRatio = currentStep / fullCurveSteps;
+        spinStepCounter.textContent = isLastStep
+          ? '🎯 ĐÃ CHỐT KIỂU DÁNG!'
+          : `Đang quay (${currentStep}/${totalSteps})...`;
+
+        if (!isLastStep) {
+          playMemeSound('roulette_tick', 0.8 + (1 - progressRatio) * 0.65);
+          if (progressRatio < 0.5) {
+            delayMs += 7;
+          } else if (progressRatio < 0.82) {
+            delayMs *= 1.12;
+          } else {
+            delayMs *= 1.18;
+          }
+          rouletteTimeoutId = setTimeout(stepRoulette, Math.round(delayMs));
+        } else {
+          isSpinningRoulette = false;
+          spinPunishmentBtn.disabled = false;
+          spinBtnLabel.textContent = '🎰 QUAY TIẾP KIỂU KHÁC (40 KIỂU)';
+          const chosenPose = PUNISHMENT_POSES[nextIdx];
+          rouletteStatusBadge.textContent = `🎉 Chốt: ${chosenPose.shortName}!`;
+          rouletteStatusBadge.className = 'text-xs font-black px-2.5 py-1 rounded-full bg-emerald-500/25 text-emerald-300 border border-emerald-400/60';
+          playMemeSound('roulette_win');
+        }
+      }
+
+      stepRoulette();
+    }
+
+    function stopHoldCountdown() {
+      if (holdTimerInterval) {
+        clearInterval(holdTimerInterval);
+        holdTimerInterval = null;
+      }
+      holdSecondsRemaining = 10;
+      poseTimerText.textContent = 'Giữ 10 giây không cười!';
+      startHoldTimerBtn.textContent = '⏱️ Đếm 10s';
+    }
+
+    startHoldTimerBtn.addEventListener('click', () => {
+      if (holdTimerInterval) {
+        stopHoldCountdown();
+        return;
+      }
+      holdSecondsRemaining = 10;
+      poseTimerText.textContent = `⏳ Đang giữ dáng: ${holdSecondsRemaining} giây!`;
+      startHoldTimerBtn.textContent = '⏹️ Dừng';
+      playMemeSound('bell');
+
+      holdTimerInterval = setInterval(() => {
+        holdSecondsRemaining--;
+        if (holdSecondsRemaining > 0) {
+          poseTimerText.textContent = `⏳ Đang giữ dáng: ${holdSecondsRemaining} giây!`;
+          playMemeSound('roulette_tick', 1.1);
+        } else {
+          clearInterval(holdTimerInterval);
+          holdTimerInterval = null;
+          poseTimerText.textContent = '🏆 HOÀN THÀNH HÌNH PHẠT XUẤT SẮC!';
+          startHoldTimerBtn.textContent = '⏱️ Đếm lại 10s';
+          playMemeSound('roulette_win');
+        }
+      }, 1000);
+    });
+
+    // ==========================================
+    // REALISTIC ANATOMICAL 2.5D HUMAN RENDERER
+    // ==========================================
+    // Draws a sculpted tapered anatomical segment (thigh, calf, upper arm, forearm, neck)
+    function drawAnatomicalSegment(pCtx, p1, p2, r1, r2, baseColor, highlightColor, strokeColor) {
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny = dx / len;
+
+      pCtx.save();
+      pCtx.beginPath();
+      pCtx.moveTo(p1.x + nx * r1, p1.y + ny * r1);
+      pCtx.lineTo(p2.x + nx * r2, p2.y + ny * r2);
+      pCtx.arc(p2.x, p2.y, r2, Math.atan2(ny, nx), Math.atan2(-ny, -nx), false);
+      pCtx.lineTo(p1.x - nx * r1, p1.y - ny * r1);
+      pCtx.arc(p1.x, p1.y, r1, Math.atan2(-ny, -nx), Math.atan2(ny, nx), false);
+      pCtx.closePath();
+
+      const grad = pCtx.createLinearGradient(
+        (p1.x + p2.x) * 0.5 + nx * r1,
+        (p1.y + p2.y) * 0.5 + ny * r1,
+        (p1.x + p2.x) * 0.5 - nx * r1,
+        (p1.y + p2.y) * 0.5 - ny * r1
+      );
+      grad.addColorStop(0, highlightColor);
+      grad.addColorStop(0.65, baseColor);
+      grad.addColorStop(1, strokeColor);
+
+      pCtx.fillStyle = grad;
+      pCtx.fill();
+      pCtx.strokeStyle = strokeColor;
+      pCtx.lineWidth = 1.2;
+      pCtx.stroke();
+      pCtx.restore();
+    }
+
+    function drawRealisticSneaker(pCtx, ankle, knee) {
+      pCtx.save();
+      const footDir = ankle.x >= knee.x ? 1 : -1;
+      pCtx.translate(ankle.x, ankle.y);
+
+      // White sock cuff
+      pCtx.fillStyle = '#f8fafc';
+      pCtx.strokeStyle = '#94a3b8';
+      pCtx.lineWidth = 1;
+      pCtx.fillRect(-5, -8, 10, 7);
+      pCtx.strokeRect(-5, -8, 10, 7);
+
+      // Red & Blue sport stripes on sock
+      pCtx.fillStyle = '#ef4444';
+      pCtx.fillRect(-5, -6, 10, 1.5);
+
+      // Sneaker upper body
+      pCtx.beginPath();
+      pCtx.moveTo(-7 * footDir, -2);
+      pCtx.lineTo(6 * footDir, -2);
+      pCtx.quadraticCurveTo(17 * footDir, 0, 18 * footDir, 6);
+      pCtx.lineTo(-8 * footDir, 6);
+      pCtx.closePath();
+      pCtx.fillStyle = '#f1f5f9';
+      pCtx.fill();
+      pCtx.strokeStyle = '#334155';
+      pCtx.lineWidth = 1.3;
+      pCtx.stroke();
+
+      // Sneaker sporty side stripe
+      pCtx.strokeStyle = '#2563eb';
+      pCtx.lineWidth = 2.2;
+      pCtx.beginPath();
+      pCtx.moveTo(-3 * footDir, 1);
+      pCtx.lineTo(9 * footDir, 3);
+      pCtx.stroke();
+
+      // Rubber sole
+      pCtx.fillStyle = '#e2e8f0';
+      pCtx.strokeStyle = '#475569';
+      pCtx.lineWidth = 1;
+      const rx = footDir > 0 ? -8 : -18;
+      pCtx.fillRect(rx, 5.5, 26, 3.2);
+      pCtx.strokeRect(rx, 5.5, 26, 3.2);
+      pCtx.restore();
+    }
+
+    function drawArticulatedHand(pCtx, elbow, hand, isWallTouch = false) {
+      const angle = Math.atan2(hand.y - elbow.y, hand.x - elbow.x);
+      pCtx.save();
+      pCtx.translate(hand.x, hand.y);
+      pCtx.rotate(angle);
+
+      // Palm
+      pCtx.fillStyle = '#f6c89f';
+      pCtx.strokeStyle = '#b47b4e';
+      pCtx.lineWidth = 1.1;
+      pCtx.beginPath();
+      pCtx.ellipse(2, 0, 5.5, 4.5, 0, 0, Math.PI * 2);
+      pCtx.fill();
+      pCtx.stroke();
+
+      // Articulated Fingers & Thumb
+      const fingerAngles = isWallTouch ? [-0.45, -0.15, 0.15, 0.45] : [-0.25, -0.08, 0.1, 0.28];
+      fingerAngles.forEach((fa) => {
+        pCtx.save();
+        pCtx.rotate(fa);
+        pCtx.beginPath();
+        pCtx.roundRect(4, -1.2, 5.5, 2.3, 1.1);
+        pCtx.fill();
+        pCtx.stroke();
+        pCtx.restore();
+      });
+
+      // Thumb
+      pCtx.save();
+      pCtx.rotate(-0.85);
+      pCtx.beginPath();
+      pCtx.roundRect(1, -2.5, 4.5, 2.3, 1.1);
+      pCtx.fill();
+      pCtx.stroke();
+      pCtx.restore();
+
+      pCtx.restore();
+    }
+
+    function drawStudentPoseIllustration() {
+      const w = poseCanvas.width;
+      const h = poseCanvas.height;
+      poseCtx.clearRect(0, 0, w, h);
+
+      const pose = PUNISHMENT_POSES[selectedPoseIndex] || PUNISHMENT_POSES[0];
+      const j = pose.joints;
+      const t = performance.now() * 0.0038;
+      const breathBob = Math.sin(t * 1.4) * 1.8;
+
+      const originX = w * 0.55;
+      const originY = h * 0.52;
+      const floorY = originY + 84;
+
+      // 1. Realistic Classroom Studio Backdrop & Floor Perspective
+      const wallBgGrad = poseCtx.createLinearGradient(0, 0, 0, floorY);
+      wallBgGrad.addColorStop(0, '#1e293b');
+      wallBgGrad.addColorStop(1, '#0f172a');
+      poseCtx.fillStyle = wallBgGrad;
+      poseCtx.fillRect(0, 0, w, floorY);
+
+      // Wooden / Tiled Classroom Floor
+      const floorGrad = poseCtx.createLinearGradient(0, floorY, 0, h);
+      floorGrad.addColorStop(0, '#334155');
+      floorGrad.addColorStop(1, '#090d16');
+      poseCtx.fillStyle = floorGrad;
+      poseCtx.fillRect(0, floorY, w, h - floorY);
+
+      // Baseboard trim
+      poseCtx.fillStyle = '#475569';
+      poseCtx.fillRect(0, floorY - 5, w, 5);
+
+      // Spotlight glow behind character
+      const aura = poseCtx.createRadialGradient(originX, originY - 10, 8, originX, originY - 10, 125);
+      aura.addColorStop(0, isSpinningRoulette ? 'rgba(232, 121, 249, 0.25)' : 'rgba(251, 191, 36, 0.22)');
+      aura.addColorStop(1, 'rgba(15, 23, 42, 0)');
+      poseCtx.fillStyle = aura;
+      poseCtx.fillRect(0, 0, w, h);
+
+      // 2. 3D Textured Classroom Brick/Plaster Pillar Wall (When pose is a Wall Pose)
+      if (j.hasWall === 'left') {
+        const wallRightX = originX - 68;
+        const wallLeftX = wallRightX - 38;
+
+        // Wall shadow cast onto floor
+        poseCtx.fillStyle = 'rgba(2, 6, 23, 0.55)';
+        poseCtx.beginPath();
+        poseCtx.moveTo(wallLeftX, floorY);
+        poseCtx.lineTo(wallRightX + 14, floorY + 22);
+        poseCtx.lineTo(wallLeftX - 10, floorY + 22);
+        poseCtx.closePath();
+        poseCtx.fill();
+
+        // Main 3D wall column
+        const brickGrad = poseCtx.createLinearGradient(wallLeftX, 0, wallRightX, 0);
+        brickGrad.addColorStop(0, '#7c2d12');
+        brickGrad.addColorStop(0.75, '#9a3412');
+        brickGrad.addColorStop(1, '#c2410c');
+        poseCtx.fillStyle = brickGrad;
+        poseCtx.fillRect(wallLeftX, 14, 38, floorY - 14);
+
+        // Realistic staggered brick mortar joints
+        poseCtx.strokeStyle = 'rgba(254, 215, 170, 0.28)';
+        poseCtx.lineWidth = 1;
+        let rowIdx = 0;
+        for (let by = 26; by < floorY; by += 14) {
+          poseCtx.beginPath();
+          poseCtx.moveTo(wallLeftX, by);
+          poseCtx.lineTo(wallRightX, by);
+          poseCtx.stroke();
+          const vOffset = (rowIdx % 2 === 0) ? 14 : 26;
+          poseCtx.beginPath();
+          poseCtx.moveTo(wallLeftX + vOffset, by - 14);
+          poseCtx.lineTo(wallLeftX + vOffset, by);
+          poseCtx.stroke();
+          rowIdx++;
+        }
+
+        // Wall contact edge highlight
+        poseCtx.strokeStyle = '#fb923c';
+        poseCtx.lineWidth = 2.2;
+        poseCtx.beginPath();
+        poseCtx.moveTo(wallRightX, 14);
+        poseCtx.lineTo(wallRightX, floorY);
+        poseCtx.stroke();
+
+        // Badge label on wall
+        poseCtx.fillStyle = '#fed7aa';
+        poseCtx.font = '800 9px Inter, sans-serif';
+        poseCtx.textAlign = 'center';
+        poseCtx.fillText('TƯỜNG LỚP', wallLeftX + 19, 11);
+      }
+
+      // Map anatomical joint coordinates
+      const pt = (joint, useBob = true) => ({
+        x: originX + joint.x,
+        y: originY + joint.y + (useBob ? breathBob : 0)
+      });
+
+      const neck = pt(j.neck);
+      const hip = pt(j.hip);
+      const lShoulder = pt(j.lShoulder);
+      const lElbow = pt(j.lElbow);
+      const lHand = pt(j.lHand, j.hasWall !== 'left');
+      const rShoulder = pt(j.rShoulder);
+      const rElbow = pt(j.rElbow);
+      const rHand = pt(j.rHand);
+      const lKnee = pt(j.lKnee);
+      const lFoot = pt(j.lFoot, false);
+      const rKnee = pt(j.rKnee);
+      const rFoot = pt(j.rFoot, false);
+      const head = pt(j.head);
+
+      // 3. Realistic Floor Contact Shadow under feet & torso
+      const shadowCenterX = (lFoot.x + rFoot.x + hip.x) / 3;
+      poseCtx.fillStyle = 'rgba(2, 6, 23, 0.65)';
+      poseCtx.beginPath();
+      poseCtx.ellipse(shadowCenterX, floorY + 5, 42, 7, 0, 0, Math.PI * 2);
+      poseCtx.fill();
+
+      // Hip joint locations for left & right legs
+      const lHip = { x: hip.x - 7, y: hip.y };
+      const rHip = { x: hip.x + 7, y: hip.y };
+
+      // 4. LEFT LEG (Back/Left Layer): Sculpted Thigh + Calf in Navy Trousers
+      drawAnatomicalSegment(poseCtx, lHip, lKnee, 9.5, 7.2, '#1e3a8a', '#2563eb', '#0f172a');
+      drawAnatomicalSegment(poseCtx, lKnee, lFoot, 7.0, 5.2, '#1e3a8a', '#1d4ed8', '#0f172a');
+      drawRealisticSneaker(poseCtx, lFoot, lKnee);
+
+      // 5. RIGHT LEG (Front/Right Layer): Sculpted Thigh + Calf in Navy Trousers
+      drawAnatomicalSegment(poseCtx, rHip, rKnee, 9.8, 7.4, '#1d4ed8', '#3b82f6', '#0f172a');
+      drawAnatomicalSegment(poseCtx, rKnee, rFoot, 7.2, 5.4, '#1d4ed8', '#2563eb', '#0f172a');
+      drawRealisticSneaker(poseCtx, rFoot, rKnee);
+
+      // 6. LEFT ARM (Back Layer): Shirt Sleeve + Forearm Skin + Articulated Hand
+      drawAnatomicalSegment(poseCtx, lShoulder, lElbow, 7.2, 5.8, '#e2e8f0', '#ffffff', '#64748b');
+      drawAnatomicalSegment(poseCtx, lElbow, lHand, 5.2, 3.8, '#eab68c', '#fcd5b4', '#9a643a');
+      drawArticulatedHand(poseCtx, lElbow, lHand, j.hasWall === 'left' && lHand.x <= originX - 60);
+
+      // 7. ANATOMICAL TORSO: Pelvis/Belt + Tailored Vietnamese White School Shirt
+      poseCtx.save();
+      const torsoAngle = Math.atan2(hip.y - neck.y, hip.x - neck.x) - Math.PI * 0.5;
+      const midShoulderX = (lShoulder.x + rShoulder.x) * 0.5;
+      const midShoulderY = (lShoulder.y + rShoulder.y) * 0.5;
+
+      // Pelvis / Navy pants waist
+      poseCtx.fillStyle = '#1e3a8a';
+      poseCtx.strokeStyle = '#0f172a';
+      poseCtx.lineWidth = 1.3;
+      poseCtx.beginPath();
+      poseCtx.ellipse(hip.x, hip.y + 2, 14.5, 9, torsoAngle, 0, Math.PI * 2);
+      poseCtx.fill();
+      poseCtx.stroke();
+
+      // Sculpted Upper Body Shirt Polygon (Shoulders tapering to Waist)
+      const shHalfW = Math.max(15, Math.hypot(rShoulder.x - lShoulder.x, rShoulder.y - lShoulder.y) * 0.56);
+      const waistHalfW = 12.5;
+      const cosT = Math.cos(torsoAngle);
+      const sinT = Math.sin(torsoAngle);
+
+      const sL = { x: midShoulderX - cosT * shHalfW, y: midShoulderY - sinT * shHalfW };
+      const sR = { x: midShoulderX + cosT * shHalfW, y: midShoulderY + sinT * shHalfW };
+      const wR = { x: hip.x + cosT * waistHalfW, y: hip.y + sinT * waistHalfW };
+      const wL = { x: hip.x - cosT * waistHalfW, y: hip.y - sinT * waistHalfW };
+
+      const shirtGrad = poseCtx.createLinearGradient(sL.x, sL.y, sR.x, sR.y);
+      shirtGrad.addColorStop(0, '#e2e8f0');
+      shirtGrad.addColorStop(0.45, '#ffffff');
+      shirtGrad.addColorStop(1, '#cbd5e1');
+
+      poseCtx.fillStyle = shirtGrad;
+      poseCtx.strokeStyle = '#64748b';
+      poseCtx.lineWidth = 1.4;
+      poseCtx.beginPath();
+      poseCtx.moveTo(sL.x, sL.y);
+      poseCtx.lineTo(sR.x, sR.y);
+      poseCtx.quadraticCurveTo((sR.x + wR.x) * 0.5 + 2, (sR.y + wR.y) * 0.5, wR.x, wR.y);
+      poseCtx.lineTo(wL.x, wL.y);
+      poseCtx.quadraticCurveTo((sL.x + wL.x) * 0.5 - 2, (sL.y + wL.y) * 0.5, sL.x, sL.y);
+      poseCtx.closePath();
+      poseCtx.fill();
+      poseCtx.stroke();
+
+      // Leather Belt & Silver Buckle at waist
+      poseCtx.strokeStyle = '#1e293b';
+      poseCtx.lineWidth = 4;
+      poseCtx.beginPath();
+      poseCtx.moveTo(wL.x, wL.y);
+      poseCtx.lineTo(wR.x, wR.y);
+      poseCtx.stroke();
+      poseCtx.fillStyle = '#fbbf24';
+      poseCtx.fillRect(hip.x - 3.5, hip.y - 2.5, 7, 5);
+
+      // Shirt Button Placket & Pocket with School Badge
+      poseCtx.strokeStyle = '#94a3b8';
+      poseCtx.lineWidth = 1;
+      poseCtx.beginPath();
+      poseCtx.moveTo(neck.x, neck.y + 4);
+      poseCtx.lineTo(hip.x, hip.y - 3);
+      poseCtx.stroke();
+
+      // School chest badge
+      poseCtx.fillStyle = '#2563eb';
+      poseCtx.fillRect((midShoulderX + hip.x) * 0.5 + 3, (midShoulderY + hip.y) * 0.5 - 6, 6, 4.5);
+      poseCtx.restore();
+
+      // 8. NECK & RED SCARF (KHĂN QUÀNG ĐỎ HỌC SINH)
+      drawAnatomicalSegment(poseCtx, neck, { x: head.x, y: head.y + 6 }, 5.5, 5.0, '#eab68c', '#fcd5b4', '#9a643a');
+
+      // White Shirt Collar + Red Scarf with Realistic Knot
+      const scarfSway = Math.sin(t * 2.2) * 3.5;
+      poseCtx.save();
+      poseCtx.fillStyle = '#dc2626';
+      poseCtx.strokeStyle = '#991b1b';
+      poseCtx.lineWidth = 1.2;
+      poseCtx.beginPath();
+      poseCtx.moveTo(neck.x - 12, neck.y - 1);
+      poseCtx.lineTo(neck.x + 12, neck.y - 1);
+      poseCtx.lineTo(neck.x + 14 + scarfSway, neck.y + 21);
+      poseCtx.lineTo(neck.x + 1, neck.y + 11);
+      poseCtx.lineTo(neck.x - 11 + scarfSway, neck.y + 22);
+      poseCtx.closePath();
+      poseCtx.fill();
+      poseCtx.stroke();
+
+      // Scarf Knot at throat
+      poseCtx.fillStyle = '#ef4444';
+      poseCtx.beginPath();
+      poseCtx.roundRect(neck.x - 4, neck.y, 8, 6.5, 2);
+      poseCtx.fill();
+      poseCtx.stroke();
+      poseCtx.restore();
+
+      // 9. RIGHT ARM (Front Layer): Shirt Sleeve + Forearm Skin + Articulated Hand
+      drawAnatomicalSegment(poseCtx, rShoulder, rElbow, 7.5, 6.0, '#f8fafc', '#ffffff', '#64748b');
+      drawAnatomicalSegment(poseCtx, rElbow, rHand, 5.4, 4.0, '#f3c198', '#fde0c5', '#9a643a');
+      drawArticulatedHand(poseCtx, rElbow, rHand, j.hasWall === 'left' && rHand.x <= originX - 60);
+
+      // 10. REALISTIC SCULPTED HUMAN HEAD, HAIR, EARS & FACIAL FEATURES
+      poseCtx.save();
+      poseCtx.translate(head.x, head.y);
+      poseCtx.rotate(j.head.tilt + Math.sin(t * 1.8) * 0.035);
+
+      // Left & Right Ears
+      poseCtx.fillStyle = '#eab68c';
+      poseCtx.strokeStyle = '#9a643a';
+      poseCtx.lineWidth = 1.2;
+      poseCtx.beginPath();
+      poseCtx.ellipse(-15, 1, 3.2, 5.5, -0.1, 0, Math.PI * 2);
+      poseCtx.ellipse(15, 1, 3.2, 5.5, 0.1, 0, Math.PI * 2);
+      poseCtx.fill();
+      poseCtx.stroke();
+
+      // Realistic Jawline & Cranium Shape with 3D Skin Gradient
+      const faceGrad = poseCtx.createRadialGradient(-4, -4, 3, 0, 0, 18);
+      faceGrad.addColorStop(0, '#fde4ce');
+      faceGrad.addColorStop(0.7, '#f5c396');
+      faceGrad.addColorStop(1, '#d99b66');
+
+      poseCtx.fillStyle = faceGrad;
+      poseCtx.strokeStyle = '#8c5327';
+      poseCtx.lineWidth = 1.4;
+      poseCtx.beginPath();
+      poseCtx.moveTo(-14.5, -4);
+      poseCtx.quadraticCurveTo(-15, -18, 0, -18.5);
+      poseCtx.quadraticCurveTo(15, -18, 14.5, -4);
+      poseCtx.quadraticCurveTo(14, 10, 0, 15.5);
+      poseCtx.quadraticCurveTo(-14, 10, -14.5, -4);
+      poseCtx.closePath();
+      poseCtx.fill();
+      poseCtx.stroke();
+
+      // Natural Cheek Blush
+      poseCtx.fillStyle = 'rgba(244, 63, 94, 0.22)';
+      poseCtx.beginPath();
+      poseCtx.ellipse(-8.5, 4, 3.8, 2.2, 0, 0, Math.PI * 2);
+      poseCtx.ellipse(8.5, 4, 3.8, 2.2, 0, 0, Math.PI * 2);
+      poseCtx.fill();
+
+      // Expressive Eyebrows
+      poseCtx.strokeStyle = '#1e293b';
+      poseCtx.lineWidth = 2;
+      poseCtx.beginPath();
+      if (j.head.expr === 'strain') {
+        poseCtx.moveTo(-10, -8); poseCtx.lineTo(-3, -5.5);
+        poseCtx.moveTo(10, -8); poseCtx.lineTo(3, -5.5);
+      } else {
+        poseCtx.moveTo(-10.5, -7); poseCtx.quadraticCurveTo(-6.5, -9.5, -2.5, -7);
+        poseCtx.moveTo(2.5, -7); poseCtx.quadraticCurveTo(6.5, -9.5, 10.5, -7);
+      }
+      poseCtx.stroke();
+
+      // Eyes & Glasses
+      if (j.head.expr === 'cool') {
+        // Sleek Aviator / Stylish Glasses
+        poseCtx.fillStyle = '#0f172a';
+        poseCtx.strokeStyle = '#fbbf24';
+        poseCtx.lineWidth = 1.5;
+        poseCtx.beginPath();
+        poseCtx.roundRect(-12.5, -5.5, 10.5, 6.5, 2);
+        poseCtx.roundRect(2, -5.5, 10.5, 6.5, 2);
+        poseCtx.fill();
+        poseCtx.stroke();
+        // Lens reflection
+        poseCtx.strokeStyle = 'rgba(255,255,255,0.45)';
+        poseCtx.lineWidth = 1.2;
+        poseCtx.beginPath();
+        poseCtx.moveTo(-10, -4); poseCtx.lineTo(-7, 0);
+        poseCtx.moveTo(4.5, -4); poseCtx.lineTo(7.5, 0);
+        poseCtx.stroke();
+      } else {
+        // Realistic Almond Eyes + Iris + Highlight + Student Glasses
+        [-6.5, 6.5].forEach((ex) => {
+          poseCtx.fillStyle = '#ffffff';
+          poseCtx.strokeStyle = '#334155';
+          poseCtx.lineWidth = 1.1;
+          poseCtx.beginPath();
+          poseCtx.ellipse(ex, -2.2, 4.2, 3.0, 0, 0, Math.PI * 2);
+          poseCtx.fill();
+          poseCtx.stroke();
+
+          // Dark brown iris
+          poseCtx.fillStyle = '#1e1b4b';
+          poseCtx.beginPath();
+          poseCtx.arc(ex, -2.2, 2.1, 0, Math.PI * 2);
+          poseCtx.fill();
+
+          // Eye catchlight
+          poseCtx.fillStyle = '#ffffff';
+          poseCtx.beginPath();
+          poseCtx.arc(ex - 0.8, -3.0, 0.8, 0, Math.PI * 2);
+          poseCtx.fill();
+        });
+
+        // Thin modern student glasses frames
+        poseCtx.strokeStyle = '#334155';
+        poseCtx.lineWidth = 1.2;
+        poseCtx.beginPath();
+        poseCtx.roundRect(-12, -6, 10.2, 7.2, 2.5);
+        poseCtx.roundRect(1.8, -6, 10.2, 7.2, 2.5);
+        poseCtx.moveTo(-1.8, -2.5);
+        poseCtx.lineTo(1.8, -2.5);
+        poseCtx.stroke();
+      }
+
+      // Sculpted Nose Bridge & Tip
+      poseCtx.strokeStyle = '#b47b4e';
+      poseCtx.lineWidth = 1.3;
+      poseCtx.beginPath();
+      poseCtx.moveTo(0, -3);
+      poseCtx.lineTo(-1.5, 2.5);
+      poseCtx.lineTo(1.2, 3.2);
+      poseCtx.stroke();
+
+      // Expressive Mouth
+      if (j.head.expr === 'laugh') {
+        poseCtx.fillStyle = '#be123c';
+        poseCtx.strokeStyle = '#881337';
+        poseCtx.lineWidth = 1.2;
+        poseCtx.beginPath();
+        poseCtx.arc(0, 6.5, 5.5, 0, Math.PI);
+        poseCtx.closePath();
+        poseCtx.fill();
+        poseCtx.stroke();
+        // Upper white teeth
+        poseCtx.fillStyle = '#ffffff';
+        poseCtx.fillRect(-4.2, 6.5, 8.4, 2.2);
+      } else if (j.head.expr === 'strain') {
+        poseCtx.fillStyle = '#ffffff';
+        poseCtx.strokeStyle = '#475569';
+        poseCtx.lineWidth = 1.2;
+        poseCtx.beginPath();
+        poseCtx.roundRect(-5.5, 6.5, 11, 4.5, 1.5);
+        poseCtx.fill();
+        poseCtx.stroke();
+        // Sweat drop
+        poseCtx.fillStyle = '#38bdf8';
+        poseCtx.beginPath();
+        poseCtx.arc(13, -6, 2.8, 0, Math.PI * 2);
+        poseCtx.fill();
+      } else if (j.head.expr === 'shock') {
+        poseCtx.fillStyle = '#be123c';
+        poseCtx.strokeStyle = '#7f1d1d';
+        poseCtx.lineWidth = 1.2;
+        poseCtx.beginPath();
+        poseCtx.ellipse(0, 8, 3.8, 4.6, 0, 0, Math.PI * 2);
+        poseCtx.fill();
+        poseCtx.stroke();
+      } else {
+        poseCtx.strokeStyle = '#881337';
+        poseCtx.lineWidth = 1.6;
+        poseCtx.beginPath();
+        poseCtx.arc(0, 5.5, 4.8, 0.15 * Math.PI, 0.85 * Math.PI);
+        poseCtx.stroke();
+      }
+
+      // Layered Realistic Student Hairstyle with Volume & Bangs
+      const hairGrad = poseCtx.createLinearGradient(0, -24, 0, -4);
+      hairGrad.addColorStop(0, '#334155');
+      hairGrad.addColorStop(0.4, '#0f172a');
+      hairGrad.addColorStop(1, '#020617');
+      poseCtx.fillStyle = hairGrad;
+      poseCtx.beginPath();
+      poseCtx.moveTo(-15, -3);
+      poseCtx.quadraticCurveTo(-17, -19, 0, -21);
+      poseCtx.quadraticCurveTo(17, -19, 15, -3);
+      poseCtx.lineTo(11, -9);
+      poseCtx.lineTo(6, -6);
+      poseCtx.lineTo(1, -10);
+      poseCtx.lineTo(-5, -6);
+      poseCtx.lineTo(-11, -9);
+      poseCtx.closePath();
+      poseCtx.fill();
+
+      poseCtx.restore();
+
+      // 11. On-Canvas Visual Alignment & Posture Guide Tag
+      poseCtx.save();
+      poseCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      poseCtx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+      poseCtx.lineWidth = 1;
+      poseCtx.beginPath();
+      poseCtx.roundRect(10, h - 26, w - 20, 20, 6);
+      poseCtx.fill();
+      poseCtx.stroke();
+
+      poseCtx.fillStyle = '#38bdf8';
+      poseCtx.font = '700 10px Inter, sans-serif';
+      poseCtx.textAlign = 'center';
+      poseCtx.fillText(`📐 Điểm chú ý: ${pose.guideNote}`, w * 0.5, h - 12.5);
+      poseCtx.restore();
+    }
+
+    // Filter Buttons Event Listeners
+    document.querySelectorAll('.pose-filter-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (isSpinningRoulette) return;
+        activePoseFilter = btn.getAttribute('data-filter') || 'all';
+        document.querySelectorAll('.pose-filter-btn').forEach((b) => {
+          b.className = 'pose-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700';
+        });
+        btn.className = 'pose-filter-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-fuchsia-600 text-white border border-fuchsia-400';
+
+        const pool = getFilteredPoseIndices();
+        if (pool.length > 0 && !pool.includes(selectedPoseIndex)) {
+          selectPose(pool[0], false);
+        } else {
+          renderPoseSlotsGrid();
+        }
+      });
+    });
+
+    function openPunishmentModal(autoSpin = false) {
+      initAudioContext();
+      punishmentModal.classList.remove('hidden');
+      renderPoseSlotsGrid();
+      selectPose(selectedPoseIndex, false);
+      if (autoSpin) {
+        startSlowDownRouletteSpin();
+      }
+    }
+
+    function closePunishmentModal() {
+      if (rouletteTimeoutId) {
+        clearTimeout(rouletteTimeoutId);
+        rouletteTimeoutId = null;
+      }
+      isSpinningRoulette = false;
+      spinPunishmentBtn.disabled = false;
+      spinBtnLabel.textContent = 'QUAY NGẪU NHIÊN CHẬM DẦN (40 KIỂU)!';
+      stopHoldCountdown();
+      punishmentModal.classList.add('hidden');
+    }
+
+    document.getElementById('openPunishHeaderBtn').addEventListener('click', () => {
+      openPunishmentModal(false);
+    });
+    document.getElementById('openPunishmentFromLoseBtn').addEventListener('click', () => {
+      openPunishmentModal(true);
+    });
+    document.getElementById('closePunishmentBtn').addEventListener('click', () => {
+      closePunishmentModal();
+    });
+    spinPunishmentBtn.addEventListener('click', () => {
+      startSlowDownRouletteSpin();
+    });
+    document.getElementById('playAgainFromPunishBtn').addEventListener('click', () => {
+      closePunishmentModal();
+      startGame(isListening);
+    });
+
+    // ==========================================
+    // 4. GAME STATE & PROCEDURAL CURVING BRIDGE
+    // ==========================================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const BIKE_WIDTH = 44;              // Chiều ngang chiếc xe đạp (px)
+    const BRIDGE_WIDTH = BIKE_WIDTH * 2; // Cây cầu chiều ngang GẤP ĐÔI chiếc xe (88px)
+    const SEGMENT_DY = 14;              // Khoảng cách dọc mỗi đốt cầu
+
+    let gameState = 'START'; // 'START', 'PLAYING', 'FALLING', 'GAMEOVER'
+    let distanceMeters = 0;
+    let highScoreMeters = 0;
+    let shoutCount = 0;
+    let speedMultiplier = 1.0;
+
+    try {
+      const savedHigh = localStorage.getItem('meme_bike_highscore');
+      if (savedHigh) {
+        highScoreMeters = parseInt(savedHigh, 10) || 0;
+        document.getElementById('highScoreDisplay').textContent = `${highScoreMeters} m`;
+      }
+    } catch (e) {}
+
+    let bridgeSegments = [];
+    let worldScrollY = 0;
+    let nextSegmentWorldY = 0;
+    let nextPlankCounter = 0;
+    let generatorPhase = 0;
+    let generatorTargetHeading = 0;
+    let generatorCurrentHeading = 0;
+    let generatorCurrentX = 0;
+
+    const bike = {
+      x: 0,
+      yScreenRatio: 0.72,
+      vx: 0,
+      steerTargetVx: 0,
+      steerHoldTimer: 0,
+      headingAngle: 0,
+      pedalPhase: 0,
+      scarfPhase: 0,
+      memeExpression: 'normal',
+      expressionTimer: 0,
+      fallScale: 1.0,
+      fallRotation: 0,
+      fallVy: 0,
+      fallVx: 0,
+      floatingMemes: []
+    };
+
+    let abyssClouds = [];
+
+    function initAbyssAtmosphere() {
+      abyssClouds = [];
+      for (let i = 0; i < 22; i++) {
+        abyssClouds.push({
+          xRatio: Math.random(),
+          y: Math.random() * 1000,
+          radius: 40 + Math.random() * 90,
+          speed: 0.3 + Math.random() * 0.7,
+          alpha: 0.04 + Math.random() * 0.08
+        });
+      }
+    }
+
+    function resetBridgeAndBike() {
+      bridgeSegments = [];
+      worldScrollY = 0;
+      nextSegmentWorldY = 0;
+      nextPlankCounter = 0;
+      generatorPhase = 0;
+      generatorTargetHeading = 0;
+      generatorCurrentHeading = 0;
+      generatorCurrentX = 0;
+
+      for (let i = 0; i < 120; i++) {
+        appendNextBridgeSegment(i < 32);
+      }
+
+      bike.x = 0;
+      bike.vx = 0;
+      bike.steerTargetVx = 0;
+      bike.steerHoldTimer = 0;
+      bike.headingAngle = 0;
+      bike.pedalPhase = 0;
+      bike.scarfPhase = 0;
+      bike.memeExpression = 'normal';
+      bike.expressionTimer = 0;
+      bike.fallScale = 1.0;
+      bike.fallRotation = 0;
+      bike.floatingMemes = [];
+
+      distanceMeters = 0;
+      shoutCount = 0;
+      updateScoreHUD();
+    }
+
+    function appendNextBridgeSegment(forceStraight = false) {
+      if (forceStraight) {
+        generatorCurrentHeading = 0;
+        generatorTargetHeading = 0;
+      } else {
+        generatorPhase++;
+        if (generatorPhase % 22 === 0) {
+          const difficulty = Math.min(1.4, 0.75 + distanceMeters / 250);
+          const randomPattern = (Math.random() - 0.5) * 2.1 * difficulty;
+          generatorTargetHeading = Math.max(-1.15, Math.min(1.15, randomPattern));
+        }
+        generatorCurrentHeading += (generatorTargetHeading - generatorCurrentHeading) * 0.085;
+        generatorCurrentX += Math.sin(generatorCurrentHeading) * SEGMENT_DY;
+      }
+
+      bridgeSegments.push({
+        worldY: nextSegmentWorldY,
+        centerX: generatorCurrentX,
+        heading: generatorCurrentHeading,
+        plankIndex: nextPlankCounter++
+      });
+
+      nextSegmentWorldY += SEGMENT_DY;
+    }
+
+    // ==========================================
+    // 5. STEERING COMMANDS (VOICE + TOUCH + KEYBOARD)
+    // ==========================================
+    let bubbleTimeout = null;
+
+    function showMemeShoutPopup(label, isRight) {
+      memeShoutBubble.textContent = label;
+      memeShoutBubble.classList.remove('hidden');
+      if (isRight) {
+        memeShoutBubble.className = 'mt-2 transform transition-all duration-150 px-4 py-1.5 rounded-full font-black text-xs sm:text-sm shadow-2xl border-2 bg-emerald-500 text-slate-950 border-emerald-200 scale-105';
+      } else {
+        memeShoutBubble.className = 'mt-2 transform transition-all duration-150 px-4 py-1.5 rounded-full font-black text-xs sm:text-sm shadow-2xl border-2 bg-rose-600 text-white border-rose-200 scale-105';
+      }
+      if (bubbleTimeout) clearTimeout(bubbleTimeout);
+      bubbleTimeout = setTimeout(() => {
+        memeShoutBubble.classList.add('hidden');
+      }, 950);
+    }
+
+    function spawnFloatingMemeText(text, color) {
+      bike.floatingMemes.push({
+        offsetX: (Math.random() - 0.5) * 40,
+        offsetY: -35,
+        text,
+        color,
+        alpha: 1.0,
+        vy: -1.6
+      });
+    }
+
+    function triggerSteerCommand(direction, spokenPhrase = '') {
+      if (gameState !== 'PLAYING') return;
+
+      shoutCount++;
+      const steerSpeed = 2.65 * speedMultiplier;
+
+      if (direction === 'right') {
+        bike.steerTargetVx = steerSpeed;
+        bike.steerHoldTimer = 38;
+        bike.memeExpression = 'gioi';
+        bike.expressionTimer = 45;
+        playMemeSound('right_gioi');
+        showMemeShoutPopup('🧠 "HỌC GIỎI!" ➔ QUẸO PHẢI ➡️', true);
+        spawnFloatingMemeText('10 ĐIỂM! +IQ ➡️', '#34d399');
+        if (spokenPhrase) {
+          transcriptText.textContent = `🗣️ Nhận diện: "${spokenPhrase.trim()}" ➔ QUẸO PHẢI!`;
+        }
+      } else if (direction === 'left') {
+        bike.steerTargetVx = -steerSpeed;
+        bike.steerHoldTimer = 38;
+        bike.memeExpression = 'do';
+        bike.expressionTimer = 45;
+        playMemeSound('left_do');
+        showMemeShoutPopup('🤪 "HỌC DỞ!" ➔ QUẸO TRÁI ⬅️', false);
+        spawnFloatingMemeText('0 ĐIỂM! ⬅️', '#fb7185');
+        if (spokenPhrase) {
+          transcriptText.textContent = `🗣️ Nhận diện: "${spokenPhrase.trim()}" ➔ QUẸO TRÁI!`;
+        }
+      } else if (direction === 'straight') {
+        bike.steerTargetVx = 0;
+        bike.steerHoldTimer = 20;
+        bike.memeExpression = 'normal';
+        playMemeSound('bell');
+        spawnFloatingMemeText('GIỮ THẲNG ⬆️', '#38bdf8');
+      }
+    }
+
+    const keysHeld = { left: false, right: false };
+
+    window.addEventListener('keydown', (e) => {
+      if (!punishmentModal.classList.contains('hidden')) return;
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        if (!keysHeld.left) triggerSteerCommand('left', 'Học dở (Phím)');
+        keysHeld.left = true;
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        if (!keysHeld.right) triggerSteerCommand('right', 'Học giỏi (Phím)');
+        keysHeld.right = true;
+      } else if (e.key === 'ArrowUp' || e.key === 's' || e.key === 'S' || e.key === ' ') {
+        triggerSteerCommand('straight', 'Thẳng lái');
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        keysHeld.left = false;
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        keysHeld.right = false;
+      }
+    });
+
+    const btnShoutLeft = document.getElementById('btnShoutLeft');
+    const btnShoutRight = document.getElementById('btnShoutRight');
+    const btnStraighten = document.getElementById('btnStraighten');
+
+    btnShoutLeft.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      keysHeld.left = true;
+      triggerSteerCommand('left', 'HỌC DỞ!');
+    });
+    btnShoutLeft.addEventListener('pointerup', () => { keysHeld.left = false; });
+    btnShoutLeft.addEventListener('pointerleave', () => { keysHeld.left = false; });
+
+    btnShoutRight.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      keysHeld.right = true;
+      triggerSteerCommand('right', 'HỌC GIỎI!');
+    });
+    btnShoutRight.addEventListener('pointerup', () => { keysHeld.right = false; });
+    btnShoutRight.addEventListener('pointerleave', () => { keysHeld.right = false; });
+
+    btnStraighten.addEventListener('click', (e) => {
+      e.preventDefault();
+      keysHeld.left = false;
+      keysHeld.right = false;
+      triggerSteerCommand('straight', 'Đi thẳng');
+    });
+
+    // ==========================================
+    // 6. UI CONTROLS & MODAL FLOW
+    // ==========================================
+    const overlayModal = document.getElementById('overlayModal');
+    const startWithMicBtn = document.getElementById('startWithMicBtn');
+    const startNoMicBtn = document.getElementById('startNoMicBtn');
+    const soundToggleBtn = document.getElementById('soundToggleBtn');
+    const speedSelect = document.getElementById('speedSelect');
+
+    speedSelect.addEventListener('change', (e) => {
+      speedMultiplier = parseFloat(e.target.value) || 1.0;
+    });
+
+    soundToggleBtn.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundToggleBtn.textContent = soundEnabled ? '🔊' : '🔇';
+    });
+
+    function startGame(enableMic) {
+      initAudioContext();
+      closePunishmentModal();
+      if (enableMic) {
+        startVoiceControl();
+      }
+      resetBridgeAndBike();
+      overlayModal.classList.add('hidden');
+      gameState = 'PLAYING';
+      playMemeSound('bell');
+    }
+
+    startWithMicBtn.addEventListener('click', () => startGame(true));
+    startNoMicBtn.addEventListener('click', () => startGame(false));
+
+    const MEME_DEATH_QUOTES = [
+      '"Học tài thi phận... Đạp xe lọt xuống vực thẳm! Mau nhận 1 trong 40 hình phạt tạo dáng!" 😭',
+      '"Chưa kịp hô Học Giỏi thì xe đã bay màu xuống vực! Tới giờ làm dáng bá đạo!" 💀',
+      '"Cầu rộng gấp đôi xe mà vẫn lọt, chuẩn bị đứng bám tường làm dáng thôi!" 🤪',
+      '"Điểm 10 ở trên cầu, còn bạn thì ở dưới đáy vực! Bấm quay 40 hình phạt ngay!" 📉'
+    ];
+
+    function triggerFallIntoAbyss(fallSide) {
+      gameState = 'FALLING';
+      playMemeSound('fall_abyss');
+      bike.fallVx = fallSide * 3.4;
+      bike.fallVy = -2.0;
+      bike.memeExpression = 'panic';
+      spawnFloatingMemeText('Á Á Á RƠI XUỐNG VỰC!! 😱', '#f43f5e');
+    }
+
+    function showGameOverModal() {
+      gameState = 'GAMEOVER';
+      if (distanceMeters > highScoreMeters) {
+        highScoreMeters = distanceMeters;
+        try {
+          localStorage.setItem('meme_bike_highscore', String(highScoreMeters));
+        } catch (e) {}
+      }
+      updateScoreHUD();
+
+      document.getElementById('modalTitle').textContent = '💥 LỌT CẦU RƠI XUỐNG VỰC!';
+      document.getElementById('modalSubtitle').innerHTML =
+        'Chiếc xe đạp đã trượt khỏi mép cầu và rơi thẳng xuống vực thẳm! <strong>Học sinh thua cuộc hãy bấm quay 40 Hình Phạt Tạo Dáng bên dưới!</strong>';
+      const crashBox = document.getElementById('crashReportBox');
+      crashBox.classList.remove('hidden');
+      document.getElementById('memeQuoteText').textContent =
+        MEME_DEATH_QUOTES[Math.floor(Math.random() * MEME_DEATH_QUOTES.length)];
+      document.getElementById('finalScoreText').textContent = `${distanceMeters} m`;
+      document.getElementById('finalShoutsText').textContent = `${shoutCount} lần`;
+      startWithMicBtn.innerHTML = '<span>🎙️ CHƠI LẠI + BẬT MIC</span>';
+      startNoMicBtn.textContent = '🔄 Chơi Lại Ngay';
+      overlayModal.classList.remove('hidden');
+    }
+
+    function updateScoreHUD() {
+      document.getElementById('scoreDisplay').textContent = `${distanceMeters} m`;
+      document.getElementById('highScoreDisplay').textContent = `${highScoreMeters} m`;
+    }
+
+    // ==========================================
+    // 7. GAME PHYSICS & BRIDGE COLLISION UPDATE
+    // ==========================================
+    const hudBikeMarker = document.getElementById('hudBikeMarker');
+    const safetyStatusText = document.getElementById('safetyStatusText');
+
+    function getBridgeCenterAtWorldY(targetWorldY) {
+      for (let i = 0; i < bridgeSegments.length - 1; i++) {
+        const s0 = bridgeSegments[i];
+        const s1 = bridgeSegments[i + 1];
+        if (targetWorldY >= s0.worldY && targetWorldY <= s1.worldY) {
+          const t = (targetWorldY - s0.worldY) / (s1.worldY - s0.worldY || 1);
+          return {
+            centerX: s0.centerX + (s1.centerX - s0.centerX) * t,
+            heading: s0.heading + (s1.heading - s0.heading) * t
+          };
+        }
+      }
+      return { centerX: bridgeSegments[0]?.centerX || 0, heading: 0 };
+    }
+
+    function updateAudioBars() {
+      const b1 = document.getElementById('bar1');
+      const b2 = document.getElementById('bar2');
+      const b3 = document.getElementById('bar3');
+      const b4 = document.getElementById('bar4');
+
+      if (analyser && micDataArray && isListening) {
+        analyser.getByteFrequencyData(micDataArray);
+        const avg = (micDataArray[2] + micDataArray[4] + micDataArray[6] + micDataArray[8]) / 4;
+        const h1 = Math.min(20, Math.max(4, (micDataArray[2] / 255) * 22));
+        const h2 = Math.min(20, Math.max(4, (micDataArray[4] / 255) * 24));
+        const h3 = Math.min(20, Math.max(4, (micDataArray[7] / 255) * 22));
+        const h4 = Math.min(20, Math.max(4, (avg / 255) * 20));
+        b1.style.height = `${h1}px`;
+        b2.style.height = `${h2}px`;
+        b3.style.height = `${h3}px`;
+        b4.style.height = `${h4}px`;
+      } else if (keysHeld.left || keysHeld.right || bike.steerHoldTimer > 0) {
+        const pulse = 8 + Math.sin(performance.now() * 0.03) * 7;
+        b1.style.height = `${pulse}px`;
+        b2.style.height = `${pulse * 1.2}px`;
+        b3.style.height = `${pulse * 0.9}px`;
+        b4.style.height = `${pulse * 0.7}px`;
+      } else {
+        b1.style.height = '5px';
+        b2.style.height = '7px';
+        b3.style.height = '5px';
+        b4.style.height = '4px';
+      }
+    }
+
+    function updateGame() {
+      updateAudioBars();
+
+      for (const cloud of abyssClouds) {
+        cloud.y += cloud.speed * (gameState === 'PLAYING' ? 2.2 : 0.6);
+        if (cloud.y > canvas.height + 120) {
+          cloud.y = -120;
+          cloud.xRatio = Math.random();
+        }
+      }
+
+      if (gameState === 'PLAYING') {
+        const forwardSpeed = (2.8 + Math.min(1.8, distanceMeters * 0.004)) * speedMultiplier;
+        worldScrollY += forwardSpeed;
+        distanceMeters = Math.floor(worldScrollY / 28);
+        updateScoreHUD();
+
+        const neededWorldY = worldScrollY + canvas.height + 300;
+        while (nextSegmentWorldY < neededWorldY) {
+          appendNextBridgeSegment(false);
+        }
+
+        while (bridgeSegments.length > 2 && bridgeSegments[1].worldY < worldScrollY - 250) {
+          bridgeSegments.shift();
+        }
+
+        const steerSpeed = 2.65 * speedMultiplier;
+        if (keysHeld.left) {
+          bike.steerTargetVx = -steerSpeed;
+          bike.steerHoldTimer = 8;
+        } else if (keysHeld.right) {
+          bike.steerTargetVx = steerSpeed;
+          bike.steerHoldTimer = 8;
+        } else if (bike.steerHoldTimer > 0) {
+          bike.steerHoldTimer--;
+          if (bike.steerHoldTimer === 0) {
+            bike.steerTargetVx = 0;
+          }
+        }
+
+        bike.vx += (bike.steerTargetVx - bike.vx) * 0.18;
+        bike.x += bike.vx;
+        bike.headingAngle = (bike.vx / steerSpeed) * 0.48;
+
+        bike.pedalPhase += 0.26 * speedMultiplier;
+        bike.scarfPhase += 0.22 * speedMultiplier;
+        if (bike.expressionTimer > 0) {
+          bike.expressionTimer--;
+          if (bike.expressionTimer === 0) bike.memeExpression = 'normal';
+        }
+
+        const bikeWorldY = worldScrollY + canvas.height * (1 - bike.yScreenRatio);
+        const bridgeHere = getBridgeCenterAtWorldY(bikeWorldY);
+        const offsetFromCenter = bike.x - bridgeHere.centerX;
+        const maxSafeOffset = BRIDGE_WIDTH * 0.5;
+
+        const normalizedPos = Math.max(-1, Math.min(1, offsetFromCenter / maxSafeOffset));
+        const leftPercent = 25 + normalizedPos * 25;
+        hudBikeMarker.style.left = `${leftPercent}%`;
+
+        if (Math.abs(normalizedPos) > 0.72) {
+          hudBikeMarker.className = 'absolute top-0 bottom-0 w-1/2 bg-rose-500 rounded transition-all duration-75';
+          safetyStatusText.textContent = '⚠️ SÁT MÉP VỰC THẲM!';
+          safetyStatusText.className = 'text-[11px] font-black text-rose-400 animate-pulse';
+        } else {
+          hudBikeMarker.className = 'absolute top-0 bottom-0 w-1/2 bg-cyan-400 rounded transition-all duration-75';
+          safetyStatusText.textContent = '✅ Đang trên cầu (Rộng 2x xe)';
+          safetyStatusText.className = 'text-[11px] font-bold text-emerald-400';
+        }
+
+        if (Math.abs(offsetFromCenter) > maxSafeOffset) {
+          const side = offsetFromCenter > 0 ? 1 : -1;
+          triggerFallIntoAbyss(side);
+        }
+      } else if (gameState === 'FALLING') {
+        bike.x += bike.fallVx;
+        bike.fallScale -= 0.018;
+        bike.fallRotation += 0.16 * (bike.fallVx >= 0 ? 1 : -1);
+        bike.scarfPhase += 0.4;
+
+        if (bike.fallScale <= 0.08) {
+          bike.fallScale = 0.08;
+          showGameOverModal();
+        }
+      }
+
+      for (let i = bike.floatingMemes.length - 1; i >= 0; i--) {
+        const m = bike.floatingMemes[i];
+        m.offsetY += m.vy;
+        m.alpha -= 0.022;
+        if (m.alpha <= 0) {
+          bike.floatingMemes.splice(i, 1);
+        }
+      }
+    }
+
+    // ==========================================
+    // 8. RENDERING: DEEP ABYSS, CURVING BRIDGE & MEME STUDENT BIKER
+    // ==========================================
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    function drawDeepAbyssBackground(cameraX) {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      const bgGrad = ctx.createRadialGradient(w * 0.5, h * 0.5, 40, w * 0.5, h * 0.5, Math.max(w, h) * 0.85);
+      bgGrad.addColorStop(0, '#0f172a');
+      bgGrad.addColorStop(0.55, '#070a14');
+      bgGrad.addColorStop(1, '#020308');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.04)';
+      ctx.lineWidth = 1;
+      const gridSpacing = 90;
+      const offsetY = (worldScrollY * 0.35) % gridSpacing;
+      const offsetX = (-cameraX * 0.35) % gridSpacing;
+
+      for (let x = offsetX; x < w; x += gridSpacing) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = offsetY; y < h; y += gridSpacing) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      for (const cloud of abyssClouds) {
+        const cx = ((cloud.xRatio * w - cameraX * 0.25) % w + w) % w;
+        const grad = ctx.createRadialGradient(cx, cloud.y, 5, cx, cloud.y, cloud.radius);
+        grad.addColorStop(0, `rgba(148, 163, 184, ${cloud.alpha})`);
+        grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cloud.y, cloud.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.save();
+      ctx.font = '900 18px Inter, sans-serif';
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.16)';
+      ctx.textAlign = 'center';
+      ctx.fillText('☠️ VỰC SÂU THĂM THẲM', w * 0.16, h * 0.45);
+      ctx.fillText('☠️ VỰC SÂU THĂM THẲM', w * 0.84, h * 0.45);
+      ctx.restore();
+    }
+
+    function drawCurvingBridge(cameraX, bikeScreenY) {
+      if (bridgeSegments.length < 2) return;
+
+      const screenCenterX = canvas.width * 0.5;
+      const bikeWorldY = worldScrollY + canvas.height * (1 - bike.yScreenRatio);
+
+      const pts = [];
+      for (let i = 0; i < bridgeSegments.length; i++) {
+        const seg = bridgeSegments[i];
+        const screenY = bikeScreenY - (seg.worldY - bikeWorldY);
+        const screenX = screenCenterX + (seg.centerX - cameraX);
+        pts.push({
+          x: screenX,
+          y: screenY,
+          heading: seg.heading,
+          plankIndex: seg.plankIndex
+        });
+      }
+
+      ctx.save();
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        if (i === 0) ctx.moveTo(p.x - BRIDGE_WIDTH * 0.5, p.y + 18);
+        else ctx.lineTo(p.x - BRIDGE_WIDTH * 0.5, p.y + 18);
+      }
+      for (let i = pts.length - 1; i >= 0; i--) {
+        const p = pts[i];
+        ctx.lineTo(p.x + BRIDGE_WIDTH * 0.5, p.y + 18);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.fill();
+
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        if (i === 0) ctx.moveTo(p.x - BRIDGE_WIDTH * 0.5, p.y);
+        else ctx.lineTo(p.x - BRIDGE_WIDTH * 0.5, p.y);
+      }
+      for (let i = pts.length - 1; i >= 0; i--) {
+        const p = pts[i];
+        ctx.lineTo(p.x + BRIDGE_WIDTH * 0.5, p.y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = '#78350f';
+      ctx.fill();
+
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[i];
+        const p1 = pts[i + 1];
+        if (p0.y < -40 || p1.y > canvas.height + 40) continue;
+
+        const isEvenPlank = p0.plankIndex % 2 === 0;
+        ctx.fillStyle = isEvenPlank ? '#92400e' : '#b45309';
+
+        ctx.beginPath();
+        ctx.moveTo(p0.x - BRIDGE_WIDTH * 0.48, p0.y);
+        ctx.lineTo(p0.x + BRIDGE_WIDTH * 0.48, p0.y);
+        ctx.lineTo(p1.x + BRIDGE_WIDTH * 0.48, p1.y);
+        ctx.lineTo(p1.x - BRIDGE_WIDTH * 0.48, p1.y);
+        ctx.closePath();
+        ctx.fill();
+
+        if (p0.plankIndex % 3 === 0) {
+          ctx.strokeStyle = 'rgba(253, 224, 71, 0.45)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.stroke();
+        }
+
+        if (p0.plankIndex % 6 === 0) {
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath();
+          ctx.arc(p0.x - BRIDGE_WIDTH * 0.5, p0.y, 3.2, 0, Math.PI * 2);
+          ctx.arc(p0.x + BRIDGE_WIDTH * 0.5, p0.y, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        if (i === 0) ctx.moveTo(p.x - BRIDGE_WIDTH * 0.5, p.y);
+        else ctx.lineTo(p.x - BRIDGE_WIDTH * 0.5, p.y);
+      }
+      ctx.stroke();
+
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        if (i === 0) ctx.moveTo(p.x + BRIDGE_WIDTH * 0.5, p.y);
+        else ctx.lineTo(p.x + BRIDGE_WIDTH * 0.5, p.y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawMemeStudentOnBike(screenX, screenY) {
+      ctx.save();
+      ctx.translate(screenX, screenY);
+      ctx.rotate(bike.headingAngle + bike.fallRotation);
+      ctx.scale(bike.fallScale, bike.fallScale);
+
+      const halfBikeW = BIKE_WIDTH * 0.5;
+
+      if (gameState === 'PLAYING') {
+        ctx.strokeStyle = 'rgba(34, 211, 238, 0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-halfBikeW, 12);
+        ctx.lineTo(halfBikeW, 12);
+        ctx.moveTo(-halfBikeW, 8);
+        ctx.lineTo(-halfBikeW, 16);
+        ctx.moveTo(halfBikeW, 8);
+        ctx.lineTo(halfBikeW, 16);
+        ctx.stroke();
+      }
+
+      if (gameState === 'PLAYING') {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(0, 4, halfBikeW * 0.85, 28, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-4, -30, 8, 18, 4);
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.roundRect(-4, 12, 8, 18, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(-halfBikeW, -19);
+      ctx.lineTo(halfBikeW, -19);
+      ctx.stroke();
+
+      ctx.fillStyle = '#f43f5e';
+      ctx.fillRect(-halfBikeW, -22, 7, 6);
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(halfBikeW - 7, -22, 7, 6);
+
+      ctx.fillStyle = '#475569';
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(-9, -31, 18, 10);
+      ctx.strokeRect(-9, -31, 18, 10);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-6, -29, 12, 7);
+      ctx.fillStyle = bike.memeExpression === 'do' ? '#e11d48' : '#059669';
+      ctx.font = '900 6px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(bike.memeExpression === 'do' ? '0đ' : '10đ', 0, -23.5);
+
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, -19);
+      ctx.lineTo(0, 18);
+      ctx.stroke();
+
+      const leftKneeY = -4 + Math.sin(bike.pedalPhase) * 9;
+      const rightKneeY = -4 - Math.sin(bike.pedalPhase) * 9;
+
+      ctx.strokeStyle = '#1e3a8a';
+      ctx.lineWidth = 6.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-9, 4);
+      ctx.lineTo(-14, leftKneeY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(9, 4);
+      ctx.lineTo(14, rightKneeY);
+      ctx.stroke();
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.arc(-14, leftKneeY, 3.5, 0, Math.PI * 2);
+      ctx.arc(14, rightKneeY, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(-12, -2);
+      ctx.lineTo(-halfBikeW + 3, -18);
+      ctx.moveTo(12, -2);
+      ctx.lineTo(halfBikeW - 3, -18);
+      ctx.stroke();
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(0, 1, 14, 11, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#d97706';
+      ctx.strokeStyle = '#78350f';
+      ctx.beginPath();
+      ctx.roundRect(-10, 5, 20, 13, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      const scarfWave1 = Math.sin(bike.scarfPhase) * 7;
+      const scarfWave2 = Math.cos(bike.scarfPhase * 1.3) * 10;
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.moveTo(-7, -3);
+      ctx.lineTo(7, -3);
+      ctx.lineTo(9 + scarfWave1, 22);
+      ctx.lineTo(2 + scarfWave2, 16);
+      ctx.lineTo(-8 + scarfWave1, 23);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#fde68a';
+      ctx.strokeStyle = '#92400e';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, -4, 10.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(0, -6, 10, Math.PI, Math.PI * 2);
+      ctx.lineTo(12, -10);
+      ctx.lineTo(6, -13);
+      ctx.lineTo(0, -17);
+      ctx.lineTo(-6, -13);
+      ctx.lineTo(-12, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      if (bike.memeExpression === 'gioi') {
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(-9, -11, 8, 4.5);
+        ctx.fillRect(1, -11, 8, 4.5);
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(-9, -11, 8, 4.5);
+        ctx.strokeRect(1, -11, 8, 4.5);
+      } else if (bike.memeExpression === 'do' || bike.memeExpression === 'panic') {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-4.5, -9, 3.8, 0, Math.PI * 2);
+        ctx.arc(4.5, -9, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(-5.5, -9.5, 1.6, 0, Math.PI * 2);
+        ctx.arc(5.5, -8.5, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(-8, -11, 6.5, 4);
+        ctx.strokeRect(1.5, -11, 6.5, 4);
+      }
+
+      ctx.restore();
+
+      for (const m of bike.floatingMemes) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, m.alpha);
+        ctx.font = '900 13px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#020617';
+        ctx.fillText(m.text, screenX + m.offsetX + 1, screenY + m.offsetY + 1);
+        ctx.fillStyle = m.color;
+        ctx.fillText(m.text, screenX + m.offsetX, screenY + m.offsetY);
+        ctx.restore();
+      }
+    }
+
+    function renderLoop() {
+      updateGame();
+
+      const bikeWorldY = worldScrollY + canvas.height * (1 - bike.yScreenRatio);
+      const bridgeHere = getBridgeCenterAtWorldY(bikeWorldY);
+      const cameraX = bridgeHere.centerX * 0.65 + bike.x * 0.35;
+      const bikeScreenX = canvas.width * 0.5 + (bike.x - cameraX);
+      const bikeScreenY = canvas.height * bike.yScreenRatio;
+
+      drawDeepAbyssBackground(cameraX);
+
+      if (gameState === 'FALLING' && bike.fallScale < 0.65) {
+        drawMemeStudentOnBike(bikeScreenX, bikeScreenY);
+        drawCurvingBridge(cameraX, bikeScreenY);
+      } else {
+        drawCurvingBridge(cameraX, bikeScreenY);
+        drawMemeStudentOnBike(bikeScreenX, bikeScreenY);
+      }
+
+      if (!punishmentModal.classList.contains('hidden')) {
+        drawStudentPoseIllustration();
+      }
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    window.onload = () => {
+      resizeCanvas();
+      initAbyssAtmosphere();
+      resetBridgeAndBike();
+      renderPoseSlotsGrid();
+      selectPose(0, false);
+      requestAnimationFrame(renderLoop);
+    };
+  </script>
+</body>
+</html>
