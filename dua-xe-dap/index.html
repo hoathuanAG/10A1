@@ -74,7 +74,7 @@
           Học Sinh Đạp Xe Qua Cầu Vực Thẳm
         </h1>
         <p class="text-[11px] text-slate-400 font-medium mt-0.5">
-          Cầu rộng gấp đôi xe (2.0x) • Nói <span class="text-rose-400 font-bold">"Học dở"</span> ⬅️ Trái | <span class="text-emerald-400 font-bold">"Học giỏi"</span> ➡️ Phải
+          Cầu rộng <span id="hudBridgeFactorLabel">2.6</span>x xe • Nói <span class="text-rose-400 font-bold">"Học dở"</span> ⬅️ Trái | <span class="text-emerald-400 font-bold">"Học giỏi"</span> ➡️ Phải
         </p>
       </div>
     </div>
@@ -148,7 +148,7 @@
     <div class="absolute top-3 left-3 z-10 hidden sm:flex flex-col gap-1 bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-2.5 text-xs pointer-events-none">
       <div class="font-bold text-slate-300 flex items-center gap-1.5">
         <span>📏 Tỷ lệ cầu:</span>
-        <span class="text-amber-400 font-black">2.0x chiều ngang xe</span>
+        <span id="statBridgeFactorLabel" class="text-amber-400 font-black">2.6x chiều ngang xe</span>
       </div>
       <div class="w-36 h-3 bg-slate-950 rounded overflow-hidden border border-slate-700 relative flex items-center justify-center">
         <div id="hudBridgeBar" class="w-full h-full bg-amber-700/50 relative">
@@ -186,6 +186,35 @@
             <div class="text-[10px] text-emerald-200/80 mt-0.5">Hoặc nói "Giỏi", "Phải", bấm nút Phải / phím D, ➡️</div>
           </div>
         </div>
+
+        <!-- Bảng tùy chỉnh thông số trước khi chơi -->
+        <details class="text-left bg-slate-950/70 border border-slate-700 rounded-2xl p-2.5 mb-3.5">
+          <summary class="text-xs font-extrabold text-amber-300 cursor-pointer select-none">⚙️ Tùy chỉnh thông số trước khi chơi</summary>
+          <div class="mt-2.5 space-y-2.5">
+            <div>
+              <div class="flex justify-between text-[11px] font-bold text-slate-300">
+                <span>📏 Độ rộng cầu</span>
+                <span id="cfgBridgeSliderLabel" class="text-amber-400">2.6x</span>
+              </div>
+              <input type="range" id="cfgBridgeSlider" min="1.8" max="4" step="0.1" value="2.6" class="w-full accent-amber-500">
+            </div>
+            <div>
+              <div class="flex justify-between text-[11px] font-bold text-slate-300">
+                <span>⚡ Độ nhạy lái (càng cao càng phản ứng nhanh, càng thấp càng trễ)</span>
+                <span id="cfgSteerEaseSliderLabel" class="text-amber-400">0.40</span>
+              </div>
+              <input type="range" id="cfgSteerEaseSlider" min="0.15" max="0.7" step="0.05" value="0.4" class="w-full accent-amber-500">
+            </div>
+            <div>
+              <div class="flex justify-between text-[11px] font-bold text-slate-300">
+                <span>💪 Độ mạnh mỗi lần hô/bấm quẹo</span>
+                <span id="cfgSteerPowerSliderLabel" class="text-amber-400">2.65</span>
+              </div>
+              <input type="range" id="cfgSteerPowerSlider" min="1.5" max="4" step="0.1" value="2.65" class="w-full accent-amber-500">
+            </div>
+            <p class="text-[10px] text-slate-500">Chỉnh xong bấm "Bắt đầu" bên dưới — thông số được nhớ lại cho lần chơi sau trên máy này.</p>
+          </div>
+        </details>
 
         <!-- Crash Report Box & Punishment Trigger (Hidden on initial screen) -->
         <div id="crashReportBox" class="hidden bg-slate-950/90 border border-rose-500/50 rounded-2xl p-3 mb-3.5">
@@ -2036,8 +2065,16 @@
     const ctx = canvas.getContext('2d');
 
     const BIKE_WIDTH = 44;              // Chiều ngang chiếc xe đạp (px)
-    const BRIDGE_WIDTH = BIKE_WIDTH * 2; // Cây cầu chiều ngang GẤP ĐÔI chiếc xe (88px)
     const SEGMENT_DY = 14;              // Khoảng cách dọc mỗi đốt cầu
+
+    // ---- Thông số có thể chỉnh trước khi chơi (mục ⚙️ Tùy chỉnh ở màn hình bắt đầu) ----
+    // Đều là "let" (không phải "const") để bảng tùy chỉnh có thể đổi được khi đang hiện màn
+    // hình Bắt đầu / Thua cuộc — các hàm vẽ & vật lý bên dưới đọc lại giá trị này MỖI KHUNG HÌNH
+    // (không lưu cứng vào từng đốt cầu), nên đổi là có tác dụng ngay, không cần tải lại trang.
+    let cfgBridgeFactor = 2.6;   // Cầu rộng = BIKE_WIDTH * cfgBridgeFactor
+    let cfgSteerEase = 0.4;      // Độ nhạy lái: càng cao phản ứng càng nhanh (trước đây cố định 0.18)
+    let cfgSteerPower = 2.65;    // Độ mạnh mỗi lần hô/bấm quẹo (tốc độ lệch ngang mỗi lần)
+    let BRIDGE_WIDTH = BIKE_WIDTH * cfgBridgeFactor; // Cây cầu — tính lại mỗi khi cfgBridgeFactor đổi
 
     let gameState = 'START'; // 'START', 'PLAYING', 'FALLING', 'GAMEOVER'
     let distanceMeters = 0;
@@ -2052,6 +2089,44 @@
         document.getElementById('highScoreDisplay').textContent = `${highScoreMeters} m`;
       }
     } catch (e) {}
+
+    // ---- Nạp lại thông số tùy chỉnh đã lưu từ lần chơi trước (nếu có) ----
+    function apDungCauHinhVaoThanhTruot(){
+      const map = {
+        cfgBridgeSlider: { get: ()=>cfgBridgeFactor, label: v => v.toFixed(1) + 'x', apply: v => {
+          cfgBridgeFactor = v;
+          BRIDGE_WIDTH = BIKE_WIDTH * cfgBridgeFactor;
+          const a = document.getElementById('hudBridgeFactorLabel'); if (a) a.textContent = v.toFixed(1);
+          const b = document.getElementById('statBridgeFactorLabel'); if (b) b.textContent = v.toFixed(1) + 'x chiều ngang xe';
+        } },
+        cfgSteerEaseSlider: { get: ()=>cfgSteerEase, label: v => v.toFixed(2), apply: v => { cfgSteerEase = v; } },
+        cfgSteerPowerSlider: { get: ()=>cfgSteerPower, label: v => v.toFixed(2), apply: v => { cfgSteerPower = v; } },
+      };
+      try {
+        const saved = JSON.parse(localStorage.getItem('meme_bike_settings') || '{}');
+        Object.keys(map).forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const val = (typeof saved[id] === 'number') ? saved[id] : map[id].get();
+          el.value = val;
+          map[id].apply(val);
+          const labelEl = document.getElementById(id + 'Label');
+          if (labelEl) labelEl.textContent = map[id].label(val);
+          el.addEventListener('input', () => {
+            const v = parseFloat(el.value);
+            map[id].apply(v);
+            const lbl = document.getElementById(id + 'Label');
+            if (lbl) lbl.textContent = map[id].label(v);
+            try {
+              const cur = JSON.parse(localStorage.getItem('meme_bike_settings') || '{}');
+              cur[id] = v;
+              localStorage.setItem('meme_bike_settings', JSON.stringify(cur));
+            } catch (e) {}
+          });
+        });
+      } catch (e) {}
+    }
+    apDungCauHinhVaoThanhTruot();
 
     let bridgeSegments = [];
     let worldScrollY = 0;
@@ -2186,7 +2261,7 @@
       if (gameState !== 'PLAYING') return;
 
       shoutCount++;
-      const steerSpeed = 2.65 * speedMultiplier;
+      const steerSpeed = cfgSteerPower * speedMultiplier;
 
       if (direction === 'right') {
         bike.steerTargetVx = steerSpeed;
@@ -2425,7 +2500,7 @@
           bridgeSegments.shift();
         }
 
-        const steerSpeed = 2.65 * speedMultiplier;
+        const steerSpeed = cfgSteerPower * speedMultiplier;
         if (keysHeld.left) {
           bike.steerTargetVx = -steerSpeed;
           bike.steerHoldTimer = 8;
@@ -2439,7 +2514,7 @@
           }
         }
 
-        bike.vx += (bike.steerTargetVx - bike.vx) * 0.18;
+        bike.vx += (bike.steerTargetVx - bike.vx) * cfgSteerEase; // độ nhạy lái — chỉnh được ở bảng ⚙️ Tùy chỉnh
         bike.x += bike.vx;
         bike.headingAngle = (bike.vx / steerSpeed) * 0.48;
 
