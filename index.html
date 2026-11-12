@@ -3606,6 +3606,56 @@
     </script>
   </div>
 
+  <!-- ============ CÔNG CỤ: ĐUA XE ĐẠP MEME ============ -->
+  <div class="panel" id="panel-duaxedap" data-group="games">
+    <div class="card">
+      <h2>🚴 Đua xe đạp meme</h2>
+      <p class="section-note">Game vui: hô to "Học giỏi" để quẹo phải, "Học dở" để quẹo trái, giữ xe đạp không rơi khỏi cầu. Ai thua phải quay vòng quay 40 tư thế hình phạt. Game có dùng micro để nhận giọng nói — trình duyệt sẽ hỏi xin quyền dùng micro khi bấm bắt đầu, có thể chọn chơi không cần mic (bấm nút/phím) nếu không muốn cấp quyền.</p>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <button type="button" id="dxFullscreenBtn" class="btn" onclick="dxBatToanManHinh()">⛶ Toàn màn hình</button>
+      </div>
+      <div class="scroll-x" id="dxWrap" style="background:#070913;">
+        <iframe id="dxIframe" src="dua-xe-dap/index.html" title="Đua xe đạp meme"
+          allow="microphone"
+          style="width:100%; min-height:80vh; border:1px solid var(--line, #ddd); border-radius:10px;"
+          loading="lazy"></iframe>
+      </div>
+    </div>
+    <script>
+      function dxBatToanManHinh(){
+        var el = document.getElementById('dxWrap');
+        if(!el) return;
+        var dangFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+        if(!dangFullscreen){
+          var yeuCau = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+          if(yeuCau) yeuCau.call(el);
+        } else {
+          var thoat = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+          if(thoat) thoat.call(document);
+        }
+      }
+      (function(){
+        function capNhatKichThuoc(){
+          var el = document.getElementById('dxWrap');
+          var frame = document.getElementById('dxIframe');
+          if(!el || !frame) return;
+          var dangFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+          if(dangFullscreen === el){
+            frame.style.height = '100vh';
+            frame.style.minHeight = '100vh';
+            frame.style.borderRadius = '0';
+          } else {
+            frame.style.height = '';
+            frame.style.minHeight = '80vh';
+            frame.style.borderRadius = '10px';
+          }
+        }
+        document.addEventListener('fullscreenchange', capNhatKichThuoc);
+        document.addEventListener('webkitfullscreenchange', capNhatKichThuoc);
+      })();
+    </script>
+  </div>
+
   <!-- ============ GÓC PHỤ HUYNH ============ -->
   <!-- Màn hình khóa: hiện khi phụ huynh chưa nhập đúng mật khẩu chung của lớp. KHÔNG nằm trong
        NHOM_TAB.phuhuynh nên không có nút subtab riêng — chỉ được JS bật/tắt (xem capNhatKhoaPhuHuynh). -->
@@ -5006,6 +5056,7 @@ const SUBTAB_DINH_NGHIA = {
   dapmuoi:   {icon:'🦟', ten:'Đập muỗi'},
   diemdanh:  {icon:'🙋', ten:'Điểm danh'},
   ensetetime: {icon:'📱', ten:'Thời gian sử dụng điện thoại'},
+  duaxedap:  {icon:'🚴', ten:'Đua xe đạp meme'},
   phtongquan: {icon:'📊', ten:'Tổng quan tình hình lớp'},
   phlienhe:   {icon:'📞', ten:'Liên hệ với GVCN'},
   phgopy:     {icon:'💬', ten:'Góp ý trực tiếp'},
@@ -5016,7 +5067,7 @@ const NHOM_TAB = {
   hoatdong: ['laodong', 'phongtrao', 'giaithuong', 'khaigiang', 'hotro'],
   hoatdongto: ['tongketTuan', 'thongkeDiemTot', 'thongkeViPham'],
   nhiemvu:  ['baitapvatly10', 'nopvideo10'],
-  games:    ['quayten', 'dodoon', 'ndkm', 'duongdenngoivua', 'dapmuoi', 'diemdanh', 'ensetetime'],
+  games:    ['quayten', 'dodoon', 'ndkm', 'duongdenngoivua', 'dapmuoi', 'diemdanh', 'ensetetime', 'duaxedap'],
   phuhuynh: ['phtongquan', 'phlienhe', 'phgopy', 'phhuongdan'],
 };
 /* Màu khung mặc định cho các mục con của "Góc Phụ Huynh" — tô màu sẵn (không cần giáo viên tự chỉnh
