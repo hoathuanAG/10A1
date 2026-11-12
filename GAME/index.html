@@ -74,7 +74,7 @@
           Học Sinh Đạp Xe Qua Cầu Vực Thẳm
         </h1>
         <p class="text-[11px] text-slate-400 font-medium mt-0.5">
-          Cầu rộng gấp đôi xe (2.0x) • Nói <span class="text-rose-400 font-bold">"Học dở"</span> ⬅️ Trái | <span class="text-emerald-400 font-bold">"Học giỏi"</span> ➡️ Phải
+          Cầu rộng 2.6x xe • Nói <span class="text-rose-400 font-bold">"Học dở"</span> ⬅️ Trái | <span class="text-emerald-400 font-bold">"Học giỏi"</span> ➡️ Phải
         </p>
       </div>
     </div>
@@ -148,7 +148,7 @@
     <div class="absolute top-3 left-3 z-10 hidden sm:flex flex-col gap-1 bg-slate-900/80 backdrop-blur border border-slate-800 rounded-xl p-2.5 text-xs pointer-events-none">
       <div class="font-bold text-slate-300 flex items-center gap-1.5">
         <span>📏 Tỷ lệ cầu:</span>
-        <span class="text-amber-400 font-black">2.0x chiều ngang xe</span>
+        <span class="text-amber-400 font-black">2.6x chiều ngang xe</span>
       </div>
       <div class="w-36 h-3 bg-slate-950 rounded overflow-hidden border border-slate-700 relative flex items-center justify-center">
         <div id="hudBridgeBar" class="w-full h-full bg-amber-700/50 relative">
@@ -2036,7 +2036,7 @@
     const ctx = canvas.getContext('2d');
 
     const BIKE_WIDTH = 44;              // Chiều ngang chiếc xe đạp (px)
-    const BRIDGE_WIDTH = BIKE_WIDTH * 2; // Cây cầu chiều ngang GẤP ĐÔI chiếc xe (88px)
+    const BRIDGE_WIDTH = BIKE_WIDTH * 2.6; // Cây cầu rộng 2.6 lần chiếc xe (trước là 2.0x, chỉnh rộng hơn cho dễ chơi)
     const SEGMENT_DY = 14;              // Khoảng cách dọc mỗi đốt cầu
 
     let gameState = 'START'; // 'START', 'PLAYING', 'FALLING', 'GAMEOVER'
@@ -2439,7 +2439,7 @@
           }
         }
 
-        bike.vx += (bike.steerTargetVx - bike.vx) * 0.18;
+        bike.vx += (bike.steerTargetVx - bike.vx) * 0.4; // phản ứng ~1/10 giây (trước là 0.18, chậm hơn nhiều)
         bike.x += bike.vx;
         bike.headingAngle = (bike.vx / steerSpeed) * 0.48;
 
