@@ -2005,7 +2005,7 @@
           </div>
           <div class="saas-kpi-ico emerald">👥</div>
         </div>
-        <div class="saas-kpi-card" onclick="moTab('thongtin','danhsachhs')">
+        <div class="saas-kpi-card" onclick="moDanhSachDanToc()">
           <div style="min-width:0;flex:1;">
             <div class="saas-kpi-label">DÂN TỘC/NỮ DÂN TỘC</div>
             <div class="saas-kpi-val" id="saasKpiSeats">0/0 HS</div>
@@ -2013,7 +2013,7 @@
           </div>
           <div class="saas-kpi-ico indigo">🌏</div>
         </div>
-        <div class="saas-kpi-card" onclick="moTab('hoatdong','hotro')">
+        <div class="saas-kpi-card" onclick="moDanhSachHoanCanh()">
           <div style="min-width:0;flex:1;">
             <div class="saas-kpi-label">HOÀN CẢNH</div>
             <div class="saas-kpi-badges" id="saasKpiFund">
@@ -5370,6 +5370,67 @@ function saasCapNhatKpiVaBreadcrumb(){
       }
     }
   }catch(e){}
+}
+
+/* Danh sách tên học sinh dân tộc / hoàn cảnh — CHỈ hiện cho admin (thầy) khi bấm vào 2 card KPI
+   tương ứng ở trang chủ. Với học sinh/phụ huynh (không phải admin), bấm vào vẫn chỉ đưa tới mục
+   "Danh sách học sinh" / "Hỗ trợ" như cũ (không lộ tên ai — giữ đúng số liệu tổng đã hiện sẵn),
+   vì đây là thông tin dân tộc/hoàn cảnh gia đình của từng em, không nên hiện tên công khai cho
+   mọi người xem trang chủ. */
+function moDanhSachDanToc(){
+  if(typeof isAdmin === 'undefined' || !isAdmin){ moTab('thongtin','danhsachhs'); return; }
+  const ds = (typeof roster !== 'undefined' && roster.length)
+    ? roster.filter(hs=>{
+        const dt = String(hs.ethnic || '').trim().toLowerCase();
+        return dt && dt !== 'kinh' && dt !== 'không' && dt !== '—';
+      })
+    : [];
+  const noiDung = ds.length
+    ? `<table style="width:100%;border-collapse:collapse;">
+         <thead><tr><th style="text-align:left;padding:4px 8px;">Họ tên</th><th style="text-align:left;padding:4px 8px;">Dân tộc</th><th style="text-align:left;padding:4px 8px;">Giới tính</th></tr></thead>
+         <tbody>${ds.map(hs=> `<tr>
+             <td style="padding:4px 8px;border-top:1px solid var(--line);">${esc(hs.name||'')}</td>
+             <td style="padding:4px 8px;border-top:1px solid var(--line);">${esc(hs.ethnic||'')}</td>
+             <td style="padding:4px 8px;border-top:1px solid var(--line);">${esc(hs.gender||'')}</td>
+           </tr>`).join('')}</tbody>
+       </table>`
+    : '<p class="section-note">Chưa có em nào ghi dân tộc khác Kinh trong danh sách lớp.</p>';
+  openModal(`
+    <h3>🌏 Danh sách học sinh dân tộc (${ds.length} em)</h3>
+    <p class="section-note">Chỉ admin xem được danh sách tên này — học sinh/phụ huynh khác chỉ thấy số liệu tổng ở trang chủ.</p>
+    ${noiDung}
+    <div class="modal-btns"><button class="btn btn-ghost btn-sm" onclick="closeModal()">Đóng</button></div>
+  `, 'gen');
+}
+
+async function moDanhSachHoanCanh(){
+  if(typeof isAdmin === 'undefined' || !isAdmin){ moTab('hoatdong','hotro'); return; }
+  // htTatCa thường đã được nạp sẵn lúc admin đăng nhập (xem napHoTroTatCa() ở onAuthStateChanged);
+  // nạp lại cho chắc trong trường hợp bấm vào trước khi dữ liệu kịp nạp xong.
+  if(typeof napHoTroTatCa === 'function' && (typeof htTatCa === 'undefined' || !htTatCa || !htTatCa.length)){
+    try{ await napHoTroTatCa(); }catch(e){}
+  }
+  const tatCa = (typeof htTatCa !== 'undefined' && htTatCa) ? htTatCa.filter(r=> r && String(r.hoanCanh||'').trim()) : [];
+  const canNgheo = tatCa.filter(r=> String(r.hoanCanh).toLowerCase().includes('cận nghèo'));
+  const khoKhan = tatCa.filter(r=> !String(r.hoanCanh).toLowerCase().includes('cận nghèo'));
+  const dongHang = r => `<tr>
+      <td style="padding:4px 8px;border-top:1px solid var(--line);">${esc(r.name||'')}</td>
+      <td style="padding:4px 8px;border-top:1px solid var(--line);">${esc(r.hoanCanh||'')}</td>
+      <td style="padding:4px 8px;border-top:1px solid var(--line);">${esc(r.loai||'')}</td>
+    </tr>`;
+  const bang = (tieuDe, ds) => `<h4 style="margin:12px 0 4px;">${tieuDe} (${ds.length} em)</h4>` + (ds.length
+    ? `<table style="width:100%;border-collapse:collapse;">
+         <thead><tr><th style="text-align:left;padding:4px 8px;">Họ tên</th><th style="text-align:left;padding:4px 8px;">Hoàn cảnh</th><th style="text-align:left;padding:4px 8px;">Loại hỗ trợ cần</th></tr></thead>
+         <tbody>${ds.map(dongHang).join('')}</tbody>
+       </table>`
+    : '<p class="section-note">Chưa có em nào thuộc nhóm này.</p>');
+  openModal(`
+    <h3>🧡 Danh sách học sinh hoàn cảnh khó khăn</h3>
+    <p class="section-note">Chỉ admin xem được danh sách tên này — học sinh/phụ huynh khác chỉ thấy số liệu tổng ở trang chủ. Dữ liệu lấy từ mục "Hỗ trợ" (em tự đăng ký hoặc thầy tự nhập).</p>
+    ${bang('🟡 Hộ cận nghèo', canNgheo)}
+    ${bang('🔴 Khó khăn khác (hộ nghèo, mồ côi, bệnh nặng, khó khăn đột xuất...)', khoKhan)}
+    <div class="modal-btns"><button class="btn btn-ghost btn-sm" onclick="closeModal()">Đóng</button></div>
+  `, 'gen');
 }
 
 renderToanBoDieuHuong();
