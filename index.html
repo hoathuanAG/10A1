@@ -5427,10 +5427,76 @@ async function moDanhSachHoanCanh(){
   openModal(`
     <h3>🧡 Danh sách học sinh hoàn cảnh khó khăn</h3>
     <p class="section-note">Chỉ admin xem được danh sách tên này — học sinh/phụ huynh khác chỉ thấy số liệu tổng ở trang chủ. Dữ liệu lấy từ mục "Hỗ trợ" (em tự đăng ký hoặc thầy tự nhập).</p>
+
+    <div class="card" style="background:var(--bg-soft,#f8fafc); margin-bottom:14px;">
+      <h4 style="margin:0 0 8px;">➕ Thêm học sinh vào danh sách</h4>
+      <p class="section-note" style="margin:0 0 8px;">Nhập xong bấm "Thêm vào danh sách" — form sẽ trống lại để thầy nhập tiếp em khác, lưu được nhiều em liên tiếp.</p>
+      <div class="field"><label>Họ và tên học sinh</label><input type="text" id="mdHcName" placeholder="Nguyễn Văn A" maxlength="60"></div>
+      <div class="field">
+        <label>Hoàn cảnh gia đình</label>
+        <select id="mdHcHoanCanh">
+          <option value="">-- Chọn hoàn cảnh --</option>
+          <option>Hộ nghèo</option>
+          <option>Hộ cận nghèo</option>
+          <option>Mồ côi cha hoặc mẹ</option>
+          <option>Mồ côi cả cha và mẹ</option>
+          <option>Cha mẹ đi làm xa, ở với ông bà</option>
+          <option>Gia đình có người bệnh nặng</option>
+          <option>Khó khăn đột xuất</option>
+          <option>Hoàn cảnh khác</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Loại hỗ trợ cần</label>
+        <select id="mdHcLoai">
+          <option value="">-- Chọn loại hỗ trợ --</option>
+          <option>Học bổng</option>
+          <option>Miễn giảm học phí</option>
+          <option>Quà Tết</option>
+          <option>Đồ dùng học tập, sách vở</option>
+          <option>Quần áo, đồng phục</option>
+          <option>Xe đạp đến trường</option>
+          <option>Bảo hiểm y tế</option>
+          <option>Hỗ trợ khác</option>
+        </select>
+      </div>
+      <div class="field"><label>Mô tả thêm (không bắt buộc)</label><textarea id="mdHcMoTa" maxlength="500"></textarea></div>
+      <div class="field"><label>Số điện thoại liên hệ (không bắt buộc)</label><input type="text" id="mdHcDienThoai" maxlength="10"></div>
+      <button type="button" class="btn btn-primary btn-sm" onclick="themHocSinhHoanCanh()">Thêm vào danh sách</button>
+      <div id="mdHcMsg" class="msg"></div>
+    </div>
+
     ${bang('🟡 Hộ cận nghèo', canNgheo)}
     ${bang('🔴 Khó khăn khác (hộ nghèo, mồ côi, bệnh nặng, khó khăn đột xuất...)', khoKhan)}
     <div class="modal-btns"><button class="btn btn-ghost btn-sm" onclick="closeModal()">Đóng</button></div>
   `, 'gen');
+}
+
+/* Admin thêm trực tiếp 1 em vào danh sách "Hỗ trợ" ngay từ popup "Hoàn cảnh khó khăn" ở trang chủ —
+   dùng chung node Firebase htRef và cờ nguon:'giaovien' giống form ở mục Hỗ trợ (khu vực giáo viên),
+   để không tạo 2 nguồn dữ liệu khác nhau cho cùng 1 việc. Sau khi lưu, render lại popup tại chỗ (không
+   đóng popup) để thầy nhập tiếp em khác liên tục, không phải mở lại từ đầu mỗi lần. */
+async function themHocSinhHoanCanh(){
+  const msgEl = $('mdHcMsg');
+  const name = $('mdHcName').value.trim();
+  const hc   = $('mdHcHoanCanh').value;
+  const loai = $('mdHcLoai').value;
+  const moTa = $('mdHcMoTa').value.trim();
+  const dt   = $('mdHcDienThoai').value.trim();
+  if(!name){ showMsg(msgEl, 'Vui lòng nhập họ tên.', 'err'); return; }
+  if(!hc){ showMsg(msgEl, 'Vui lòng chọn hoàn cảnh gia đình.', 'err'); return; }
+  if(!loai){ showMsg(msgEl, 'Vui lòng chọn loại hỗ trợ cần.', 'err'); return; }
+  if(dt && !/^0\d{9}$/.test(dt)){ showMsg(msgEl, 'Số điện thoại phải có 10 chữ số, bắt đầu bằng 0.', 'err'); return; }
+  try{
+    const refMoi = htRef.push();
+    const key = refMoi.key;
+    await refMoi.set({ name, loai, hoanCanh: hc, moTa, dienThoai: dt, uid: key, nguon: 'giaovien',
+                       time: new Date().toLocaleString('vi-VN') });
+    await napHoTroTatCa();
+    if(typeof renderAdmin === 'function') renderAdmin();
+    await moDanhSachHoanCanh(); // render lại popup tại chỗ, danh sách mới hiện ngay
+    showMsg($('mdHcMsg'), `✅ Đã thêm "${name}" vào danh sách — nhập tiếp em khác nếu cần.`, 'ok');
+  }catch(e){ showMsg(msgEl, baoLoi(e), 'err'); }
 }
 
 renderToanBoDieuHuong();
