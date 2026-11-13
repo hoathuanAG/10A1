@@ -2265,6 +2265,7 @@
 
       if (direction === 'right') {
         bike.steerTargetVx = steerSpeed;
+        bike.vx = steerSpeed; // đặt vận tốc NGAY LẬP TỨC — không chờ easing từng khung hình nữa
         bike.steerHoldTimer = 38;
         bike.memeExpression = 'gioi';
         bike.expressionTimer = 45;
@@ -2276,6 +2277,7 @@
         }
       } else if (direction === 'left') {
         bike.steerTargetVx = -steerSpeed;
+        bike.vx = -steerSpeed; // đặt vận tốc NGAY LẬP TỨC — không chờ easing từng khung hình nữa
         bike.steerHoldTimer = 38;
         bike.memeExpression = 'do';
         bike.expressionTimer = 45;
@@ -2287,6 +2289,7 @@
         }
       } else if (direction === 'straight') {
         bike.steerTargetVx = 0;
+        bike.vx = 0; // dừng lệch ngang NGAY LẬP TỨC
         bike.steerHoldTimer = 20;
         bike.memeExpression = 'normal';
         playMemeSound('bell');
