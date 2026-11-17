@@ -3320,8 +3320,9 @@
         </div>
         <div id="ndkmNguoiKhacDsHienTai" style="margin:8px 0;"></div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-          <input type="file" id="ndkmNguoiKhacAnhInput" accept="image/*" style="display:none;">
-          <button class="btn btn-blue btn-sm" id="ndkmNguoiKhacAnhChonBtn">📎 Thêm ảnh cho người này</button>
+          <input type="file" id="ndkmNguoiKhacAnhInput" accept="image/*" multiple style="display:none;">
+          <button class="btn btn-blue btn-sm" id="ndkmNguoiKhacAnhChonBtn">📎 Thêm ảnh từ file</button>
+          <button class="btn btn-blue btn-sm" id="ndkmNguoiKhacChupBtn">📸 Chụp bằng camera</button>
           <button class="btn btn-ghost btn-sm" id="ndkmNguoiKhacXoaBtn">🗑️ Xóa hẳn người này</button>
         </div>
         <div id="ndkmNguoiKhacMsg" class="msg"></div>
@@ -14107,34 +14108,131 @@ $('ndkmNguoiKhacThemBtn') && ($('ndkmNguoiKhacThemBtn').onclick = async ()=>{
   }catch(e){ showMsg($('ndkmNguoiKhacMsg'), baoLoi(e), 'err'); }
 });
 
-$('ndkmNguoiKhacAnhChonBtn') && ($('ndkmNguoiKhacAnhChonBtn').onclick = ()=>{
+/* ---- Bước 1b: thêm ảnh cho người bất kỳ — từ FILE (chọn nhiều ảnh 1 lần) hoặc CHỤP BẰNG CAMERA.
+   Cả 2 cách dùng chung 1 hàm tải lên (ndkmNguoiKhacTaiAnh) và cùng giới hạn NDKM_ANH_TOI_DA ảnh/người. */
+function ndkmNguoiKhacConLai(id){
+  return NDKM_ANH_TOI_DA - Object.keys((ndkmNguoiKhacState[id]||{}).anh||{}).length;
+}
+function ndkmNguoiKhacKiemTraTruoc(){
   const id = $('ndkmNguoiKhacChon').value;
-  if(!id){ showMsg($('ndkmNguoiKhacMsg'), 'Vui lòng chọn hoặc thêm người trước.', 'err'); return; }
-  const soAnhHienTai = Object.keys((ndkmNguoiKhacState[id]||{}).anh||{}).length;
-  if(soAnhHienTai >= NDKM_ANH_TOI_DA){ showMsg($('ndkmNguoiKhacMsg'), `Người này đã có đủ ${NDKM_ANH_TOI_DA} ảnh (tối đa) — xóa bớt ảnh cũ nếu muốn thêm ảnh mới.`, 'err'); return; }
+  if(!id){ showMsg($('ndkmNguoiKhacMsg'), 'Vui lòng chọn hoặc thêm người trước.', 'err'); return null; }
+  if(ndkmNguoiKhacConLai(id) <= 0){ showMsg($('ndkmNguoiKhacMsg'), `Người này đã có đủ ${NDKM_ANH_TOI_DA} ảnh (tối đa) — xóa bớt ảnh cũ nếu muốn thêm ảnh mới.`, 'err'); return null; }
+  if(!dungNdkmDrive()){ showMsg($('ndkmNguoiKhacMsg'), 'Chưa cấu hình nơi lưu ảnh (Drive) cho mục này — báo kỹ thuật kiểm tra NDKM_DRIVE_URL.', 'err'); return null; }
+  return id;
+}
+// Tải 1 ảnh lên Drive + ghi Firebase cho người id. Ném lỗi nếu thất bại.
+async function ndkmNguoiKhacTaiAnh(id, file){
+  const ten = (ndkmNguoiKhacState[id] && ndkmNguoiKhacState[id].ten) || 'Người khác';
+  const anhNen = await nenAnh(file, 1000, 0.85);
+  const kqDrive = await guiAnhNdkmLenDrive(anhNen, ten + ' - nhan dien khac');
+  const banGhi = { anhLink: kqDrive.link, thuMucId: kqDrive.thuMucId, luc: new Date().toISOString() };
+  await ndkmNguoiKhacRef.child(id).child('anh').child(kqDrive.id).set(banGhi);
+  ndkmNguoiKhacState[id] = ndkmNguoiKhacState[id] || {ten};
+  ndkmNguoiKhacState[id].anh = Object.assign({}, ndkmNguoiKhacState[id].anh||{}, { [kqDrive.id]: banGhi });
+  ndkmDienChonNguoiKhac();
+  $('ndkmNguoiKhacChon').value = id; // giữ nguyên người đang chọn sau khi vẽ lại danh sách
+  renderNdkmNguoiKhacDsHienTai();
+}
+const NDKM_GOI_Y_NAP_LAI = ' Để camera điểm danh nhận ra ngay, mở "⚙️ Tùy chọn nâng cao" bên dưới và bấm "🧠 Chỉ nạp người ở Bước 1b".';
+
+$('ndkmNguoiKhacAnhChonBtn') && ($('ndkmNguoiKhacAnhChonBtn').onclick = ()=>{
+  if(!ndkmNguoiKhacKiemTraTruoc()) return;
   $('ndkmNguoiKhacAnhInput').click();
 });
 $('ndkmNguoiKhacAnhInput') && ($('ndkmNguoiKhacAnhInput').onchange = async (e)=>{
-  const file = e.target.files[0];
+  const dsFile = [...(e.target.files||[])].filter(f=> /^image\//.test(f.type));
   e.target.value = '';
-  if(!file) return;
-  if(!/^image\//.test(file.type)){ showMsg($('ndkmNguoiKhacMsg'), 'Vui lòng chọn đúng tệp ảnh.', 'err'); return; }
-  const id = $('ndkmNguoiKhacChon').value;
-  if(!id){ showMsg($('ndkmNguoiKhacMsg'), 'Vui lòng chọn hoặc thêm người trước.', 'err'); return; }
+  if(!dsFile.length){ showMsg($('ndkmNguoiKhacMsg'), 'Vui lòng chọn đúng tệp ảnh.', 'err'); return; }
+  const id = ndkmNguoiKhacKiemTraTruoc();
+  if(!id) return;
   const ten = (ndkmNguoiKhacState[id] && ndkmNguoiKhacState[id].ten) || 'Người khác';
-  if(!dungNdkmDrive()){ showMsg($('ndkmNguoiKhacMsg'), 'Chưa cấu hình nơi lưu ảnh (Drive) cho mục này — báo kỹ thuật kiểm tra NDKM_DRIVE_URL.', 'err'); return; }
-  showMsg($('ndkmNguoiKhacMsg'), `Đang tải ảnh lên cho "${ten}"...`, 'info');
-  try{
-    const anhNen = await nenAnh(file, 1000, 0.85);
-    const kqDrive = await guiAnhNdkmLenDrive(anhNen, ten + ' - nhan dien khac');
-    const banGhi = { anhLink: kqDrive.link, thuMucId: kqDrive.thuMucId, luc: new Date().toISOString() };
-    await ndkmNguoiKhacRef.child(id).child('anh').child(kqDrive.id).set(banGhi);
-    ndkmNguoiKhacState[id] = ndkmNguoiKhacState[id] || {ten};
-    ndkmNguoiKhacState[id].anh = Object.assign({}, ndkmNguoiKhacState[id].anh||{}, { [kqDrive.id]: banGhi });
-    ndkmDienChonNguoiKhac();
-    renderNdkmNguoiKhacDsHienTai();
-    showMsg($('ndkmNguoiKhacMsg'), `✅ Đã thêm ảnh cho "${ten}".`, 'ok');
-  }catch(err){ showMsg($('ndkmNguoiKhacMsg'), baoLoi(err), 'err'); }
+  const conLai = ndkmNguoiKhacConLai(id);
+  const dsTai = dsFile.slice(0, conLai);
+  const boQua = dsFile.length - dsTai.length;
+  let soOk = 0; const dsLoi = [];
+  for(let i=0; i<dsTai.length; i++){
+    showMsg($('ndkmNguoiKhacMsg'), `⏳ Đang tải ảnh ${i+1}/${dsTai.length} lên cho "${ten}"...`, 'info');
+    try{ await ndkmNguoiKhacTaiAnh(id, dsTai[i]); soOk++; }
+    catch(err){ dsLoi.push(`${dsTai[i].name}: ${baoLoi(err)}`); }
+  }
+  showMsg($('ndkmNguoiKhacMsg'),
+    `✅ Đã thêm ${soOk}/${dsTai.length} ảnh cho "${ten}".`
+    + (boQua ? ` Bỏ qua ${boQua} ảnh vì đã đủ tối đa ${NDKM_ANH_TOI_DA} ảnh/người.` : '')
+    + (dsLoi.length ? ` ⚠️ Lỗi: ${dsLoi.join('; ')}` : '')
+    + (soOk ? NDKM_GOI_Y_NAP_LAI : ''),
+    dsLoi.length || !soOk ? 'err' : 'ok');
+});
+
+// Chụp bằng camera: mở cửa sổ camera, mỗi lần bấm "📸 Chụp" là tải lên NGAY ảnh đó cho người đang chọn.
+$('ndkmNguoiKhacChupBtn') && ($('ndkmNguoiKhacChupBtn').onclick = async ()=>{
+  const id = ndkmNguoiKhacKiemTraTruoc();
+  if(!id) return;
+  if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
+    showMsg($('ndkmNguoiKhacMsg'), 'Thiết bị/trình duyệt này không mở được camera trực tiếp — hãy dùng "📎 Thêm ảnh từ file".', 'err');
+    return;
+  }
+  const ten = (ndkmNguoiKhacState[id] && ndkmNguoiKhacState[id].ten) || 'Người khác';
+  let huongCamera = 'user', dangTai = false, soDaChup = 0;
+  openModal(`
+    <h3>📸 Chụp ảnh khuôn mặt cho "${esc(ten)}"</h3>
+    <p class="section-note">Nhìn thẳng, đủ sáng; nên chụp thêm 1–2 ảnh hơi nghiêng để nhận diện chính xác hơn. Mỗi lần bấm Chụp là ảnh được lưu ngay.</p>
+    <video id="ndkm1bCamVideo" autoplay playsinline muted style="width:100%;max-height:360px;object-fit:cover;background:#000;border-radius:10px;display:block;"></video>
+    <p class="section-note" id="ndkm1bCamDem"></p>
+    <div class="modal-btns" style="flex-wrap:wrap; gap:8px;">
+      <button class="btn btn-primary btn-sm" id="ndkm1bCamChupBtn">📸 Chụp</button>
+      <button class="btn btn-ghost btn-sm" id="ndkm1bCamDoiBtn">🔄 Đổi camera trước/sau</button>
+      <button class="btn btn-ghost btn-sm" id="ndkm1bCamXongBtn">✅ Xong</button>
+    </div>
+    <div id="ndkm1bCamMsg" class="msg"></div>`, 'gen');
+
+  function capNhatDem(){
+    const conLai = ndkmNguoiKhacConLai(id);
+    if($('ndkm1bCamDem')) $('ndkm1bCamDem').textContent = conLai > 0
+      ? `Đã có ${NDKM_ANH_TOI_DA - conLai}/${NDKM_ANH_TOI_DA} ảnh — chụp thêm được ${conLai} ảnh nữa.`
+      : `Đã đủ ${NDKM_ANH_TOI_DA} ảnh — bấm "✅ Xong".`;
+    if($('ndkm1bCamChupBtn')) $('ndkm1bCamChupBtn').disabled = dangTai || conLai <= 0;
+  }
+  async function moCamera(){
+    ndkmTatCamera();
+    try{
+      ndkmCamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: huongCamera }, audio: false });
+      if($('ndkm1bCamVideo')) $('ndkm1bCamVideo').srcObject = ndkmCamStream;
+      else ndkmTatCamera(); // cửa sổ đã bị đóng trong lúc chờ quyền camera
+    }catch(e){
+      showMsg($('ndkm1bCamMsg'), 'Không mở được camera — kiểm tra đã cho phép trình duyệt dùng camera chưa, hoặc dùng "📎 Thêm ảnh từ file".', 'err');
+    }
+  }
+  capNhatDem();
+  await moCamera();
+
+  if($('ndkm1bCamChupBtn')) $('ndkm1bCamChupBtn').onclick = ()=>{
+    const video = $('ndkm1bCamVideo');
+    if(dangTai || !video || !video.videoWidth || ndkmNguoiKhacConLai(id) <= 0) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(async blob=>{
+      if(!blob){ showMsg($('ndkm1bCamMsg'), 'Chụp ảnh thất bại, thử lại.', 'err'); return; }
+      dangTai = true; capNhatDem();
+      showMsg($('ndkm1bCamMsg'), '⏳ Đang lưu ảnh vừa chụp...', 'info');
+      try{
+        await ndkmNguoiKhacTaiAnh(id, new File([blob], 'chup-' + Date.now() + '.jpg', { type: 'image/jpeg' }));
+        soDaChup++;
+        showMsg($('ndkm1bCamMsg'), `✅ Đã lưu ảnh thứ ${soDaChup} — chụp tiếp hoặc bấm "✅ Xong".`, 'ok');
+      }catch(err){
+        showMsg($('ndkm1bCamMsg'), '❌ ' + baoLoi(err), 'err');
+      }
+      dangTai = false; capNhatDem();
+    }, 'image/jpeg', 0.9);
+  };
+  if($('ndkm1bCamDoiBtn')) $('ndkm1bCamDoiBtn').onclick = ()=>{
+    huongCamera = (huongCamera === 'user') ? 'environment' : 'user';
+    moCamera();
+  };
+  if($('ndkm1bCamXongBtn')) $('ndkm1bCamXongBtn').onclick = ()=>{
+    closeModal(); // closeModal đã được bọc để tự tắt camera
+    if(soDaChup) showMsg($('ndkmNguoiKhacMsg'), `✅ Đã chụp và lưu ${soDaChup} ảnh cho "${ten}".` + NDKM_GOI_Y_NAP_LAI, 'ok');
+  };
 });
 async function ndkmNguoiKhacXoaAnh(id, anhId){
   if(!confirm('Xóa ảnh này?')) return;
