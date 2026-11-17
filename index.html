@@ -3362,6 +3362,11 @@
                 <option value="ngoailop">Chỉ người ở Bước 1b (bỏ qua học sinh lớp)</option>
               </select>
             </div>
+            <div class="field" style="max-width:420px;">
+              <label>Độ khắt khe khi ghi điểm danh: <b id="ndkmNguongGhiNhan"></b></label>
+              <input type="range" id="ndkmNguongGhiSlider" min="0.35" max="0.5" step="0.01">
+              <p class="section-note" style="margin:4px 0 0;">Kéo sang TRÁI = khắt khe hơn (ít nhận nhầm nhưng khó ghi hơn). Kéo sang PHẢI (0.50) = cứ hiện tên là ghi. Nếu camera hay gắn nhầm tên người khác, kéo sang trái một chút. Lưu riêng trên máy này.</p>
+            </div>
             <p class="section-note">
               Dữ liệu nhận diện được tự nạp sẵn ở nền ngay khi mở mục này; cache lưu trên Firebase
               nên chỉ chậm đúng 1 lần đầu tiên. Chỉ cần bấm nút bên dưới khi muốn nạp lại thủ công —
@@ -13196,8 +13201,20 @@ const NDKM_NGUONG_KHOP = 0.5; // càng nhỏ càng khắt khe khi so khớp khu�
        người duy nhất ghi đè/sửa được bản ghi đã tồn tại (dùng ở mục "➕ Điểm danh thay / sửa cho 1
        em" khi cần chỉnh lại).
    Nếu em đã tự bấm tay ở mục Điểm danh từ trước thì camera thấy đã có bản ghi, bỏ qua, không ghi lại. */
-const NDKM_DD_NGUONG_GHI = 0.42;  // khắt khe hơn mức khớp hiển thị (0.5) — tránh ghi nhầm điểm danh vì nhận diện sai
-const NDKM_DD_SO_KHUNG_CAN = 3;   // số khung hình liên tiếp phải khớp mới ghi (mỗi khung ~350ms) — tránh ghi vì 1 khung lỡ
+/* Ngưỡng ghi điểm danh (khoảng cách khớp tối đa). TRƯỚC ĐÂY cố định 0.42 — khắt khe hơn mức hiện tên
+   (0.5), nên với webcam/điện thoại thường khoảng cách hay rơi vào 0.42–0.5: camera VẪN HIỆN TÊN xanh
+   nhưng KHÔNG BAO GIỜ ghi điểm danh → đây là lỗi "nhận diện được mà không điểm danh". Giờ mặc định
+   bằng đúng ngưỡng hiện tên (hiện tên = đủ điều kiện ghi), giáo viên chỉnh khắt khe hơn được ở
+   "⚙️ Tùy chọn nâng cao" nếu thấy hay nhận nhầm. Lưu theo từng máy (localStorage). */
+let NDKM_DD_NGUONG_GHI = 0.5;
+try{
+  const v = parseFloat(localStorage.getItem('ndkm_nguong_ghi'));
+  if(v >= 0.3 && v <= NDKM_NGUONG_KHOP) NDKM_DD_NGUONG_GHI = v;
+}catch(e){}
+/* Xác nhận: cần khớp >= NDKM_DD_SO_LAN_CAN lần trong NDKM_DD_CUA_SO_MS mili-giây gần nhất (KHÔNG bắt
+   buộc liên tiếp tuyệt đối như trước — 1 khung chớp mắt/quay đầu không còn làm đếm lại từ 0). */
+const NDKM_DD_SO_LAN_CAN = 3;
+const NDKM_DD_CUA_SO_MS = 2500;
 let ndkmDiemDanhHomNayState = {}; // { uid: banGhi } — bản ghi điểm danh HÔM NAY của cả lớp, nạp khi mở camera, để biết ai đã điểm danh rồi mà bỏ qua
 let ndkmDiemDanhDangGhi = new Set(); // các uid đang trong lúc chờ ghi (await) — chặn ghi trùng khi 2 khung hình gần nhau cùng kích hoạt
 let ndkmDiemDanhLienTiep = {};     // { uid: số khung liên tiếp đã khớp đủ chắc } — đếm dồn, reset về 0 khi khung nào không khớp nữa
@@ -13227,6 +13244,7 @@ async function ndkmNapDiemDanhHomNay(){
     };
     ref.on('value', ndkmDdHamNghe, ()=>{ ndkmDiemDanhHomNayState = {}; xong(); });
     ndkmDdRefDangNghe = ref;
+    setTimeout(xong, 4000);
   });
 }
 
@@ -13259,6 +13277,11 @@ async function ndkmTuDongDiemDanh(uid, hoTen){
   if(ndkmDiemDanhThuLaiSau[uid] && Date.now() < ndkmDiemDanhThuLaiSau[uid]) return;
   // Bất kỳ ai đã đăng nhập (không riêng isAdmin) đều ghi được cho bất kỳ học sinh nào camera nhận ra.
   // Rules Firebase vẫn chặn ghi ĐÈ nếu không phải admin, nên chỉ ghi được lần đầu.
+  if(!(typeof auth !== 'undefined' && auth.currentUser)){
+    if($('ndkmErr')) showMsg($('ndkmErr'), '⏳ Đang kết nối máy chủ, chưa ghi điểm danh được — đợi vài giây...', 'err');
+    try{ if(typeof auth !== 'undefined') await auth.signInAnonymously(); }catch(e){}
+    if(!(typeof auth !== 'undefined' && auth.currentUser)) return;
+  }
   ndkmDiemDanhDangGhi.add(uid);
   const ngay = ddNgayHomNay();
   try{
@@ -13285,7 +13308,11 @@ async function ndkmTuDongDiemDanh(uid, hoTen){
       ndkmDiemDanhHomNayState[uid] = daCo;
     } else {
       ndkmDiemDanhThuLaiSau[uid] = Date.now() + 5000;
-      if($('ndkmErr')) showMsg($('ndkmErr'), `❌ Chưa ghi được điểm danh cho "${hoTen||uid}" (lỗi mạng hoặc quyền ghi) — hệ thống sẽ tự thử lại.`, 'err');
+      const maLoi = String((e && (e.code || e.message)) || '');
+      const goiY = /permission/i.test(maLoi)
+        ? ' Firebase từ chối quyền ghi — giáo viên cần dán bộ Rules mới nhất (firebase-rules.json) vào Firebase Console và bấm Publish.'
+        : ' Kiểm tra kết nối mạng.';
+      if($('ndkmErr')) showMsg($('ndkmErr'), `❌ Chưa ghi được điểm danh cho "${hoTen||uid}" (${maLoi}).${goiY} Hệ thống sẽ tự thử lại.`, 'err');
     }
   }
   ndkmDiemDanhDangGhi.delete(uid);
@@ -14274,6 +14301,17 @@ async function ndkmMotNutBatCameraDiemDanh(){
   await ndkmBatCamera();
 }
 if($('ndkmMotNutBtn')) $('ndkmMotNutBtn').onclick = ()=> ndkmMotNutBatCameraDiemDanh();
+(function(){
+  const sl = $('ndkmNguongGhiSlider'), nh = $('ndkmNguongGhiNhan');
+  if(!sl) return;
+  const hien = ()=>{ if(nh) nh.textContent = NDKM_DD_NGUONG_GHI.toFixed(2) + (NDKM_DD_NGUONG_GHI >= NDKM_NGUONG_KHOP ? ' (hiện tên là ghi)' : ''); };
+  sl.value = NDKM_DD_NGUONG_GHI; hien();
+  sl.oninput = ()=>{
+    NDKM_DD_NGUONG_GHI = parseFloat(sl.value);
+    try{ localStorage.setItem('ndkm_nguong_ghi', String(NDKM_DD_NGUONG_GHI)); }catch(e){}
+    hien();
+  };
+})();
 
 $('ndkmBatCameraBtn').onclick = ()=> ndkmBatCamera();
 $('ndkmDoiCameraBtn').onclick = ()=>{
@@ -14345,8 +14383,17 @@ async function ndkmVongLapNhanDien(){
             ten = thanhVienState[khop.label].hoTen || khop.label;
             maMau = '#22c55e'; // xanh lá: học sinh của lớp
             const ddRoi = ndkmDiemDanhHomNayState[khop.label];
-            if(ddRoi){ ten += ' ✅ Đã điểm danh' + (ddRoi.gio ? ' ' + ddRoi.gio : ''); maMau = '#15803d'; }
-            if(khop.distance <= NDKM_DD_NGUONG_GHI) uidHocSinhKhop = khop.label;
+            if(ddRoi){
+              ten += ' ✅ Đã điểm danh' + (ddRoi.gio ? ' ' + ddRoi.gio : '');
+              maMau = '#15803d';
+            } else if(khop.distance <= NDKM_DD_NGUONG_GHI){
+              uidHocSinhKhop = khop.label;
+              const daDem = (ndkmDiemDanhLienTiep[khop.label] || []).length + 1;
+              ten += ndkmDiemDanhDangGhi.has(khop.label) ? ' ⏳ đang ghi...' : ` ⏳ xác nhận ${Math.min(daDem, NDKM_DD_SO_LAN_CAN)}/${NDKM_DD_SO_LAN_CAN}`;
+            } else {
+              ten += ' · chưa đủ rõ, nhìn thẳng camera';
+              maMau = '#ca8a04'; // vàng: nhận ra nhưng chưa đủ chắc để ghi
+            }
           } else {
             ten = khop.label;
             maMau = '#22c55e';
@@ -14374,8 +14421,11 @@ async function ndkmVongLapNhanDien(){
       // ghi — 1 khung lỡ khớp nhầm không đủ để tự ghi điểm danh cho ai.
       if(uidHocSinhKhop){
         uidKhopKhungNay.add(uidHocSinhKhop);
-        ndkmDiemDanhLienTiep[uidHocSinhKhop] = (ndkmDiemDanhLienTiep[uidHocSinhKhop] || 0) + 1;
-        if(ndkmDiemDanhLienTiep[uidHocSinhKhop] >= NDKM_DD_SO_KHUNG_CAN){
+        const bayGio = Date.now();
+        const ds = (ndkmDiemDanhLienTiep[uidHocSinhKhop] || []).filter(t=> bayGio - t <= NDKM_DD_CUA_SO_MS);
+        ds.push(bayGio);
+        ndkmDiemDanhLienTiep[uidHocSinhKhop] = ds;
+        if(ds.length >= NDKM_DD_SO_LAN_CAN){
           ndkmTuDongDiemDanh(uidHocSinhKhop, thanhVienState[uidHocSinhKhop] && thanhVienState[uidHocSinhKhop].hoTen);
         }
       }
@@ -14383,7 +14433,12 @@ async function ndkmVongLapNhanDien(){
 
     // Mặt nào khung này không còn thấy (hoặc không còn khớp đủ chắc) thì reset bộ đếm của uid đó
     // về 0 — tránh trường hợp khớp rải rác, chập chờn vẫn bị tính dồn thành liên tục.
-    Object.keys(ndkmDiemDanhLienTiep).forEach(uid=>{ if(!uidKhopKhungNay.has(uid)) delete ndkmDiemDanhLienTiep[uid]; });
+    // Bỏ các lần khớp đã quá cũ (ngoài cửa sổ thời gian) — không xóa ngay chỉ vì 1 khung không thấy mặt.
+    { const bayGio = Date.now();
+      Object.keys(ndkmDiemDanhLienTiep).forEach(uid=>{
+        const ds = (ndkmDiemDanhLienTiep[uid] || []).filter(t=> bayGio - t <= NDKM_DD_CUA_SO_MS);
+        if(ds.length) ndkmDiemDanhLienTiep[uid] = ds; else delete ndkmDiemDanhLienTiep[uid];
+      }); }
   }catch(e){ /* bỏ qua lỗi 1 khung hình lẻ (vd camera vừa tắt), vòng lặp sau sẽ tự thử lại */ }
 
   ndkmHenGioNhanDien = setTimeout(ndkmVongLapNhanDien, 350);
