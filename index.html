@@ -13202,9 +13202,32 @@ let ndkmDiemDanhHomNayState = {}; // { uid: banGhi } — bản ghi điểm danh 
 let ndkmDiemDanhDangGhi = new Set(); // các uid đang trong lúc chờ ghi (await) — chặn ghi trùng khi 2 khung hình gần nhau cùng kích hoạt
 let ndkmDiemDanhLienTiep = {};     // { uid: số khung liên tiếp đã khớp đủ chắc } — đếm dồn, reset về 0 khi khung nào không khớp nữa
 
+/* Theo dõi TRỰC TIẾP (on 'value', không chỉ đọc 1 lần) danh sách điểm danh hôm nay trong lúc camera
+   đang chạy: giáo viên xóa tên 1 em ở danh sách (trên bất kỳ máy nào) thì máy đang mở camera biết
+   ngay, bỏ em đó khỏi bộ nhớ "đã điểm danh" → camera nhận ra em đó lần nữa là ghi lại được. */
+let ndkmDdRefDangNghe = null, ndkmDdHamNghe = null;
+function ndkmNgungNgheDiemDanh(){
+  if(ndkmDdRefDangNghe && ndkmDdHamNghe) ndkmDdRefDangNghe.off('value', ndkmDdHamNghe);
+  ndkmDdRefDangNghe = null; ndkmDdHamNghe = null;
+}
 async function ndkmNapDiemDanhHomNay(){
-  try{ ndkmDiemDanhHomNayState = (await diemDanhDsRef.child(ddNgayHomNay()).once('value')).val() || {}; }
-  catch(e){ ndkmDiemDanhHomNayState = {}; }
+  ndkmNgungNgheDiemDanh();
+  const ref = diemDanhDsRef.child(ddNgayHomNay());
+  await new Promise(resolve=>{
+    let lanDau = true;
+    const xong = ()=>{ if(lanDau){ lanDau = false; resolve(); } };
+    ndkmDdHamNghe = snap=>{
+      const moi = snap.val() || {};
+      // Em nào vừa bị xóa khỏi danh sách: xóa luôn bộ đếm khung liên tiếp + hẹn thử lại, để ghi lại ngay khi nhận ra
+      Object.keys(ndkmDiemDanhHomNayState).forEach(uid=>{
+        if(!moi[uid]){ delete ndkmDiemDanhLienTiep[uid]; delete ndkmDiemDanhThuLaiSau[uid]; }
+      });
+      ndkmDiemDanhHomNayState = moi;
+      xong();
+    };
+    ref.on('value', ndkmDdHamNghe, ()=>{ ndkmDiemDanhHomNayState = {}; xong(); });
+    ndkmDdRefDangNghe = ref;
+  });
 }
 
 /* Băng thông báo lớn phủ ngay trên khung camera khi 1 em vừa được ghi điểm danh THÀNH CÔNG — để
@@ -13709,11 +13732,22 @@ function renderDiemDanhCaiDat(){
   if($('ddDanhSachHienThi')) $('ddDanhSachHienThi').style.display = diemDanhCaiDat.an ? 'none' : 'block';
 }
 
+let ddCuaToiRefDangNghe = null, ddCuaToiHamNghe = null;
 async function napDiemDanhHomNayCuaToi(){
-  if(!myUid){ diemDanhHomNayCuaToi = null; return; }
-  try{ diemDanhHomNayCuaToi = (await diemDanhDsRef.child(ddNgayHomNay()).child(myUid).once('value')).val() || null; }
-  catch(e){ diemDanhHomNayCuaToi = null; }
-  renderDiemDanhCuaToi();
+  if(ddCuaToiRefDangNghe && ddCuaToiHamNghe) ddCuaToiRefDangNghe.off('value', ddCuaToiHamNghe);
+  ddCuaToiRefDangNghe = null; ddCuaToiHamNghe = null;
+  if(!myUid){ diemDanhHomNayCuaToi = null; renderDiemDanhCuaToi(); return; }
+  const ref = diemDanhDsRef.child(ddNgayHomNay()).child(myUid);
+  await new Promise(resolve=>{
+    let lanDau = true;
+    ddCuaToiHamNghe = snap=>{
+      diemDanhHomNayCuaToi = snap.val() || null;
+      renderDiemDanhCuaToi();
+      if(lanDau){ lanDau = false; resolve(); }
+    };
+    ref.on('value', ddCuaToiHamNghe, ()=>{ diemDanhHomNayCuaToi = null; renderDiemDanhCuaToi(); if(lanDau){ lanDau = false; resolve(); } });
+    ddCuaToiRefDangNghe = ref;
+  });
 }
 
 function renderDiemDanhCuaToi(){
@@ -13791,6 +13825,10 @@ async function ddXoaDong(uid){
     await diemDanhDsRef.child(ngay).child(uid).remove();
     delete diemDanhNgayState[uid];
     renderDiemDanhBang();
+    if(ngay === ddNgayHomNay()){
+      if(typeof ndkmDiemDanhHomNayState === 'object') delete ndkmDiemDanhHomNayState[uid];
+      if(typeof ndkmDiemDanhThuLaiSau === 'object') delete ndkmDiemDanhThuLaiSau[uid];
+    }
     if(uid === myUid && ngay === ddNgayHomNay()){ diemDanhHomNayCuaToi = null; renderDiemDanhCuaToi(); }
   }catch(e){ alert(baoLoi(e)); }
 }
@@ -14362,6 +14400,7 @@ function dungNdkmCamera(){
   if(canvas){ const ctx = canvas.getContext('2d'); ctx && ctx.clearRect(0,0,canvas.width,canvas.height); }
   if($('ndkmVideoWrap')) $('ndkmVideoWrap').style.display = 'none';
   if($('ndkmBannerThanhCong')) $('ndkmBannerThanhCong').style.display = 'none';
+  ndkmNgungNgheDiemDanh();
   if($('ndkmMotNutBtn')) $('ndkmMotNutBtn').style.display = 'inline-block';
   if($('ndkmBatCameraBtn')) $('ndkmBatCameraBtn').style.display = 'inline-block';
   if($('ndkmDoiCameraBtn')) $('ndkmDoiCameraBtn').style.display = 'none';
