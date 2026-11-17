@@ -3334,45 +3334,47 @@
           </p>
         </div>
 
-        <div class="section-title" style="margin-top:20px;">Bước 2 — Nạp dữ liệu khuôn mặt</div>
-        <p class="section-note">
-          ⚡ <b>Tự động:</b> ngay khi mở mục này, hệ thống đã tự nạp sẵn dữ liệu ở nền, không cần bấm
-          gì ở đây — đợi Bước 3 "Bật camera" hết mờ là dùng được. Mã đặc trưng khuôn mặt của ảnh thẻ
-          + ảnh bổ sung đều được <b>lưu cache lại trên Firebase</b> sau lần tính đầu tiên, nên
-          <b>chỉ chậm đúng 1 lần (ai mở trước thì người đó "mồi" sẵn cho cả lớp)</b> — những lần mở
-          sau, của bất kỳ ai, đều gần như tức thì vì chỉ cần tải lại số đã tính sẵn, không phải chạy
-          AI lại. Chỉ bấm nút bên dưới khi muốn <b>nạp lại thủ công</b> — ví dụ vừa thêm/xóa ảnh ở
-          Bước 1/1b xong và muốn cập nhật ngay, hoặc lần tự động bị lỗi mạng.
-        </p>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn btn-primary btn-sm" id="ndkmNapDuLieuBtn">🧠 Nạp học sinh + người Bước 1b (tất cả)</button>
-          <button class="btn btn-blue btn-sm" id="ndkmNapDuLieuNguoiKhacBtn">🧠 Chỉ nạp người ở Bước 1b</button>
-        </div>
-        <div id="ndkmNapMsg" class="msg"></div>
-
-        <div class="section-title">Bước 3 — Bật camera nhận diện</div>
+        <div class="section-title" style="margin-top:20px;">📷 Điểm danh bằng camera</div>
         <p class="section-note">
           🙋 <b>Tự động điểm danh:</b> khi camera nhận ra MỘT học sinh đủ chắc và liên tục trong vài
-          khung hình, hệ thống sẽ <b>tự ghi điểm danh</b> cho em đó ở mục "🙋 Điểm danh" — không cần
-          bấm gì thêm. Ai mở Bước 3 cũng quét và ghi được cho <b>bất kỳ em nào</b> camera nhận ra
-          (dùng khi đặt 1 máy ở cửa lớp, một bạn cầm quét lần lượt cả lớp đi vào), không chỉ riêng
-          giáo viên. Mỗi em vẫn chỉ được ghi 1 lần/ngày: bản ghi đã có rồi thì không ai (trừ giáo
-          viên) ghi đè/sửa lại được — chỉ là <b>ghi giùm lần đầu</b>, không sửa được điểm danh của
-          người khác.
+          khung hình, hệ thống sẽ <b>tự ghi điểm danh</b> cho em đó ở mục "🙋 Điểm danh" theo đúng
+          khung giờ quá sớm/đúng giờ/đi muộn mà giáo viên đã cài sẵn — không cần bấm gì thêm.
+          <b>Bất kỳ ai</b> mở trang này cũng bấm được nút dưới đây để dùng (dùng khi đặt 1 máy ở cửa
+          lớp, một bạn cầm máy quét lần lượt cả lớp đi vào). Mỗi em vẫn chỉ được ghi 1 lần/ngày: bản
+          ghi đã có rồi thì không ai (trừ giáo viên) ghi đè/sửa lại được — chỉ là <b>ghi giùm lần
+          đầu</b>, không sửa được điểm danh của người khác.
         </p>
-        <div class="field" style="max-width:420px;">
-          <label>Chế độ quét</label>
-          <select id="ndkmCheDoQuetChon">
-            <option value="tatca">Tất cả (học sinh lớp + người ở Bước 1b)</option>
-            <option value="ngoailop">Chỉ người ở Bước 1b (bỏ qua học sinh lớp)</option>
-          </select>
-        </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
-          <button class="btn btn-primary btn-sm" id="ndkmBatCameraBtn" disabled>🎥 Bật camera</button>
+          <button class="btn btn-primary btn-sm" id="ndkmMotNutBtn">📷 Bật camera điểm danh</button>
           <button class="btn btn-ghost btn-sm" id="ndkmDoiCameraBtn" style="display:none;">🔄 Đổi camera trước/sau</button>
           <button class="btn btn-ghost btn-sm" id="ndkmDungCameraBtn" style="display:none;">⏹ Tắt camera</button>
         </div>
+        <div id="ndkmNapMsg" class="msg"></div>
         <div id="ndkmErr" class="msg err"></div>
+
+        <details style="margin:10px 0 0;">
+          <summary style="cursor:pointer; font-weight:700; color:var(--ink-soft, #64748b);">⚙️ Tùy chọn nâng cao (thường chỉ giáo viên cần dùng)</summary>
+          <div style="margin-top:10px;">
+            <div class="field" style="max-width:420px;">
+              <label>Chế độ quét</label>
+              <select id="ndkmCheDoQuetChon">
+                <option value="tatca">Tất cả (học sinh lớp + người ở Bước 1b)</option>
+                <option value="ngoailop">Chỉ người ở Bước 1b (bỏ qua học sinh lớp)</option>
+              </select>
+            </div>
+            <p class="section-note">
+              Dữ liệu nhận diện được tự nạp sẵn ở nền ngay khi mở mục này; cache lưu trên Firebase
+              nên chỉ chậm đúng 1 lần đầu tiên. Chỉ cần bấm nút bên dưới khi muốn nạp lại thủ công —
+              ví dụ vừa thêm/xóa ảnh ở Bước 1/1b xong và muốn cập nhật ngay, hoặc lần tự động bị lỗi
+              mạng.
+            </p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-blue btn-sm" id="ndkmNapDuLieuBtn">🧠 Nạp lại học sinh + người Bước 1b (tất cả)</button>
+              <button class="btn btn-blue btn-sm" id="ndkmNapDuLieuNguoiKhacBtn">🧠 Chỉ nạp người ở Bước 1b</button>
+              <button class="btn btn-primary btn-sm" id="ndkmBatCameraBtn">🎥 Bật camera (không tự nạp lại dữ liệu)</button>
+            </div>
+          </div>
+        </details>
 
         <div class="ndkm-video-wrap" id="ndkmVideoWrap" style="display:none;">
           <video id="ndkmVideo" autoplay playsinline muted></video>
@@ -14178,6 +14180,30 @@ $('ndkmNapDuLieuNguoiKhacBtn').onclick = async ()=>{
 
 $('ndkmCheDoQuetChon').onchange = (e)=>{ ndkmCheDoQuet = e.target.value; };
 
+// Nút gộp duy nhất "📷 Bật camera điểm danh" cho MỌI người dùng — tự lo luôn bước nạp dữ liệu
+// (nếu lúc này chưa nạp xong ở nền) rồi mới bật camera, khỏi bắt ai phải biết có 2 bước riêng
+// "Nạp dữ liệu" / "Bật camera" như trước. Hầu hết trường hợp dữ liệu đã được ndkmTuDongSanSangCamera()
+// nạp sẵn ở nền ngay khi mở mục này, nên bấm vào là vào camera gần như ngay lập tức.
+async function ndkmMotNutBatCameraDiemDanh(){
+  const btn = $('ndkmMotNutBtn');
+  showMsg($('ndkmErr'), '', '');
+  if(!ndkmLabeledDescriptors.length){
+    if(btn){ btn.disabled = true; btn.textContent = '⏳ Đang chuẩn bị dữ liệu...'; }
+    try{
+      await napNdkmAnhTatCa();
+      await napNdkmNguoiKhacTatCa();
+      await ndkmNapDuLieuTatCa(true);
+    }catch(e){}
+    if(btn){ btn.disabled = false; btn.textContent = '📷 Bật camera điểm danh'; }
+  }
+  if(!ndkmLabeledDescriptors.length){
+    showMsg($('ndkmErr'), '❌ Chưa có dữ liệu khuôn mặt nào để nhận diện — cần giáo viên thêm ảnh thẻ cho học sinh trước (mục "Thành viên lớp" hoặc Bước 1/1b bên dưới).', 'err');
+    return;
+  }
+  await ndkmBatCamera();
+}
+if($('ndkmMotNutBtn')) $('ndkmMotNutBtn').onclick = ()=> ndkmMotNutBatCameraDiemDanh();
+
 $('ndkmBatCameraBtn').onclick = ()=> ndkmBatCamera();
 $('ndkmDoiCameraBtn').onclick = ()=>{
   ndkmFacingMode = (ndkmFacingMode === 'environment') ? 'user' : 'environment';
@@ -14208,6 +14234,7 @@ async function ndkmBatCamera(){
   canvas.height = video.videoHeight;
 
   $('ndkmVideoWrap').style.display = 'block';
+  if($('ndkmMotNutBtn')) $('ndkmMotNutBtn').style.display = 'none';
   $('ndkmBatCameraBtn').style.display = 'none';
   $('ndkmDoiCameraBtn').style.display = 'inline-block';
   $('ndkmDungCameraBtn').style.display = 'inline-block';
@@ -14299,6 +14326,7 @@ function dungNdkmCamera(){
   const canvas = $('ndkmCanvas');
   if(canvas){ const ctx = canvas.getContext('2d'); ctx && ctx.clearRect(0,0,canvas.width,canvas.height); }
   if($('ndkmVideoWrap')) $('ndkmVideoWrap').style.display = 'none';
+  if($('ndkmMotNutBtn')) $('ndkmMotNutBtn').style.display = 'inline-block';
   if($('ndkmBatCameraBtn')) $('ndkmBatCameraBtn').style.display = 'inline-block';
   if($('ndkmDoiCameraBtn')) $('ndkmDoiCameraBtn').style.display = 'none';
   if($('ndkmDungCameraBtn')) $('ndkmDungCameraBtn').style.display = 'none';
