@@ -3563,6 +3563,25 @@
         <div id="ddDsRong" class="empty" style="display:none;">Chưa có ai điểm danh ngày này.</div>
       </div>
     </div>
+
+    <div class="card" id="ddThongKeCard">
+      <h2>📊 Thống kê điểm danh theo khoảng ngày</h2>
+      <p class="section-note">Chọn từ ngày – đến ngày rồi bấm "Thống kê". Chỉ tính những <b>ngày có ít nhất 1 em điểm danh</b> là ngày học (thứ Bảy, Chủ nhật, ngày nghỉ không ai điểm danh sẽ không bị tính là vắng).</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+        <div class="field" style="margin-bottom:0;"><label>Từ ngày</label><input type="date" id="ddTkTuNgay"></div>
+        <div class="field" style="margin-bottom:0;"><label>Đến ngày</label><input type="date" id="ddTkDenNgay"></div>
+        <button type="button" class="btn btn-primary btn-sm" id="ddTkBtn">📊 Thống kê</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="ddTkCsvBtn" style="display:none;">⬇️ Tải file Excel (CSV)</button>
+      </div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+        <button type="button" class="btn btn-ghost btn-sm" data-dd-tk-nhanh="tuan">Tuần này</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-dd-tk-nhanh="thang">Tháng này</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-dd-tk-nhanh="thangtruoc">Tháng trước</button>
+      </div>
+      <div id="ddTkMsg" class="msg"></div>
+      <div id="ddTkTomTat" style="margin:10px 0;"></div>
+      <div class="scroll-x"><table id="ddTkBang"></table></div>
+    </div>
   </div>
 
   <!-- ============ CÔNG CỤ: THỜI GIAN SỬ DỤNG ĐIỆN THOẠI ============ -->
@@ -13861,6 +13880,103 @@ async function ddXoaDong(uid){
 }
 
 $('ddLocNgay') && ($('ddLocNgay').onchange = ()=> napDiemDanhNgay($('ddLocNgay').value || ddNgayHomNay()));
+
+/* ===== Thống kê điểm danh theo khoảng ngày =====
+   Đọc diemDanh2026/ds trong khoảng [từ, đến] bằng orderByKey (khóa ngày dạng YYYY-MM-DD nên sắp
+   theo chữ cũng đúng theo thời gian) — chỉ 1 lần đọc cho cả khoảng. "Ngày học" = ngày có ít nhất
+   1 bản ghi; vắng = số ngày học − số ngày em đó có bản ghi. */
+let ddTkKetQua = null;
+function ddTkDoiNgay(d){ return d.getFullYear() + '-' + ddSo2(d.getMonth()+1) + '-' + ddSo2(d.getDate()); }
+function ddTkDatKhoangNhanh(loai){
+  const nay = new Date();
+  let tu, den;
+  if(loai === 'tuan'){
+    const thu = (nay.getDay() + 6) % 7; // thứ Hai = 0
+    tu = new Date(nay); tu.setDate(nay.getDate() - thu); den = nay;
+  } else if(loai === 'thangtruoc'){
+    tu = new Date(nay.getFullYear(), nay.getMonth() - 1, 1);
+    den = new Date(nay.getFullYear(), nay.getMonth(), 0);
+  } else {
+    tu = new Date(nay.getFullYear(), nay.getMonth(), 1); den = nay;
+  }
+  $('ddTkTuNgay').value = ddTkDoiNgay(tu);
+  $('ddTkDenNgay').value = ddTkDoiNgay(den);
+}
+function ddTkTenNgay(ngay){ const [y,m,d] = ngay.split('-'); return `${d}/${m}/${y}`; }
+
+async function ddThongKeKhoangNgay(){
+  const msg = $('ddTkMsg');
+  if(diemDanhCaiDat.an && !isAdmin){ showMsg(msg, '🙈 Danh sách điểm danh đang được thầy tạm ẩn.', 'info'); return; }
+  const tu = $('ddTkTuNgay').value, den = $('ddTkDenNgay').value;
+  if(!tu || !den){ showMsg(msg, 'Vui lòng chọn đủ Từ ngày và Đến ngày.', 'err'); return; }
+  if(tu > den){ showMsg(msg, '"Từ ngày" phải trước hoặc bằng "Đến ngày".', 'err'); return; }
+  showMsg(msg, '⏳ Đang tổng hợp...', 'info');
+  let duLieu = {};
+  try{ duLieu = (await diemDanhDsRef.orderByKey().startAt(tu).endAt(den).once('value')).val() || {}; }
+  catch(e){ showMsg(msg, baoLoi(e), 'err'); return; }
+
+  const ngayHoc = Object.keys(duLieu).filter(n=> /^\d{4}-\d{2}-\d{2}$/.test(n) && n >= tu && n <= den && duLieu[n] && Object.keys(duLieu[n]).length).sort();
+  // Danh sách học sinh: mọi em có hồ sơ Thành viên lớp + em nào có bản ghi trong khoảng (phòng khi chưa có hồ sơ)
+  const hs = {};
+  Object.entries(thanhVienState || {}).forEach(([uid,x])=>{ if(x && x.hoTen) hs[uid] = { hoTen: x.hoTen, coMat:0, dungGio:0, quaSom:0, diMuon:0, ngayVang:[] }; });
+  ngayHoc.forEach(n=> Object.entries(duLieu[n]).forEach(([uid,b])=>{
+    if(!hs[uid]) hs[uid] = { hoTen: (b && b.hoTen) || uid, coMat:0, dungGio:0, quaSom:0, diMuon:0, ngayVang:[] };
+  }));
+  Object.entries(hs).forEach(([uid,x])=>{
+    ngayHoc.forEach(n=>{
+      const b = duLieu[n][uid];
+      if(!b){ x.ngayVang.push(n); return; }
+      x.coMat++;
+      if(b.trangThai === 'dung-gio') x.dungGio++;
+      else if(b.trangThai === 'qua-som') x.quaSom++;
+      else if(b.trangThai === 'di-muon') x.diMuon++;
+    });
+  });
+  const ds = Object.values(hs).sort((a,b)=> (b.ngayVang.length - a.ngayVang.length) || (b.diMuon - a.diMuon) || String(a.hoTen).localeCompare(String(b.hoTen), 'vi'));
+  ddTkKetQua = { tu, den, ngayHoc, ds };
+
+  showMsg(msg, '', '');
+  const tongLuot = ds.reduce((t,x)=> t + x.coMat, 0);
+  const tongMuon = ds.reduce((t,x)=> t + x.diMuon, 0);
+  const tongVang = ds.reduce((t,x)=> t + x.ngayVang.length, 0);
+  $('ddTkTomTat').innerHTML = ngayHoc.length
+    ? `<b>${ddTkTenNgay(tu)} → ${ddTkTenNgay(den)}</b>: ${ngayHoc.length} ngày học · ${ds.length} học sinh · ${tongLuot} lượt có mặt · <span style="color:#b45309">${tongMuon} lượt đi muộn</span> · <span style="color:#b91c1c">${tongVang} lượt vắng/chưa điểm danh</span>`
+    : `<span class="section-note">Không có ngày nào có dữ liệu điểm danh trong khoảng ${ddTkTenNgay(tu)} → ${ddTkTenNgay(den)}.</span>`;
+  if(!ngayHoc.length){ $('ddTkBang').innerHTML = ''; $('ddTkCsvBtn').style.display = 'none'; return; }
+  $('ddTkBang').innerHTML = `<tr><th>#</th><th>Họ tên</th><th>Có mặt</th><th>✅ Đúng giờ</th><th>🌅 Quá sớm</th><th>⏰ Đi muộn</th><th>❌ Vắng</th><th>Ngày vắng</th></tr>` +
+    ds.map((x,i)=> `<tr>
+      <td>${i+1}</td>
+      <td>${esc(x.hoTen)}</td>
+      <td>${x.coMat}/${ngayHoc.length}</td>
+      <td>${x.dungGio}</td>
+      <td>${x.quaSom}</td>
+      <td${x.diMuon ? ' style="color:#b45309;font-weight:700;"' : ''}>${x.diMuon}</td>
+      <td${x.ngayVang.length ? ' style="color:#b91c1c;font-weight:700;"' : ''}>${x.ngayVang.length}</td>
+      <td style="font-size:12px;">${x.ngayVang.map(n=> n.slice(8,10) + '/' + n.slice(5,7)).join(', ')}</td>
+    </tr>`).join('');
+  $('ddTkCsvBtn').style.display = 'inline-block';
+}
+
+function ddTkTaiCsv(){
+  if(!ddTkKetQua) return;
+  const { tu, den, ngayHoc, ds } = ddTkKetQua;
+  const o = v => '"' + String(v).replace(/"/g,'""') + '"';
+  const dong = [['STT','Họ tên','Có mặt','Số ngày học','Đúng giờ','Quá sớm','Đi muộn','Vắng','Ngày vắng'].map(o).join(',')];
+  ds.forEach((x,i)=> dong.push([i+1, x.hoTen, x.coMat, ngayHoc.length, x.dungGio, x.quaSom, x.diMuon, x.ngayVang.length, x.ngayVang.map(ddTkTenNgay).join('; ')].map(o).join(',')));
+  const blob = new Blob(['\ufeff' + dong.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `thong-ke-diem-danh-10A1_${tu}_den_${den}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 1000);
+}
+
+if($('ddTkBtn')){
+  ddTkDatKhoangNhanh('thang');
+  $('ddTkBtn').onclick = ddThongKeKhoangNgay;
+  $('ddTkCsvBtn').onclick = ddTkTaiCsv;
+  document.querySelectorAll('[data-dd-tk-nhanh]').forEach(b=> b.onclick = ()=>{ ddTkDatKhoangNhanh(b.getAttribute('data-dd-tk-nhanh')); ddThongKeKhoangNgay(); });
+}
 
 $('ddLuuCaiDatBtn') && ($('ddLuuCaiDatBtn').onclick = async ()=>{
   const batDau = $('ddGioBatDau').value, ketThuc = $('ddGioKetThuc').value;
