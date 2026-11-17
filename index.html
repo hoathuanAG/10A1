@@ -4205,7 +4205,17 @@ async function guiAnhNdkmLenDrive(duLieuAnh, tenHocSinh){
     body: JSON.stringify({ ma: MA_NDKM, hanhDong: 'upload', duLieu: duLieuAnh, ten: tenHocSinh, thuMuc: tenHocSinh })
   });
   const kq = await res.json();
-  if(!kq.ok) throw new Error(kq.loi || 'Không tải được ảnh lên Drive.');
+  if(!kq.ok){
+    const loi = String(kq.loi || 'Không tải được ảnh lên Drive.');
+    // Lỗi phía Apps Script (máy chủ lưu ảnh), không phải lỗi camera/trang web — chỉ giáo viên sửa được
+    // trong trình soạn Apps Script: chạy lại 1 hàm để cấp quyền Drive + triển khai lại phiên bản mới.
+    if(/DriveApp|Access denied|authoriz|quyền/i.test(loi)){
+      throw new Error('Máy chủ lưu ảnh (Apps Script) chưa được cấp quyền truy cập Google Drive (' + loi + '). '
+        + 'Giáo viên mở dự án Apps Script của mục nhận diện khuôn mặt → chạy 1 hàm bất kỳ để cấp quyền (Xem lại quyền → Cho phép) '
+        + '→ Triển khai → Quản lý bản triển khai → Sửa → Phiên bản mới, "Thực thi với tư cách: Tôi", "Ai có quyền truy cập: Bất kỳ ai" → Triển khai.');
+    }
+    throw new Error(loi);
+  }
   return { id: kq.id, link: kq.link || anhDriveLon(kq.id), thuMucId: kq.thuMucId || null };
 }
 async function xoaAnhNdkmTrenDrive(anhId){
@@ -14121,11 +14131,26 @@ function ndkmNguoiKhacKiemTraTruoc(){
   return id;
 }
 // Tải 1 ảnh lên Drive + ghi Firebase cho người id. Ném lỗi nếu thất bại.
+/* Tính mã đặc trưng khuôn mặt (128 số) từ ảnh đang có SẴN trong bộ nhớ trình duyệt. Trả về mảng số,
+   hoặc null nếu AI không thấy rõ khuôn mặt. Lưu kèm mã này lên Firebase nên lúc nạp dữ liệu KHÔNG cần
+   tải lại ảnh từ Drive — vì vậy ảnh trên Drive không cần bật chia sẻ công khai (tài khoản Drive của
+   thầy bị Google chặn "chia sẻ link cho bất kỳ ai": Access denied: DriveApp ở bước setSharing). */
+async function ndkmDacTrungTuAnh(anhNen){
+  await ndkmTaiModelNeuChua();
+  const img = await ndkmTaiAnh(anhNen);
+  const kq = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
+    .withFaceLandmarks().withFaceDescriptor();
+  return (kq && kq.descriptor && kq.descriptor.length === 128) ? Array.from(kq.descriptor) : null;
+}
 async function ndkmNguoiKhacTaiAnh(id, file){
   const ten = (ndkmNguoiKhacState[id] && ndkmNguoiKhacState[id].ten) || 'Người khác';
   const anhNen = await nenAnh(file, 1000, 0.85);
+  let dacTrung = null;
+  try{ dacTrung = await ndkmDacTrungTuAnh(anhNen); }
+  catch(e){ throw new Error('Không tải được mô hình AI để kiểm tra khuôn mặt — kiểm tra mạng rồi thử lại.'); }
+  if(!dacTrung) throw new Error('AI không thấy rõ khuôn mặt trong ảnh này — nhìn thẳng camera, đủ sáng, mặt không bị che rồi chụp/chọn lại.');
   const kqDrive = await guiAnhNdkmLenDrive(anhNen, ten + ' - nhan dien khac');
-  const banGhi = { anhLink: kqDrive.link, thuMucId: kqDrive.thuMucId, luc: new Date().toISOString() };
+  const banGhi = { anhLink: kqDrive.link, thuMucId: kqDrive.thuMucId, luc: new Date().toISOString(), dacTrung };
   await ndkmNguoiKhacRef.child(id).child('anh').child(kqDrive.id).set(banGhi);
   ndkmNguoiKhacState[id] = ndkmNguoiKhacState[id] || {ten};
   ndkmNguoiKhacState[id].anh = Object.assign({}, ndkmNguoiKhacState[id].anh||{}, { [kqDrive.id]: banGhi });
@@ -14266,6 +14291,18 @@ $('ndkmNguoiKhacXoaBtn') && ($('ndkmNguoiKhacXoaBtn').onclick = async ()=>{
 let ndkmDescriptorsHocSinh = [];   // [faceapi.LabeledFaceDescriptors] — nhãn = uid học sinh
 let ndkmDescriptorsNguoiKhac = []; // [faceapi.LabeledFaceDescriptors] — nhãn = "oth_<id>"
 
+// Lấy danh sách mã đặc trưng cho 1 người ở Bước 1b: dùng mã đã lưu sẵn (dacTrung) nếu có, chỉ tải
+// ảnh từ Drive về tính lại cho những ảnh cũ chưa có mã.
+async function ndkmDescriptorNguoiKhac(x){
+  const dsSan = [], dsCanTinh = [];
+  Object.entries((x && x.anh) || {}).forEach(([anhId, a])=>{
+    if(a && Array.isArray(a.dacTrung) && a.dacTrung.length === 128) dsSan.push(new Float32Array(a.dacTrung));
+    else dsCanTinh.push(anhId);
+  });
+  const dsTinh = dsCanTinh.length ? await ndkmTinhDsDescriptor(dsCanTinh) : [];
+  return dsSan.concat(dsTinh);
+}
+
 async function ndkmTinhDsDescriptor(dsAnhId){
   // Tính descriptor khuôn mặt cho từng ảnh trong danh sách anhId, bỏ qua (không chặn cả danh
   // sách) những ảnh lỗi hoặc không thấy khuôn mặt rõ.
@@ -14401,7 +14438,7 @@ async function ndkmNapDuLieuTatCa(tuDong){
     const ten = (x && x.ten) || 'Người khác';
     const dsAnhId = Object.keys((x && x.anh) || {});
     showMsg($('ndkmNapMsg'), `⏳ Đang nạp người khác ${i+1}/${dsNguoiKhac.length}: ${ten} (${dsAnhId.length} ảnh)...`, 'info');
-    const dsDescriptor = await ndkmTinhDsDescriptor(dsAnhId);
+    const dsDescriptor = await ndkmDescriptorNguoiKhac(x);
     if(!dsDescriptor.length){ dsLoi.push(ten + ` (không thấy khuôn mặt rõ trong ${dsAnhId.length} ảnh, hoặc không đọc được ảnh)`); continue; }
     const nhan = 'oth_' + id;
     ndkmDescriptorsNguoiKhac.push(new faceapi.LabeledFaceDescriptors(nhan, dsDescriptor));
@@ -14469,7 +14506,7 @@ $('ndkmNapDuLieuNguoiKhacBtn').onclick = async ()=>{
     const ten = (x && x.ten) || 'Người khác';
     const dsAnhId = Object.keys((x && x.anh) || {});
     showMsg($('ndkmNapMsg'), `⏳ Đang nạp người ở Bước 1b ${i+1}/${dsNguoiKhac.length}: ${ten} (${dsAnhId.length} ảnh)...`, 'info');
-    const dsDescriptor = await ndkmTinhDsDescriptor(dsAnhId);
+    const dsDescriptor = await ndkmDescriptorNguoiKhac(x);
     if(!dsDescriptor.length){ dsLoi.push(ten + ` (không thấy khuôn mặt rõ trong ${dsAnhId.length} ảnh, hoặc không đọc được ảnh)`); continue; }
     const nhan = 'oth_' + id;
     ndkmDescriptorsNguoiKhac.push(new faceapi.LabeledFaceDescriptors(nhan, dsDescriptor));
